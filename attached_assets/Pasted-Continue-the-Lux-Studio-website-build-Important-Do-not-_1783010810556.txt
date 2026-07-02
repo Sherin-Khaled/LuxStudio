@@ -1,0 +1,819 @@
+Continue the Lux Studio website build.
+
+Important: **Do not rebuild, redesign, or remove the Home page that already exists.**
+Keep the current Home page exactly as it is unless a shared component needs a small safe adjustment.
+
+Now create the missing pages:
+
+```text
+/work
+/services
+```
+
+Also make sure the navbar links work correctly:
+
+```text
+Home → /
+Work → /work
+Services → /services
+About → placeholder route or disabled for now
+Contact → placeholder route or disabled for now
+```
+
+Highlight the active nav item based on the current page.
+
+---
+
+# Shared Requirements
+
+Both pages must use the same Lux Studio design system already used on the Home page:
+
+```text
+Dark cinematic background
+Stars on the left and right edges
+Blue / violet glow atmosphere
+Glassmorphism cards
+Premium typography
+Smooth scroll
+GSAP / Framer Motion animations
+Responsive layout
+Reduced motion support
+Rounded dark-blue footer
+```
+
+Use the existing shared components where possible:
+
+```text
+Navbar
+Footer
+Stars / side stars
+Glass cards
+Section wrappers
+Buttons
+Marquee / motion helpers
+```
+
+If shared components do not exist yet, create reusable ones without breaking the Home page.
+
+---
+
+# Page 1 — Work Page
+
+Create a premium Work page at:
+
+```text
+/work
+```
+
+## Work Page Hero
+
+Content:
+
+```text
+Selected Projects
+Work built from strategy to launch.
+A closer look at websites, e-commerce platforms, brand experiences, and digital systems we shaped, designed, developed, and launched for real businesses.
+4 selected projects · Websites · E-commerce · Export brands · Digital systems
+```
+
+Visual style:
+
+```text
+Dark galaxy background
+Left and right moving side stars
+Blue/violet aurora glow
+Meteor moves quickly every 3 seconds, then disappears
+Premium spacing
+Large editorial typography
+```
+
+Keep the motion subtle and premium.
+
+---
+
+## Work Projects Section
+
+Use this project hierarchy:
+
+```text
+Featured horizontal card: X Dental
+Tall vertical card: Houd El Nile
+Right top card: Al Nours
+Right bottom card: Al Baraka Olives
+```
+
+The section should feel like a premium project showcase, not a basic grid.
+
+Use glassmorphism cards with soft shadows, rounded corners, mockup/preview areas, tags, descriptions, and CTA links.
+
+---
+
+## X Dental — Featured Horizontal Project
+
+Project type:
+
+```text
+Dental Supplies E-commerce Platform
+```
+
+Main content:
+
+```text
+We designed and built a complete e-commerce platform for dental doctors and clinics, combining UI/UX design, frontend, backend, and real store functionality into a cleaner and more professional buying experience.
+```
+
+Secondary content:
+
+```text
+The project included product browsing, product details, cart, checkout, backend functionality, and large-scale product image preparation. We sourced product visuals, enhanced their quality, removed backgrounds, and created a cleaner and more consistent e-commerce presentation across more than 1000 products.
+```
+
+Tags:
+
+```text
+UI/UX Design
+Frontend
+Backend
+E-commerce
+1000+ Product Images
+Background Removal
+Quality Enhancement
+Checkout Flow
+SEO & Performance
+Motion-Rich UX
+```
+
+CTA:
+
+```text
+View Case Study →
+```
+
+Add a small proof block:
+
+```text
+Product Visual Preparation
+Image Sourcing
+Quality Enhancement
+Background Removal
+```
+
+---
+
+## Houd El Nile — Tall Vertical Card
+
+Project type:
+
+```text
+Agriculture Export Company
+```
+
+Content:
+
+```text
+We rebuilt Houd El Nile’s digital presence from an outdated WordPress website into a premium multilingual Next.js experience that better reflects the company’s farms, factories, export business, and product quality.
+```
+
+Secondary content:
+
+```text
+The project included original farm and factory photography, Lightroom image editing, a redesigned visual direction, a rotating hero experience, a top contact bar, seven-language support, SEO / performance thinking, and final deployment.
+```
+
+Tags:
+
+```text
+Website Redesign
+Next.js
+Photography
+Lightroom Editing
+7 Languages
+Export Brand
+SEO & Performance
+Scroll Storytelling
+Deployment
+```
+
+CTA:
+
+```text
+View Case Study →
+```
+
+---
+
+## Al Nours — Right Top Card
+
+Project type:
+
+```text
+Saudi Beverage Distribution E-commerce
+```
+
+Content:
+
+```text
+We created an online shopping platform for Al Nours, combining logo creation, brand direction, frontend, backend, authentication flows, and deployment into a clear and trustworthy e-commerce experience.
+```
+
+Tags:
+
+```text
+E-commerce
+Frontend
+Backend
+Logo Design
+Brand Direction
+Authentication
+Deployment
+Motion-Rich UX
+```
+
+CTA:
+
+```text
+View Case Study →
+```
+
+---
+
+## Al Baraka Olives — Right Bottom Card
+
+Project type:
+
+```text
+Olive Export Brand Website
+```
+
+Content:
+
+```text
+We transformed Al Baraka Olives from an outdated website into a cleaner, more premium export-brand experience with stronger visuals, refined structure, and subtle motion.
+```
+
+Tags:
+
+```text
+Website Redesign
+Frontend
+Export Brand
+Photography
+Curated Imagery
+Subtle Motion
+Scroll Storytelling
+Deployment
+```
+
+CTA:
+
+```text
+View Case Study →
+```
+
+---
+
+## Work Page Motion
+
+Use scroll reveal motion:
+
+1. Work hero appears smoothly.
+2. X Dental featured horizontal card appears first.
+3. Houd El Nile card appears from bottom.
+4. Al Nours card appears from right.
+5. Al Baraka Olives card appears from bottom.
+6. CTA card appears from bottom.
+
+Keep movement smooth with premium easing.
+Do not make cards jump.
+Do not make animations too fast.
+
+---
+
+## Work CTA
+
+Add a compact CTA before the footer.
+
+Headline:
+
+```text
+Have a project that needs this level of care?
+```
+
+Supporting text:
+
+```text
+Let’s shape the strategy, design, system, and launch plan behind your next digital experience.
+```
+
+Buttons:
+
+```text
+Start a Project →
+Explore Services
+```
+
+Add subtle glowing border motion around the CTA card and small moving stars in the background.
+
+---
+
+# Page 2 — Services Page
+
+Create a premium Services page at:
+
+```text
+/services
+```
+
+The concept is:
+
+```text
+The Lux Studio Operating System
+```
+
+The page should show that Lux Studio does not offer disconnected services. It connects strategy, content, design, development, systems, and launch into one complete digital experience.
+
+---
+
+## Services Hero
+
+Content:
+
+```text
+Services
+Services built as one connected system.
+From strategy and content to UI/UX, development, dashboards, SEO, and launch support — every service is shaped to work together, not separately.
+Strategy · Design · Content · Development · Systems · Launch
+```
+
+Visual style:
+
+```text
+Dark cinematic background
+Stars on left and right edges moving slowly upward
+Soft blue/violet atmosphere
+Premium large typography
+```
+
+---
+
+## Operating System Overview
+
+Create a compact flow:
+
+```text
+Strategy → Content → Design → Development → Systems → Launch
+```
+
+Motion:
+
+```text
+Each word/node with its circle and line glows blue in sequence.
+Strategy glows first, then returns to normal.
+Then Content glows, then Design, etc.
+Loop slowly and elegantly.
+```
+
+Do not make it fast.
+
+---
+
+## Service Constellation Section
+
+This is a pinned scroll section.
+
+Services:
+
+```text
+01 Strategy & Direction
+02 UI/UX Design
+03 Brand & Content Experience
+04 Frontend Development
+05 Backend, CMS & Dashboards
+06 SEO, Performance & Launch
+```
+
+Each service panel should include:
+
+```text
+Number
+Title
+Short description
+What we handle
+Best for
+```
+
+Motion:
+
+```text
+Section pins.
+Each scroll step reveals the next service panel/card.
+Previous cards remain visible but become muted/grey.
+Active card has cyan/blue accent.
+The active card border has a subtle moving blue glow traveling around the stroke.
+```
+
+Keep the glow premium, not neon.
+
+---
+
+## Service Panel Content
+
+### 01 Strategy & Direction
+
+Description:
+
+```text
+We define the project purpose, audience, structure, and digital direction before designing screens or writing code.
+```
+
+What we handle:
+
+```text
+Discovery
+Website strategy
+User flows
+Content structure
+Feature planning
+Competitor review
+```
+
+Best for:
+
+```text
+Brands that need clarity before starting the design or build.
+```
+
+### 02 UI/UX Design
+
+Description:
+
+```text
+We design clear, premium interfaces that balance beauty, usability, responsiveness, and real development requirements.
+```
+
+What we handle:
+
+```text
+User experience
+Interface design
+Wireframes
+High-fidelity screens
+Design systems
+Responsive layouts
+```
+
+Best for:
+
+```text
+Businesses that need a polished experience users can understand and trust.
+```
+
+### 03 Brand & Content Experience
+
+Description:
+
+```text
+We shape the words, visuals, and creative direction that help the website feel aligned with the business behind it.
+```
+
+What we handle:
+
+```text
+Website content
+Visual direction
+Graphic assets
+Photography support
+Image editing
+Video editing
+Brand consistency
+```
+
+Best for:
+
+```text
+Projects that need more than layout — they need a complete visual and content experience.
+```
+
+### 04 Frontend Development
+
+Description:
+
+```text
+We build responsive, high-performance interfaces with clean structure, smooth interaction, and a premium experience across screen sizes.
+```
+
+What we handle:
+
+```text
+React / Next.js
+Responsive development
+Scroll motion
+Pinned storytelling sections
+Component systems
+Performance-focused UI
+```
+
+Best for:
+
+```text
+Websites that need to feel fast, modern, smooth, and ready for real users.
+```
+
+### 05 Backend, CMS & Dashboards
+
+Description:
+
+```text
+We build the systems behind the website so teams can manage content, products, users, requests, files, and business data.
+```
+
+What we handle:
+
+```text
+Backend logic
+Admin dashboards
+CMS platforms
+Product management
+API integrations
+Database structure
+Authentication
+```
+
+Best for:
+
+```text
+Businesses that need control, scalability, and real system functionality behind the website.
+```
+
+### 06 SEO, Performance & Launch
+
+Description:
+
+```text
+We prepare the website for launch with speed, responsiveness, SEO structure, accessibility, testing, deployment, and future support in mind.
+```
+
+What we handle:
+
+```text
+Technical SEO
+Performance checks
+Responsive testing
+Accessibility basics
+Deployment
+Hosting setup
+Future updates
+```
+
+Best for:
+
+```text
+Brands that want the website to look premium, load fast, and launch properly.
+```
+
+---
+
+## Connected Services Strip
+
+Content:
+
+```text
+One connected process, not disconnected tasks.
+Strategy → Content → Design → Development → Systems → Launch
+```
+
+Motion:
+
+```text
+Circle beside each name glows blue in order.
+Circle should have around 4px gap from the text.
+Each word and circle glow in sequence every 1 second.
+Loop slowly.
+Inactive items stay muted.
+```
+
+---
+
+## Engagement Types Section
+
+Cards:
+
+```text
+Website Build
+E-commerce Platform
+Brand + Website Experience
+Dashboard / CMS System
+```
+
+This should be a pinned reveal section.
+
+Motion:
+
+```text
+Section pins.
+First card is visible.
+On first scroll, second card appears from the left and lands beside first card with 16px gap.
+On second scroll, third card appears from bottom and lands below first card with 16px gap.
+On third scroll, fourth card appears from left and lands beside third card with 16px gap.
+Final layout becomes a 2x2 grid.
+```
+
+Cards should be glassmorphism with subtle blue glow.
+
+---
+
+## Engagement Card Content
+
+### Website Build
+
+```text
+For businesses that need a premium marketing website with strong structure, responsive design, motion, performance, and launch support.
+```
+
+Includes:
+
+```text
+Strategy
+UI/UX
+Frontend
+Content
+SEO
+Launch
+```
+
+### E-commerce Platform
+
+```text
+For brands that need a professional online store with product structure, browsing, cart, checkout, backend logic, and scalable content management.
+```
+
+Includes:
+
+```text
+UI/UX
+Frontend
+Backend
+Products
+Checkout
+Performance
+```
+
+### Brand + Website Experience
+
+```text
+For businesses that need visual direction, content, image editing, motion details, and a website experience that feels aligned with the brand.
+```
+
+Includes:
+
+```text
+Brand Direction
+Content
+Visual Assets
+UI/UX
+Frontend
+Motion
+```
+
+### Dashboard / CMS System
+
+```text
+For teams that need to manage content, requests, products, users, files, data, or internal workflows from a clear digital system.
+```
+
+Includes:
+
+```text
+Backend
+CMS
+Dashboard
+Database
+Authentication
+APIs
+```
+
+---
+
+## Services CTA
+
+Headline:
+
+```text
+Need the full system or only one layer?
+```
+
+Supporting text:
+
+```text
+Tell us what you want to build, and we will shape the right strategy, design, and technical direction around it.
+```
+
+Buttons:
+
+```text
+Start a Project →
+View Work
+```
+
+Add subtle glowing border motion around the CTA card and small moving stars in the background.
+
+---
+
+# Shared Footer for Both Pages
+
+Use the same footer already used on the Home page.
+
+If it does not exist as a reusable component, extract it into a reusable Footer component.
+
+Footer style:
+
+```text
+Deep dark blue panel
+Background: #06152D
+Rounded top corners only
+Full width
+Feels like it rises from the bottom of the website
+Small moving stars inside it
+Subtle glowing border/stroke if suitable
+```
+
+Footer content:
+
+```text
+Lux Studio
+Design. Build. Scale.
+Pages
+Capabilities
+Contact
+Large faint LUX STUDIO word
+© 2026 Lux Studio. All rights reserved.
+Designed and built by Lux Studio.
+```
+
+---
+
+# Responsiveness
+
+Make both pages responsive.
+
+Desktop:
+
+```text
+Large cinematic sections
+Side stars visible
+Pinned sections enabled
+Premium spacing
+```
+
+Tablet:
+
+```text
+Reduce headline sizes
+Keep animations lighter
+Make grids adapt cleanly
+```
+
+Mobile:
+
+```text
+Side stars become subtle
+Pinned sections should become normal stacked sections if needed
+No broken scroll behavior
+Cards stack vertically
+Marquees remain smooth or become static if reduced motion
+```
+
+---
+
+# Reduced Motion
+
+Respect `prefers-reduced-motion`.
+
+If reduced motion is enabled:
+
+```text
+Disable pinned scroll effects
+Disable meteors
+Disable continuous marquee motion
+Disable moving border glow
+Show all content statically and clearly
+```
+
+---
+
+# Final Requirement
+
+Do not change the existing Home page design or animation unless necessary for shared component consistency.
+
+The priority of this task is:
+
+```text
+1. Create /work page
+2. Create /services page
+3. Connect navbar links
+4. Reuse shared design system
+5. Add responsive behavior
+6. Add animations carefully
+```
+
+Make sure both pages exist and can be opened directly from the navbar.

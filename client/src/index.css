@@ -168,3 +168,67 @@
     transform: translateY(calc(-100% - var(--gap)));
   }
 }
+
+@keyframes meteor {
+  0% {
+    transform: translateX(0) translateY(0);
+    opacity: 0;
+  }
+  5% {
+    opacity: 1;
+  }
+  85% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateX(120vw) translateY(60vh);
+    opacity: 0;
+  }
+}
+
+@keyframes float-star {
+  0% {
+    transform: translateY(0px);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.4;
+  }
+  100% {
+    transform: translateY(-220px);
+    opacity: 0;
+  }
+}
+
+@keyframes glow-border-travel {
+  0% {
+    box-shadow: 0 0 8px 1px #38bdf840, inset 0 0 8px 1px transparent;
+  }
+  25% {
+    box-shadow: 8px 0 16px 2px #38bdf850, inset 0 0 8px 1px transparent;
+  }
+  50% {
+    box-shadow: 0 0 8px 1px #38bdf840, inset 0 0 8px 1px transparent;
+  }
+  75% {
+    box-shadow: -8px 0 16px 2px #38bdf850, inset 0 0 8px 1px transparent;
+  }
+  100% {
+    box-shadow: 0 0 8px 1px #38bdf840, inset 0 0 8px 1px transparent;
+  }
+}
+
+.animate-meteor {
+  animation: meteor 3s ease-in-out infinite;
+}
+
+.animate-float-star {
+  animation: float-star var(--duration, 4s) var(--delay, 0s) linear infinite;
+}
+
+.animate-glow-border {
+  animation: glow-border-travel 3s ease-in-out infinite;
+}

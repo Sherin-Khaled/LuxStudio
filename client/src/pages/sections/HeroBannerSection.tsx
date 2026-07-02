@@ -1,6 +1,13 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "wouter";
 
-const navItems = ["Work", "Services", "Process", "About", "Contact"];
+const navLinks = [
+  { label: "Work", href: "/work" },
+  { label: "Services", href: "/services" },
+  { label: "Process", href: null },
+  { label: "About", href: null },
+  { label: "Contact", href: null },
+];
 
 export const HeroBannerSection = (): JSX.Element => {
   return (
@@ -24,21 +31,27 @@ export const HeroBannerSection = (): JSX.Element => {
             className="mx-auto flex w-full max-w-[1407px] items-center justify-between rounded-2xl border border-[#ffffff1f] bg-[#03050a70] px-4 py-3 shadow-[0px_4px_28px_#00000059] backdrop-blur-sm sm:px-7"
             aria-label="Main navigation"
           >
-            <a
-              href="#"
+            <Link
+              href="/"
               className="relative w-fit mt-[-1.00px] [font-family:'Bricolage_Grotesque',Helvetica] text-[17px] font-semibold leading-[25.5px] tracking-[-0.43px] text-[#f5f7fa] whitespace-nowrap"
             >
               Lux Studio
-            </a>
+            </Link>
             <ul className="hidden items-center gap-8 md:flex">
-              {navItems.map((item) => (
-                <li key={item}>
-                  <button
-                    type="button"
-                    className="relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0.13px] text-[#f5f7faad] whitespace-nowrap transition-colors hover:text-[#f5f7fa]"
-                  >
-                    {item}
-                  </button>
+              {navLinks.map((item) => (
+                <li key={item.label}>
+                  {item.href ? (
+                    <Link
+                      href={item.href}
+                      className="relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0.13px] text-[#f5f7faad] whitespace-nowrap transition-colors hover:text-[#f5f7fa]"
+                    >
+                      {item.label}
+                    </Link>
+                  ) : (
+                    <span className="relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0.13px] text-[#f5f7fa38] whitespace-nowrap cursor-default">
+                      {item.label}
+                    </span>
+                  )}
                 </li>
               ))}
             </ul>
