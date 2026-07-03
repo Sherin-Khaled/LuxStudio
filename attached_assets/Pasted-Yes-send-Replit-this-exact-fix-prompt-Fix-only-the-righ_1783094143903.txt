@@ -1,0 +1,69 @@
+Yes — send Replit this exact fix prompt:
+
+---
+
+**Fix only the right-side blue glow / blur circle in the Studio Manifesto section. Do not change anything else.**
+
+### Problem
+
+The blue glow circle on the right side is:
+
+* cropped / cut off
+* not floating naturally
+* the color changed from what we want
+
+### Required fix
+
+I want the right-side glow to be:
+
+* **Color:** `#2664FF`
+* **Opacity:** `25%`
+* It should look like a **soft floating blur glow**
+* It should **not be cropped**
+* It should feel like it is extending naturally beyond the section edge
+* It should stay **behind the content**
+* It should not cover text
+* It should not look like a hard-edged square or rectangle
+
+### Important technical notes
+
+* Check if a parent wrapper has `overflow: hidden` and is clipping the glow.
+* If yes, move the glow into a wrapper that allows it to extend naturally, or place it in a background layer that is not clipped incorrectly.
+* Keep the glow positioned on the **right side** of the section.
+* The glow should be large and soft, with a premium floating look.
+
+### Preferred implementation
+
+Use something like this:
+
+```tsx
+<div
+  className="pointer-events-none absolute right-[-10%] bottom-[8%] h-[520px] w-[520px] rounded-full blur-[140px] z-0"
+  style={{ backgroundColor: 'rgba(38, 100, 255, 0.25)' }}
+/>
+```
+
+### If it is still cropped
+
+Try:
+
+* increasing negative right offset
+* moving it slightly lower
+* making sure the section background layer allows visible overflow where needed
+* keeping the actual content wrapper above it with higher z-index
+
+### Final result should be
+
+* a **soft premium blue glow**
+* exact brand color feeling
+* **#2664FF at 25% opacity**
+* floating on the right side
+* not cropped
+* not square
+* not covering text
+
+**Do not edit the text, layout, animation timing, or other sections. Fix only this glow.**
+
+---
+
+If you want, I can also write you a **shorter version** for Replit, because sometimes shorter prompts work better with it.

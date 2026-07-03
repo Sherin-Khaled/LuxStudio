@@ -232,3 +232,8 @@
 .animate-glow-border {
   animation: glow-border-travel 3s ease-in-out infinite;
 }
+
+/* Allow GSAP pin-spacer to show overflow so decorative glows are not hard-cropped */
+.pin-spacer {
+  overflow: visible !important;
+}

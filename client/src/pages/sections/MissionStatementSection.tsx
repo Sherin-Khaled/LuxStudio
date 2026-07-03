@@ -68,7 +68,8 @@ export const MissionStatementSection = (): JSX.Element => {
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-[-18%] right-[-12%] h-[560px] w-[560px] rounded-full bg-cyan-500/20 blur-[130px]"
+        className="pointer-events-none absolute bottom-[5%] right-[-10%] h-[560px] w-[560px] rounded-full blur-[140px]"
+        style={{ backgroundColor: "rgba(38, 100, 255, 0.25)" }}
       />
 
       {/* ── Content ── */}
