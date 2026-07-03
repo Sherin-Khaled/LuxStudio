@@ -5,27 +5,6 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const principles = [
-  {
-    id: "P.01",
-    title: "Strategy before screens",
-    description:
-      "We define the purpose, audience, and experience before designing the interface.",
-  },
-  {
-    id: "P.02",
-    title: "Design that can actually be built",
-    description:
-      "We create interfaces with responsiveness, performance, and development in mind.",
-  },
-  {
-    id: "P.03",
-    title: "Systems prepared to scale",
-    description:
-      "We build digital foundations that can grow into dashboards, CMS platforms, integrations, and larger business systems.",
-  },
-];
-
 export const MissionStatementSection = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
 
@@ -50,42 +29,27 @@ export const MissionStatementSection = (): JSX.Element => {
     const pts = [p1Ref.current, p2Ref.current, p3Ref.current];
 
     const ctx = gsap.context(() => {
-      // Hide all points before animation starts
-      gsap.set(pts, { opacity: 0, y: 48, filter: "blur(8px)" });
+      // Use autoAlpha (visibility + opacity together) so elements are truly invisible
+      gsap.set(pts, { autoAlpha: 0, y: 56, filter: "blur(10px)" });
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=220%",
+          end: "+=300%",      // long enough: next section stays hidden until all 3 points appear
           scrub: 1,
           pin: true,
+          pinSpacing: true,   // GSAP adds a spacer — no early overlap
           anticipatePin: 1,
+          invalidateOnRefresh: true,
         },
       });
 
-      // Reveal each point in sequence, scroll-controlled
-      tl.to(p1Ref.current, {
-        opacity: 1,
-        y: 0,
-        filter: "blur(0px)",
-        duration: 1,
-        ease: "none",
-      })
-        .to(p2Ref.current, {
-          opacity: 1,
-          y: 0,
-          filter: "blur(0px)",
-          duration: 1,
-          ease: "none",
-        })
-        .to(p3Ref.current, {
-          opacity: 1,
-          y: 0,
-          filter: "blur(0px)",
-          duration: 1,
-          ease: "none",
-        });
+      tl
+        .to(p1Ref.current, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" })
+        .to(p2Ref.current, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" })
+        .to(p3Ref.current, { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" })
+        .to({}, { duration: 0.6 }); // brief hold so all 3 points are visible before unpin
     }, sectionRef);
 
     return () => ctx.revert();
@@ -97,14 +61,14 @@ export const MissionStatementSection = (): JSX.Element => {
       className="relative w-full bg-[#03050a] bg-[url(/figmaAssets/backgroundstars.svg)] bg-[100%_100%]"
       aria-labelledby="mission-statement-heading"
     >
-      {/* ── Glow decorations — direct section children, NOT inside overflow-hidden ── */}
+      {/* ── Glow decorations (direct section children, no overflow-hidden parent) ── */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute left-[-40px] top-[182px] h-[340px] w-[340px] rounded-full bg-[#70d7ff1c] blur-[80px]"
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-[-20%] right-[-10%] h-[520px] w-[520px] rounded-full bg-cyan-500/20 blur-[120px]"
+        className="pointer-events-none absolute bottom-[-18%] right-[-12%] h-[560px] w-[560px] rounded-full bg-cyan-500/20 blur-[130px]"
       />
 
       {/* ── Content ── */}
@@ -124,7 +88,7 @@ export const MissionStatementSection = (): JSX.Element => {
             </h2>
           </header>
 
-          {/* Right — intro + scroll-revealed points */}
+          {/* Right — intro paragraph + scroll-revealed points */}
           <aside className="flex w-full flex-col justify-center justify-self-start lg:pt-4">
             <p className="[font-family:'Inter',Helvetica] text-[15px] font-normal leading-[27px] tracking-[0] text-[#f5f7faa6] md:text-[17px] md:leading-[29px]">
               We combine strategy, design, content, development, and technology
@@ -132,11 +96,13 @@ export const MissionStatementSection = (): JSX.Element => {
               efficiently, and grow with the businesses behind them.
             </p>
 
-            {/* Principles list */}
+            {/* Principles — hidden initially (GSAP sets autoAlpha: 0) */}
             <div className="mt-10 flex flex-col border-t border-white/10">
+
+              {/* P.01 */}
               <article
                 ref={p1Ref as Ref<HTMLElement>}
-                className="w-full border-b border-white/10 pb-[22px] pt-5"
+                className="w-full border-b border-white/10 pb-5 pt-5"
               >
                 <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-normal leading-[15px] tracking-[1px] text-[#70d7ff99]">
                   P.01
@@ -144,15 +110,18 @@ export const MissionStatementSection = (): JSX.Element => {
                 <h3 className="pt-[7px] [font-family:'Bricolage_Grotesque',Helvetica] text-[20px] font-medium leading-[24px] tracking-[-0.28px] text-[#f5f7fa]">
                   Strategy before screens
                 </h3>
-                <p className="pt-[7px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[22px] tracking-[0] text-[#f5f7fa99]">
-                  We define the purpose, audience, and experience before
-                  designing the interface.
+                <p className="pt-[6px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[22px] tracking-[0] text-[#f5f7fa99]">
+                  We define the purpose, audience, and experience before designing the interface.
+                </p>
+                <p className="pt-[5px] [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[20px] tracking-[0] text-[#f5f7fa52]">
+                  Every project starts with understanding the business, the audience, the offer, and the result the website or system needs to achieve.
                 </p>
               </article>
 
+              {/* P.02 */}
               <article
                 ref={p2Ref as Ref<HTMLElement>}
-                className="w-full border-b border-white/10 pb-[22px] pt-5"
+                className="w-full border-b border-white/10 pb-5 pt-5"
               >
                 <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-normal leading-[15px] tracking-[1px] text-[#70d7ff99]">
                   P.02
@@ -160,15 +129,18 @@ export const MissionStatementSection = (): JSX.Element => {
                 <h3 className="pt-[7px] [font-family:'Bricolage_Grotesque',Helvetica] text-[20px] font-medium leading-[24px] tracking-[-0.28px] text-[#f5f7fa]">
                   Design that can actually be built
                 </h3>
-                <p className="pt-[7px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[22px] tracking-[0] text-[#f5f7fa99]">
-                  We create interfaces with responsiveness, performance, and
-                  development in mind.
+                <p className="pt-[6px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[22px] tracking-[0] text-[#f5f7fa99]">
+                  We create interfaces with responsiveness, performance, and development in mind.
+                </p>
+                <p className="pt-[5px] [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[20px] tracking-[0] text-[#f5f7fa52]">
+                  The design is shaped to look premium, work across screen sizes, and translate cleanly into real frontend code without losing quality.
                 </p>
               </article>
 
+              {/* P.03 */}
               <article
                 ref={p3Ref as Ref<HTMLElement>}
-                className="w-full border-b border-white/10 pb-[22px] pt-5"
+                className="w-full border-b border-white/10 pb-5 pt-5"
               >
                 <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-normal leading-[15px] tracking-[1px] text-[#70d7ff99]">
                   P.03
@@ -176,9 +148,11 @@ export const MissionStatementSection = (): JSX.Element => {
                 <h3 className="pt-[7px] [font-family:'Bricolage_Grotesque',Helvetica] text-[20px] font-medium leading-[24px] tracking-[-0.28px] text-[#f5f7fa]">
                   Systems prepared to scale
                 </h3>
-                <p className="pt-[7px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[22px] tracking-[0] text-[#f5f7fa99]">
-                  We build digital foundations that can grow into dashboards,
-                  CMS platforms, integrations, and larger business systems.
+                <p className="pt-[6px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[22px] tracking-[0] text-[#f5f7fa99]">
+                  We build digital foundations that can grow into dashboards, CMS platforms, integrations, and larger business systems.
+                </p>
+                <p className="pt-[5px] [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[20px] tracking-[0] text-[#f5f7fa52]">
+                  The website is treated as a foundation that can later connect with backend logic, admin panels, product management, APIs, content systems, and business tools.
                 </p>
               </article>
             </div>

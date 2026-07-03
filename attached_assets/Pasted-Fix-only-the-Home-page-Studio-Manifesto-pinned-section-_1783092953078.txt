@@ -1,0 +1,360 @@
+Fix only the **Home page Studio Manifesto pinned section**.
+
+Do not edit the Hero.
+Do not edit the What We Create section design.
+Do not redesign the homepage.
+Do not change the section content or typography unless required for the pinning fix.
+
+The current problem:
+
+* Point 01 starts appearing with a blur effect, which is good.
+* But before Point 01 becomes fully clear, and before Point 02 and Point 03 appear, the next section **What We Create** already starts entering.
+* This is wrong.
+
+The **What We Create** section must not appear until all three manifesto points have appeared completely.
+
+---
+
+# Required Behavior
+
+The Studio Manifesto section must work like this:
+
+1. User reaches the Studio Manifesto section.
+2. The section pins and stays fixed.
+3. The large headline and supporting paragraph are visible.
+4. Point 01 starts hidden.
+5. User scrolls inside the pinned section.
+6. Point 01 appears from bottom with blur-to-clear effect.
+7. User scrolls more.
+8. Point 02 appears below Point 01 with blur-to-clear effect.
+9. User scrolls more.
+10. Point 03 appears below Point 02 with blur-to-clear effect.
+11. All three points remain visible.
+12. Only after all three points are fully visible, the section unpins.
+13. Then, and only then, the **What We Create** section appears.
+
+The next section must not overlap, show early, slide in early, or appear behind the pinned section.
+
+---
+
+# Important Technical Fix
+
+The issue is likely caused by one of these:
+
+* ScrollTrigger `end` is too short
+* `pinSpacing: false` is being used incorrectly
+* the next section is positioned too close or overlapping
+* the pinned section does not reserve enough scroll distance
+* the timeline completes too late compared to the pin duration
+
+For this Studio Manifesto section, use:
+
+```ts
+pin: true
+pinSpacing: true
+anticipatePin: 1
+scrub: true
+end: "+=300%"
+```
+
+Do **not** use `pinSpacing: false` for this section.
+
+The pinned section must reserve enough scroll space so the next section waits until the reveal timeline is complete.
+
+---
+
+# Correct ScrollTrigger Setup
+
+Use GSAP ScrollTrigger like this structure:
+
+```ts
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: manifestoSectionRef.current,
+    start: "top top",
+    end: "+=300%",
+    scrub: 1,
+    pin: true,
+    pinSpacing: true,
+    anticipatePin: 1,
+    invalidateOnRefresh: true,
+  },
+});
+```
+
+The `end` must be long enough for all three points.
+
+Recommended:
+
+```text
+end: "+=300%"
+```
+
+Acceptable range:
+
+```text
+"+=280%" to "+=340%"
+```
+
+Do not use less than `+=260%`.
+
+---
+
+# Point Reveal Timing
+
+The timeline should reveal points in sequence.
+
+Use this logic:
+
+```ts
+gsap.set([point1, point2, point3], {
+  autoAlpha: 0,
+  y: 56,
+  filter: "blur(10px)",
+});
+
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: manifestoSectionRef.current,
+    start: "top top",
+    end: "+=300%",
+    scrub: 1,
+    pin: true,
+    pinSpacing: true,
+    anticipatePin: 1,
+    invalidateOnRefresh: true,
+  },
+});
+
+tl.to(point1, {
+  autoAlpha: 1,
+  y: 0,
+  filter: "blur(0px)",
+  duration: 1,
+  ease: "none",
+})
+.to(point2, {
+  autoAlpha: 1,
+  y: 0,
+  filter: "blur(0px)",
+  duration: 1,
+  ease: "none",
+})
+.to(point3, {
+  autoAlpha: 1,
+  y: 0,
+  filter: "blur(0px)",
+  duration: 1,
+  ease: "none",
+})
+.to({}, { duration: 0.6 });
+```
+
+The final empty duration is intentional. It gives the user a short moment to see all three points fully visible before the section unpins.
+
+---
+
+# Point Content
+
+Use these exact points.
+
+## Point 01
+
+Label:
+
+**P.01**
+
+Title:
+
+**Strategy before screens**
+
+Description:
+
+**We define the purpose, audience, and experience before designing the interface.**
+
+Extended meaning:
+
+**Every project starts with understanding the business, the audience, the offer, and the result the website or system needs to achieve.**
+
+---
+
+## Point 02
+
+Label:
+
+**P.02**
+
+Title:
+
+**Design that can actually be built**
+
+Description:
+
+**We create interfaces with responsiveness, performance, and development in mind.**
+
+Extended meaning:
+
+**The design is shaped to look premium, work across screen sizes, and translate cleanly into real frontend code without losing quality.**
+
+---
+
+## Point 03
+
+Label:
+
+**P.03**
+
+Title:
+
+**Systems prepared to scale**
+
+Description:
+
+**We build digital foundations that can grow into dashboards, CMS platforms, integrations, and larger business systems.**
+
+Extended meaning:
+
+**The website is treated as a foundation that can later connect with backend logic, admin panels, product management, APIs, content systems, and business tools.**
+
+---
+
+# Initial State
+
+When the section first pins:
+
+* headline is visible
+* supporting paragraph is visible
+* CTA link can be visible
+* Point 01 is hidden
+* Point 02 is hidden
+* Point 03 is hidden
+* What We Create is not visible yet
+
+Do not show any manifesto point until the user scrolls inside the pinned section.
+
+---
+
+# Final State Before Unpin
+
+Before the section unpins:
+
+* Point 01 is fully visible
+* Point 02 is fully visible
+* Point 03 is fully visible
+* no point is blurred
+* no point is cropped
+* all text is readable
+* the user gets a short moment to see the full list
+
+Only after this should the page continue to **What We Create**.
+
+---
+
+# Layout Rules
+
+Keep the final layout like the approved design:
+
+Left side:
+
+```text
+We do not just make websites.
+We create digital systems that move brands forward.
+```
+
+Right side:
+
+```text
+Supporting paragraph
+P.01
+P.02
+P.03
+Discover Our Approach →
+```
+
+The right-side points should stack vertically and stay in their final place after appearing.
+
+Make sure the right-side container has enough height so the appearing points do not push the next section into view.
+
+---
+
+# Prevent Next Section Overlap
+
+The **What We Create** section must stay below the pinned section in normal document flow.
+
+Do not position it absolute.
+
+Do not move it upward.
+
+Do not make it overlap the pinned manifesto section.
+
+Do not use negative margin to pull it up.
+
+Do not reveal it during the manifesto pin.
+
+The What We Create section should begin only after ScrollTrigger releases the pinned manifesto section.
+
+---
+
+# Blue Glow Fix
+
+Also make sure the blue glow on the right is not cropped.
+
+If needed:
+
+```tsx
+<div className="pointer-events-none absolute right-[-12%] bottom-[-18%] h-[560px] w-[560px] rounded-full bg-cyan-500/20 blur-[130px]" />
+```
+
+Important:
+
+* glow behind content
+* no hard cropped edge
+* no square cutoff
+* no covering text
+
+If a parent has `overflow-hidden`, move the glow into an overflow-visible background wrapper.
+
+---
+
+# Reduced Motion
+
+If `prefers-reduced-motion` is enabled:
+
+* disable pinning
+* show all three points immediately
+* do not animate blur
+* keep the section readable
+* no overlap with the next section
+
+---
+
+# Mobile Behavior
+
+On mobile:
+
+* avoid heavy pinning if it breaks scroll
+* show the points stacked normally
+* reveal them with simple fade-up or show statically
+* no overlap with the next section
+* no huge blank gap
+
+---
+
+# Test Checklist
+
+After fixing, test carefully:
+
+1. The manifesto section pins.
+2. What We Create does not appear early.
+3. Point 01 appears fully before Point 02 starts.
+4. Point 02 appears fully before Point 03 starts.
+5. Point 03 appears fully.
+6. All three points remain visible.
+7. The user can see all three points for a short moment.
+8. Only then the section unpins.
+9. Then What We Create appears.
+10. No overlap.
+11. No giant blank area.
+12. Blue glow is not cropped.
+
+Only fix this Studio Manifesto pinned section.
