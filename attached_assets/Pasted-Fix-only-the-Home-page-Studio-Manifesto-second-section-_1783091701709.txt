@@ -1,0 +1,286 @@
+Fix only the **Home page Studio Manifesto / second section**.
+
+Do not edit the Hero section now.
+Do not redesign the whole homepage.
+Do not change the sections after this one.
+
+The current second section has the right visual direction, but the scroll behavior and background glow need to be fixed.
+
+---
+
+# 1. Section Goal
+
+This section should explain Lux Studio’s manifesto:
+
+**We do not just make websites. We create digital systems that move brands forward.**
+
+The right-side points should appear one by one while the section is pinned.
+
+This section should feel premium, cinematic, and scroll-controlled.
+
+---
+
+# 2. Keep the Current Content
+
+Keep the current section content.
+
+Main headline:
+
+```text
+We do not just make websites. We create digital systems that move brands forward.
+```
+
+Paragraph:
+
+```text
+We combine strategy, design, content, development, and technology to create digital experiences that look premium, perform efficiently, and grow with the businesses behind them.
+```
+
+Points:
+
+```text
+P.01 Strategy before screens
+We define the purpose, audience, and experience before designing the interface.
+
+P.02 Design that can actually be built
+We create interfaces with responsiveness, performance, and development in mind.
+
+P.03 Systems prepared to scale
+We build digital foundations that can grow into dashboards, CMS platforms, integrations, and larger business systems.
+```
+
+CTA link:
+
+```text
+Discover Our Approach →
+```
+
+---
+
+# 3. Required Scroll Behavior
+
+This section must be a **pinned scroll section**.
+
+When the user reaches this section:
+
+1. The section pins.
+2. The headline and paragraph are visible.
+3. The right-side points should **not all be visible immediately**.
+4. Point 01 appears only after the user starts scrolling inside the pinned section.
+5. Point 02 appears after more scroll.
+6. Point 03 appears after more scroll.
+7. Previous points stay visible.
+8. Previous points should not disappear.
+9. When all 3 points are visible, the section unpins and the page continues normally.
+
+The points should appear from bottom to their final place.
+
+Use this animation style for each point:
+
+```text
+opacity: 0 → 1
+y: 48px → 0
+filter blur: 8px → 0px
+duration: scroll-controlled
+```
+
+Do not make the points appear by time.
+
+They must appear by scrolling.
+
+---
+
+# 4. Correct Initial State
+
+When the section first enters the viewport:
+
+* headline is visible
+* paragraph is visible
+* right-side intro paragraph can be visible
+* Point 01, Point 02, and Point 03 should start hidden
+
+Then each point appears with scroll progress.
+
+Do not show Point 01 immediately before the user starts scrolling inside the pinned section.
+
+---
+
+# 5. GSAP ScrollTrigger Behavior
+
+Use GSAP ScrollTrigger for this section.
+
+Recommended structure:
+
+```tsx
+<section ref={manifestoSectionRef} className="relative min-h-screen overflow-visible">
+  <div className="manifesto-inner">
+    <div className="manifesto-left">...</div>
+    <div className="manifesto-right">
+      <div ref={point1Ref}>...</div>
+      <div ref={point2Ref}>...</div>
+      <div ref={point3Ref}>...</div>
+    </div>
+  </div>
+</section>
+```
+
+Recommended ScrollTrigger setup:
+
+```ts
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: manifestoSectionRef.current,
+    start: "top top",
+    end: "+=220%",
+    scrub: true,
+    pin: true,
+    anticipatePin: 1,
+  },
+});
+
+tl.fromTo(point1Ref.current, 
+  { opacity: 0, y: 48, filter: "blur(8px)" },
+  { opacity: 1, y: 0, filter: "blur(0px)", duration: 1 }
+)
+.fromTo(point2Ref.current,
+  { opacity: 0, y: 48, filter: "blur(8px)" },
+  { opacity: 1, y: 0, filter: "blur(0px)", duration: 1 }
+)
+.fromTo(point3Ref.current,
+  { opacity: 0, y: 48, filter: "blur(8px)" },
+  { opacity: 1, y: 0, filter: "blur(0px)", duration: 1 }
+);
+```
+
+Keep the timing smooth and balanced.
+
+Do not make the section pin too long.
+
+Recommended scroll length:
+
+```text
+200vh–240vh
+```
+
+Do not exceed 260vh.
+
+---
+
+# 6. Point Styling
+
+When a point appears, it should become clear and premium.
+
+Active/new point style:
+
+```text
+Title: white
+Body: muted white
+Small P.01/P.02/P.03 label: subtle cyan/blue
+Divider line: rgba(255,255,255,0.12)
+```
+
+Previous points should remain visible.
+
+Optional: after the next point appears, previous points can become slightly muted, but they should not disappear.
+
+Recommended previous point opacity:
+
+```text
+0.72–0.82
+```
+
+---
+
+# 7. Fix the Cropped Blue Glow
+
+The blue glow on the right side is currently cropped.
+
+Fix it.
+
+The glow should feel like a floating atmosphere behind the right column, not a hard cropped rectangle.
+
+Use:
+
+```text
+overflow-visible
+```
+
+on the section wrapper or the glow wrapper.
+
+The glow should be positioned as an absolute decorative background layer:
+
+```tsx
+<div className="pointer-events-none absolute right-[-10%] bottom-[-20%] h-[520px] w-[520px] rounded-full bg-cyan-500/20 blur-[120px]" />
+```
+
+Important:
+
+* the glow must be behind content
+* it must not cover text
+* it must not be clipped by the section container
+* it should fade softly into the dark background
+* no visible hard edge or square crop
+
+If a parent wrapper uses `overflow-hidden`, move the glow outside that clipped wrapper or make a separate `overflow-visible` background layer.
+
+---
+
+# 8. Layout Requirements
+
+Keep the layout close to the current design:
+
+Desktop:
+
+```text
+Left side: huge editorial headline
+Right side: paragraph + points
+```
+
+The final state should look like the reference screenshot where all three points are visible below each other.
+
+The section should not become too crowded.
+
+Keep premium spacing.
+
+---
+
+# 9. Reduced Motion
+
+Respect `prefers-reduced-motion`.
+
+If reduced motion is enabled:
+
+* do not pin the section
+* show all three points immediately
+* disable scroll-triggered point reveal
+* keep the layout static and readable
+
+---
+
+# 10. Mobile Behavior
+
+On mobile:
+
+* do not use heavy pinned scroll if it causes issues
+* stack the headline and points vertically
+* reveal points normally on scroll, or show them statically
+* avoid broken scroll behavior
+
+---
+
+# 11. Test Checklist
+
+After fixing, test:
+
+1. The section pins when it reaches the viewport.
+2. No point is visible before scrolling inside the pinned section.
+3. Point 01 appears from bottom on scroll.
+4. Point 02 appears below Point 01 on further scroll.
+5. Point 03 appears below Point 02 on further scroll.
+6. Previous points remain visible.
+7. The section unpins only after all points are visible.
+8. The blue glow is not cropped.
+9. No huge blank gap is created before or after this section.
+10. Mobile does not break.
+
+Only fix this second section for now.
