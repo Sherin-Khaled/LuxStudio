@@ -1,0 +1,314 @@
+Fix only the **Home Hero scroll transition and Hero stars**.
+
+Do not redesign the whole website.
+Do not change the navbar.
+Do not change sections after the Capabilities Marquee except where needed to connect the transition.
+Do not remove the shooting stars because they are already working.
+Do not remove the “Scroll to Explore” indicator.
+
+The current problems are:
+
+1. The shooting stars work, but the **side stars on the left and right edges are not visible**.
+2. The Hero scroll transition is wrong.
+3. There is a huge empty black area between the Hero and the Capabilities Marquee.
+4. The intended behavior is a premium smooth push/reveal transition like a cinematic scroll experience, not a blank pinned gap.
+
+---
+
+# 1. Fix the Side Stars
+
+Add visible animated side stars on the **left and right edges** of the Hero.
+
+They must appear above the hero background image and dark overlay, but below the text/buttons.
+
+Correct layer order:
+
+```text
+Hero background image
+Dark gradient overlays
+Side stars layer
+Shooting stars layer
+Hero text/buttons/scroll indicator
+Navbar
+```
+
+Create or fix a component:
+
+```text
+SideStars
+```
+
+The side stars should be placed in two edge containers:
+
+```tsx
+<div className="hero-side-stars hero-side-stars-left" />
+<div className="hero-side-stars hero-side-stars-right" />
+```
+
+Style rules:
+
+```text
+position: absolute
+top: 0
+bottom: 0
+width: 120px–180px desktop
+pointer-events: none
+z-index: above overlays, below content
+overflow: hidden
+```
+
+Left stars:
+
+```text
+left: 0
+```
+
+Right stars:
+
+```text
+right: 0
+```
+
+Star visual:
+
+```text
+small white/cyan dots
+opacity between 0.25 and 0.75
+some larger stars at 2px–3px
+most stars at 1px
+subtle glow
+```
+
+Animation:
+
+```text
+slow vertical drift upward
+different speeds
+subtle opacity pulsing
+no fast movement
+```
+
+Important:
+
+* The stars must be visible on the left and right edges.
+* They should not cover the hero text.
+* They should not appear only at the center.
+* They should not be hidden behind the background image.
+* They should not be black in dark mode.
+* Use white/cyan stars in dark mode.
+
+If the existing star component is not visible, check:
+
+```text
+z-index
+opacity
+mix-blend-mode
+positioning
+parent overflow
+parent height
+color
+dark overlay covering stars
+```
+
+---
+
+# 2. Remove the Huge Black Gap
+
+There must not be a huge blank black area between the Hero and the next section.
+
+The next visible section after the Hero should be the Capabilities Marquee / strip.
+
+Fix the layout so the Hero transition ends directly into the next section.
+
+Check and remove or reduce any accidental:
+
+```text
+extra min-height
+empty spacer div
+pin-spacer with wrong height
+padding-top / margin-top
+ScrollTrigger end value too large
+blank transition section
+unnecessary 100vh black block
+```
+
+The black gap should not exist.
+
+---
+
+# 3. Correct Hero Scroll Transition
+
+The intended transition is:
+
+* Hero starts full screen.
+* User scrolls.
+* Hero feels like it is being gently pushed / dragged upward.
+* Hero content moves upward slightly and fades softly.
+* Hero background image scales slightly and moves upward.
+* The Capabilities Marquee / next section rises from the bottom.
+* The next section becomes visible gradually.
+* No blank gap appears.
+* Normal scrolling continues after the transition.
+
+This should feel premium and cinematic.
+
+Do not create a hard snap.
+
+Do not create a long empty pinned area.
+
+---
+
+# 4. Preferred ScrollTrigger Implementation
+
+Use GSAP ScrollTrigger only for this Hero transition.
+
+Create a wrapper like:
+
+```tsx
+<section ref={heroWrapperRef} className="relative min-h-screen overflow-hidden">
+  <Hero />
+</section>
+
+<section ref={nextSectionRef} className="relative z-20">
+  <CapabilitiesMarquee />
+</section>
+```
+
+Better option:
+
+Create one transition wrapper:
+
+```tsx
+<div ref={heroTransitionRef} className="relative">
+  <section ref={heroRef} className="hero-section min-h-screen sticky/pinned">
+    ...
+  </section>
+
+  <section ref={nextRef} className="capabilities-section">
+    ...
+  </section>
+</div>
+```
+
+But do not create an extra blank 100vh section.
+
+Recommended ScrollTrigger:
+
+```ts
+gsap.timeline({
+  scrollTrigger: {
+    trigger: heroTransitionRef.current,
+    start: "top top",
+    end: "+=100%",
+    scrub: true,
+    pin: heroRef.current,
+    pinSpacing: false,
+  }
+})
+```
+
+Important:
+
+Use `pinSpacing: false` or carefully manage the spacer so it does not create a huge blank black gap.
+
+Animate:
+
+```ts
+heroContent: y -100, opacity 0.55
+heroBackground: scale 1.06, y -60
+scrollIndicator: opacity 0
+nextSection: y 120 to 0, opacity 0 to 1
+```
+
+The next section should rise into place during the scroll.
+
+Recommended values:
+
+```text
+Hero content y: 0 → -100px
+Hero content opacity: 1 → 0.55
+Hero background scale: 1 → 1.06
+Hero background y: 0 → -60px
+Next section y: 120px → 0
+Next section opacity: 0 → 1
+Scroll indicator opacity: 1 → 0
+Scroll distance: 100vh to 120vh maximum
+```
+
+Do not use 200vh+ for this transition.
+
+---
+
+# 5. Capabilities Marquee Position
+
+The Capabilities Marquee should appear immediately after the Hero transition.
+
+During the transition, it should rise from the bottom.
+
+At the end of the transition, it should sit naturally in the page flow.
+
+No large gap.
+
+No empty black block.
+
+No detached strip floating too far below.
+
+---
+
+# 6. Keep Shooting Stars
+
+The shooting stars are already working.
+
+Keep them, but make sure:
+
+* they appear below the main text area
+* they do not overlap the headline too much
+* they are above the background and below the text/buttons
+* they are subtle and premium
+* they still appear around every 3 seconds
+
+Do not create too many shooting stars.
+
+---
+
+# 7. Reduced Motion
+
+If `prefers-reduced-motion` is enabled:
+
+* disable Hero pinning
+* disable side star movement
+* disable shooting stars
+* show static stars only
+* allow normal scrolling
+* no giant black gap
+
+---
+
+# 8. Mobile Behavior
+
+On mobile:
+
+* do not use complicated pinning if it causes scroll issues
+* use a simple fade/up transition
+* keep side stars more subtle
+* keep shooting stars fewer or disabled if performance is weak
+* absolutely no huge blank gap
+
+---
+
+# 9. Test Checklist
+
+After fixing, test this:
+
+1. Hero fills the first screen correctly.
+2. Side stars are visible on the left and right edges.
+3. Shooting stars still work.
+4. Scroll indicator is still visible.
+5. When scrolling, the Hero moves upward smoothly.
+6. The Capabilities Marquee appears from the bottom.
+7. There is no huge black gap.
+8. The transition feels premium and smooth.
+9. Mobile scroll does not break.
+10. No other homepage sections are redesigned.
+
+Only fix the Hero transition and side stars for now.

@@ -1,3 +1,4 @@
+import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 
 const expertiseItems = [
@@ -16,10 +17,16 @@ const repeatedExpertiseItems = Array.from(
 ).flat();
 
 export const ExpertiseHighlightsSection = (): JSX.Element => {
+  const reduced = useReducedMotion();
+
   return (
-    <section
+    <motion.section
       aria-label="Expertise highlights"
       className="relative w-full overflow-hidden border-y border-[#ffffff24] bg-[#03050a]"
+      initial={reduced ? false : { opacity: 0, y: 64 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-40px" }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
     >
       <Card className="h-auto w-full rounded-none border-0 bg-transparent shadow-none">
         <CardContent className="relative p-0">
@@ -53,6 +60,6 @@ export const ExpertiseHighlightsSection = (): JSX.Element => {
           </div>
         </CardContent>
       </Card>
-    </section>
+    </motion.section>
   );
 };
