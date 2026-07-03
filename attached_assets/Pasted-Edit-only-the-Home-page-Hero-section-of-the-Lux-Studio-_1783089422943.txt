@@ -1,0 +1,324 @@
+Edit only the **Home page Hero section** of the Lux Studio website.
+
+Do not redesign the whole website.
+Do not edit the sections after the Hero.
+Do not remove the existing scroll button.
+Do not break the navbar or existing homepage structure.
+
+The goal is to make the Hero section more premium and animated with:
+
+1. animated white stars over the hero background
+2. shooting stars below the hero text
+3. a pinned/smooth scroll transition from the Hero to the next section
+4. clean reduced-motion fallback
+
+---
+
+# 1. Keep the Current Hero Content
+
+Keep the current hero content:
+
+```text
+Design. Build.
+Scale.
+
+From strategy to launch, we create digital experiences people remember.
+
+We create Digital Experiences
+
+Start a Project
+View Our Work
+Scroll to Explore
+```
+
+Keep the scroll button / scroll indicator because I like it.
+
+Do not remove it.
+
+---
+
+# 2. Add Animated Stars to the Hero
+
+Add a star animation layer above the hero background image and below the text content.
+
+The stars must be **white** in dark mode.
+
+Do not use black stars in the hero dark mode.
+
+Layer order should be:
+
+```text
+Hero background image
+Dark overlay / gradient overlay
+Animated stars layer
+Shooting stars layer
+Hero text and buttons
+Navbar above everything
+```
+
+The stars should not affect readability.
+
+Use:
+
+```text
+pointer-events: none
+absolute inset-0
+overflow-hidden
+```
+
+If the project supports `shadcn` and Animate UI, install and use:
+
+```bash
+npx shadcn@latest add @animate-ui/components-backgrounds-stars
+```
+
+Then use a component similar to:
+
+```tsx
+<StarsBackground
+  starColor="#FFFFFF"
+  className="absolute inset-0 pointer-events-none"
+/>
+```
+
+Important:
+
+* force the dark-mode star color to white
+* if the project has light mode later, black/dark stars can be used only in light mode
+* for now, dark mode hero stars should be white
+* keep the stars subtle and premium, not too dense
+
+If Animate UI causes dependency conflicts, create a custom `StarsBackground` component instead using CSS radial dots / box shadows / absolutely positioned particles.
+
+---
+
+# 3. Add Shooting Stars Below the Hero Text
+
+Create a reusable component:
+
+```text
+ShootingStars
+```
+
+Place it inside the Hero section, above the background and below the text layer.
+
+The shooting stars should appear **below the main text area**, not over the headline.
+
+Design direction:
+
+* white star head
+* soft white/cyan glow
+* long fading tail
+* diagonal movement from upper-right to lower-left or right-to-left
+* one shooting star every 3 seconds
+* quick movement but elegant
+* not too many stars at the same time
+* do not distract from the CTA buttons
+
+Use CSS keyframes or Framer Motion.
+
+Do not copy the CodePen full-page CSS exactly because it uses global `body`, `section`, and `span` styles that may break the website.
+
+Instead, create an isolated React component with scoped class names.
+
+Example structure:
+
+```tsx
+<div className="shooting-stars-layer">
+  <span className="shooting-star shooting-star-1" />
+  <span className="shooting-star shooting-star-2" />
+  <span className="shooting-star shooting-star-3" />
+</div>
+```
+
+CSS behavior:
+
+```text
+Each shooting star:
+- position absolute
+- small rounded white dot
+- glowing box-shadow
+- ::before tail using linear-gradient(90deg, white, transparent)
+- diagonal transform animation
+- opacity fades out at the end
+```
+
+Recommended timing:
+
+```text
+animation-duration: 1.2s–1.8s
+animation-delay staggered
+one visible shooting star around every 3 seconds
+```
+
+Keep it premium and minimal.
+
+---
+
+# 4. Make the Hero Pinned / Smooth Push Transition
+
+The Hero should feel cinematic when scrolling to the next section.
+
+Reference behavior:
+
+* the hero feels like it is being gently dragged upward
+* the next section gradually appears from the bottom
+* the transition feels smooth and premium
+* do not make it jump
+
+Use GSAP ScrollTrigger if already installed.
+
+Create a scroll transition for the Hero only.
+
+Preferred behavior:
+
+```text
+1. Hero starts full screen.
+2. User scrolls.
+3. Hero pins briefly.
+4. Hero content moves slightly upward and fades a little.
+5. Hero background subtly scales or shifts upward.
+6. Next section rises from bottom with opacity increasing.
+7. Transition completes and normal scrolling continues.
+```
+
+Recommended animation values:
+
+```text
+Hero pin duration: 100vh–140vh
+Hero content y: -80px to -140px
+Hero content opacity: 1 → 0.55 or 0.65
+Hero background scale: 1 → 1.06
+Next section y: 120px → 0
+Next section opacity: 0 → 1
+Scrub: true
+Ease: none for scroll-linked movement
+```
+
+Do not make the hero pinned for too long.
+
+Do not create an aggressive sticky section that makes the site feel heavy.
+
+The transition should feel like a premium smooth push, not a hard snap.
+
+---
+
+# 5. Preserve the Hero Scroll Indicator
+
+Keep the existing:
+
+```text
+SCROLL TO EXPLORE
+```
+
+and the small arrow / scroll indicator.
+
+But make it fade subtly during the hero pinned transition.
+
+Behavior:
+
+```text
+scroll indicator opacity: 1 → 0
+```
+
+as the user scrolls.
+
+---
+
+# 6. Reduced Motion Fallback
+
+Respect `prefers-reduced-motion`.
+
+If reduced motion is enabled:
+
+* disable animated star movement
+* disable shooting stars
+* disable hero pinning
+* show static stars only
+* allow normal scrolling to the next section
+* do not animate background scale
+
+This is important for accessibility and performance.
+
+---
+
+# 7. Performance Requirements
+
+Keep the animation performant.
+
+Use:
+
+```text
+transform
+opacity
+will-change only where needed
+pointer-events-none
+overflow-hidden
+```
+
+Avoid:
+
+```text
+animating layout properties
+too many particles
+global CSS that affects the whole app
+large continuous blur animations
+heavy canvas/WebGL
+```
+
+The hero should remain smooth on desktop and acceptable on mobile.
+
+On mobile:
+
+* reduce the number of stars
+* reduce shooting stars or disable them if performance is weak
+* avoid complex pinning if it breaks scroll
+* use a simpler fade/rise transition instead
+
+---
+
+# 8. Files / Component Structure
+
+Create reusable components if they do not already exist:
+
+```text
+components/backgrounds/StarsBackground.tsx
+components/backgrounds/ShootingStars.tsx
+components/sections/HeroSection.tsx
+```
+
+Keep styling scoped.
+
+Do not use global `span` styles.
+
+Do not use global `section` styles.
+
+Do not modify all sections.
+
+---
+
+# 9. Final Result
+
+The Lux Studio Hero should feel:
+
+* premium
+* cinematic
+* star-filled
+* smooth
+* dark and elegant
+* readable
+* not noisy
+* not childish
+* not overloaded
+
+The hero should keep the current design but improve the motion with:
+
+```text
+white animated stars
+subtle shooting stars every 3 seconds
+smooth pinned push transition into the next section
+preserved scroll indicator
+reduced-motion fallback
+```
+
+Only edit the Hero section for now.
