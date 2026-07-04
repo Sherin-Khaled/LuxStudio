@@ -66,75 +66,91 @@ export const ProcessJourneySection = (): JSX.Element => {
   const animOff = reduced || isMobile;
 
   const sectionRef = useRef<HTMLElement>(null);
+  const listRef    = useRef<HTMLOListElement>(null);
   const pointRefs  = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
   const dotRefs    = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
   const lineRefs   = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
-  const ctxRef     = useRef<gsap.Context | null>(null);
+  // Store the timeline so cleanup kills it without ctx.revert() DOM conflicts
+  const tlRef      = useRef<gsap.core.Timeline | null>(null);
 
   useEffect(() => {
-    if (ctxRef.current) {
-      ctxRef.current.revert();
-      ctxRef.current = null;
+    // Clean up any previous timeline + ScrollTrigger without reverting DOM
+    if (tlRef.current) {
+      tlRef.current.scrollTrigger?.kill();
+      tlRef.current.kill();
+      tlRef.current = null;
     }
+
     if (animOff) return;
 
     const points = pointRefs.current.filter(Boolean) as HTMLDivElement[];
     const dots   = dotRefs.current.filter(Boolean)   as HTMLDivElement[];
     const lines  = lineRefs.current.filter(Boolean)  as HTMLDivElement[];
+    const list   = listRef.current;
     if (!points.length || !sectionRef.current) return;
 
-    const ctx = gsap.context(() => {
-      // ── Initial states — GSAP owns these, no conflicting JSX styles ──
-      gsap.set(points, { autoAlpha: 0, y: 50, filter: "blur(8px)" });
-      gsap.set(dots,   { backgroundColor: "rgba(56,189,248,0.25)", boxShadow: "none" });
-      gsap.set(lines,  { scaleY: 0, transformOrigin: "top center" });
+    // ── Initial hidden states — GSAP owns these exclusively ──
+    gsap.set(points, { autoAlpha: 0, y: 50, filter: "blur(8px)" });
+    gsap.set(dots,   { backgroundColor: "rgba(56,189,248,0.25)", boxShadow: "none" });
+    gsap.set(lines,  { scaleY: 0, transformOrigin: "top center" });
+    if (list) gsap.set(list, { y: 0 });
 
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: sectionRef.current,
-          start: "top top",
-          end: "+=480%",
-          scrub: 1,
-          pin: true,
-          pinSpacing: true,
-          anticipatePin: 1,
-          invalidateOnRefresh: true,
-        },
-      });
+    const tl = gsap.timeline({
+      scrollTrigger: {
+        trigger: sectionRef.current,
+        start: "top top",
+        end: "+=500%",
+        scrub: 1,
+        pin: true,
+        pinSpacing: true,
+        anticipatePin: 1,
+        invalidateOnRefresh: true,
+      },
+    });
 
-      points.forEach((point, i) => {
-        const dot  = dots[i];
-        const line = lines[i];
-        const isLast = i === points.length - 1;
+    points.forEach((point, i) => {
+      const dot  = dots[i];
+      const line = lines[i];
+      const isLast = i === points.length - 1;
 
-        // ── Reveal point (active / bright state) ──
-        tl.fromTo(
-          point,
-          { autoAlpha: 0, y: 50, filter: "blur(8px)" },
-          { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "none" }
-        );
-        // Dot brightens + line grows from top
-        tl.to(dot,  { backgroundColor: "#38bdf8", boxShadow: "0 0 12px rgba(56,189,248,0.28)", duration: 0.35, ease: "none" }, "<0.15");
-        tl.to(line, { scaleY: 1, duration: 0.45, ease: "none" }, "<");
+      // Reveal point — active / bright state
+      tl.fromTo(
+        point,
+        { autoAlpha: 0, y: 50, filter: "blur(8px)" },
+        { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "none" }
+      );
+      tl.to(dot,  { backgroundColor: "#38bdf8", boxShadow: "0 0 12px rgba(56,189,248,0.28)", duration: 0.35, ease: "none" }, "<0.15");
+      tl.to(line, { scaleY: 1, duration: 0.45, ease: "none" }, "<");
 
-        if (!isLast) {
-          // Brief hold so user clearly sees the active state
-          tl.to({}, { duration: 0.3 });
-          // Dim to "previous / revealed" state — 50% opacity for strong contrast
-          tl.to(point, { opacity: 0.50, duration: 0.4, ease: "none" });
-          tl.to(dot,   { backgroundColor: "rgba(56,189,248,0.45)", boxShadow: "none", opacity: 0.55, duration: 0.4, ease: "none" }, "<");
-          tl.to(line,  { opacity: 0.30, duration: 0.4, ease: "none" }, "<");
+      if (!isLast) {
+        // Brief hold at full brightness so user clearly sees the active state
+        tl.to({}, { duration: 0.3 });
+        // Dim to "previous / revealed" — 50% opacity for clear contrast with active
+        tl.to(point, { opacity: 0.50, duration: 0.4, ease: "none" });
+        tl.to(dot,   { backgroundColor: "rgba(56,189,248,0.45)", boxShadow: "none", opacity: 0.55, duration: 0.4, ease: "none" }, "<");
+        tl.to(line,  { opacity: 0.30, duration: 0.4, ease: "none" }, "<");
+
+        // After point 03 dims, start scrolling list upward so 04/05/06 stay visible
+        if (i === 2 && list) {
+          tl.to(list, { y: -65, duration: 0.6, ease: "none" });
         }
-      });
+        // After point 04 dims, scroll list up further so 05 and 06 are fully unclipped
+        if (i === 3 && list) {
+          tl.to(list, { y: -140, duration: 0.7, ease: "none" });
+        }
+      }
+    });
 
-      // Hold so the user sees the full completed timeline
-      tl.to({}, { duration: 0.8 });
-    }, sectionRef);
+    // Brief hold so the user sees the completed timeline before unpin
+    tl.to({}, { duration: 0.8 });
 
-    ctxRef.current = ctx;
+    tlRef.current = tl;
+
     return () => {
-      ctx.revert();
-      ctxRef.current = null;
+      // Kill ScrollTrigger and timeline without reverting DOM to avoid React conflicts
+      tl.scrollTrigger?.kill();
+      tl.kill();
+      tlRef.current = null;
     };
   }, [animOff]);
 
@@ -173,14 +189,9 @@ export const ProcessJourneySection = (): JSX.Element => {
       <SideStars starsPerSide={isMobile ? 6 : 14} className="z-[1]" />
 
       {/* ── Main content ── */}
-      {/*
-        h-screen keeps the pinned section viewport-height.
-        pt-12/pb-8 are tighter than before so all 6 points fit without cropping.
-        The right column uses pt-8 lg:pt-10 (not pt-20) to reclaim vertical space.
-      */}
-      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1360px] flex-col gap-8 overflow-hidden px-6 pt-12 pb-8 sm:px-8 md:flex-row md:items-start lg:px-11 lg:pt-14">
+      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1360px] flex-col gap-8 px-6 pt-12 pb-8 sm:px-8 md:flex-row md:items-start lg:px-11 lg:pt-14">
 
-        {/* ── Left: editorial heading (stays in position while pinned) ── */}
+        {/* ── Left: editorial heading ── */}
         <header className="flex w-full shrink-0 flex-col items-start md:w-[360px] lg:w-[400px] xl:w-[440px] md:pt-2">
           <p className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] text-[#f5f7fa61]">
             03 / 06
@@ -202,26 +213,29 @@ export const ProcessJourneySection = (): JSX.Element => {
           </p>
         </header>
 
-        {/* ── Right: vertical process list ──
-            pt-8 lg:pt-10 is intentionally short to keep all 6 points within viewport.
-            gap-[9px] lg:gap-[11px] is tight so the final state fits without cropping. ── */}
-        <div className="flex min-w-0 flex-1 flex-col pt-2 md:pt-8 lg:pt-10">
-          <ol className="flex flex-col gap-[9px] lg:gap-[11px]" aria-label="Project process steps">
+        {/* ── Right: process timeline ──
+            overflow-visible so GSAP's upward list translation doesn't get clipped. ── */}
+        <div className="flex min-w-0 flex-1 flex-col overflow-visible pt-2 md:pt-8 lg:pt-10">
+          <ol
+            ref={listRef}
+            className="flex flex-col gap-[9px] lg:gap-[11px]"
+            aria-label="Project process steps"
+          >
             {steps.map((step, i) => (
               <li
                 key={step.id}
                 ref={(el) => { pointRefs.current[i] = el; }}
                 className="flex items-start gap-[18px] lg:gap-5"
               >
-                {/* ── Per-point marker: dot then short line ── */}
+                {/* Per-point marker: dot + short line (no continuous vertical bar) */}
                 <div className="flex shrink-0 flex-col items-center pt-[3px]">
-                  {/* Dot — GSAP controls bg/shadow/opacity via refs */}
+                  {/* Dot — GSAP controls bg/shadow/opacity only */}
                   <div
                     ref={(el) => { dotRefs.current[i] = el; }}
                     className="rounded-full"
                     style={{ width: "8px", height: "8px", flexShrink: 0 }}
                   />
-                  {/* Short line — GSAP controls scaleY/opacity via ref */}
+                  {/* Short per-point line — GSAP controls scaleY/opacity only */}
                   <div
                     ref={(el) => { lineRefs.current[i] = el; }}
                     style={{
@@ -234,21 +248,17 @@ export const ProcessJourneySection = (): JSX.Element => {
                   />
                 </div>
 
-                {/* ── Step text ── */}
+                {/* Step text */}
                 <article className="flex min-w-0 flex-1 flex-col items-start">
-                  {/* Number — always cyan so it reads as the timeline label */}
                   <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-medium leading-[12px] tracking-[1.2px] text-sky-400">
                     {step.id}
                   </p>
-                  {/* Title — bright white at full opacity; dims with parent on previous state */}
                   <h3 className="pt-[4px] [font-family:'Bricolage_Grotesque',Helvetica] text-[18px] font-semibold leading-[23px] tracking-[-0.45px] text-[#f5f7fa] lg:text-[20px] lg:leading-[25px]">
                     {step.title}
                   </h3>
-                  {/* Description */}
                   <p className="pt-[4px] max-w-[540px] [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[19px] tracking-[0] text-[#f5f7faa6]">
                     {step.description}
                   </p>
-                  {/* Tags */}
                   <p className="pt-[4px] [font-family:'Inter',Helvetica] text-[10px] font-normal leading-[14px] tracking-[0.38px] text-[#f5f7fa61]">
                     {step.tags}
                   </p>

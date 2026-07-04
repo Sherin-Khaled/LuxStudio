@@ -1,0 +1,161 @@
+Fix only the **Home page “From idea to launch” / Project Journey section**.
+
+Do not redesign the section.
+Do not change the stars.
+Do not change the left-side text.
+Do not change the point content.
+Do not change the previous/active point styling.
+Only fix the final visibility problem.
+
+## Current problem
+
+The section is almost correct now, but **Point 06 is not fully visible**.
+
+Right now I can only see:
+
+**06 Optimize, Launch & Support**
+
+But the description and tags below it are cropped / hidden.
+
+Point 06 must appear completely before the section unpins.
+
+---
+
+## Required fix
+
+When Point 06 becomes active, the full point must be visible, including:
+
+Title:
+
+**Optimize, Launch & Support**
+
+Description:
+
+**We test responsiveness, performance, accessibility, SEO, and launch readiness, then support future updates and improvements after launch.**
+
+Tags:
+
+**SEO · Performance · Testing · Support**
+
+The user must be able to read the full Point 06 content before the next section appears.
+
+---
+
+## How to fix it
+
+Use one or more of these fixes, but keep the design the same:
+
+### 1. Move the right timeline group slightly upward near the final steps
+
+When Point 05 and Point 06 are being revealed, subtly translate the whole right timeline group upward so Point 06 fits inside the viewport.
+
+Recommended:
+
+```ts
+timelineGroupY: 0 → -120px or -180px
+```
+
+This movement should happen gradually during the later part of the pinned timeline, not suddenly.
+
+Do not move it so much that the section feels broken.
+
+---
+
+### 2. Add enough bottom safe space inside the pinned section
+
+Add bottom padding to the right timeline area so Point 06 has room to appear.
+
+Recommended:
+
+```text
+padding-bottom: 160px–220px
+```
+
+---
+
+### 3. Check overflow clipping
+
+Make sure Point 06 is not being clipped by a parent wrapper.
+
+Check these:
+
+```text
+overflow-hidden
+fixed height
+max-height
+absolute positioning
+pin wrapper clipping
+timeline container clipping
+```
+
+If a parent is clipping the bottom of the timeline, change the timeline wrapper to allow enough visible space.
+
+Use:
+
+```text
+overflow: visible
+```
+
+where safe.
+
+---
+
+### 4. Keep the section pinned longer if needed
+
+If the section unpins before Point 06 is fully readable, increase the ScrollTrigger end value slightly.
+
+Current section should stay pinned until Point 06 is fully visible and readable.
+
+Recommended:
+
+```ts
+end: "+=500%"
+```
+
+Acceptable range:
+
+```text
++=480% to +=540%
+```
+
+Also keep:
+
+```ts
+pin: true
+pinSpacing: true
+scrub: 1
+anticipatePin: 1
+```
+
+---
+
+## Important behavior
+
+The sequence should stay like this:
+
+1. Point 01 appears.
+2. Point 02 appears.
+3. Point 03 appears.
+4. Point 04 appears.
+5. Point 05 appears.
+6. Point 06 appears fully.
+7. User can see Point 06 title, description, and tags.
+8. Then the section unpins.
+9. Then the next section appears.
+
+The next section must not appear before Point 06 is fully visible.
+
+---
+
+## Do not change
+
+Do not remove the stars.
+Do not remove the blue glow.
+Do not redesign the timeline.
+Do not change the typography.
+Do not change the content.
+Do not change the marker style.
+Do not make all points bright.
+Do not add an internal scrollbar.
+
+Only make sure **Point 06 is fully visible before the section ends**.
