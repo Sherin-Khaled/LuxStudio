@@ -1,0 +1,471 @@
+Fix only the **Home page “What We Create” section**.
+
+Do not edit the Hero section.
+Do not edit the Studio Manifesto section.
+Do not redesign the whole homepage.
+Do not change sections after “What We Create.”
+Only fix this section’s layout, content, stars, and pinned scroll reveal behavior.
+
+The current section is showing only the first service card. I want it to become a pinned scroll-reveal section where all six service cards appear one by one until the section reaches the final 2-column layout.
+
+---
+
+# 1. Section Goal
+
+This section introduces Lux Studio’s six core capabilities.
+
+It should feel:
+
+* premium
+* editorial
+* cinematic
+* clean
+* dark
+* minimal
+* scroll-controlled
+* consistent with the Figma design
+
+The final layout should become a clean 2-column editorial grid like the approved design.
+
+---
+
+# 2. Section Header Content
+
+Use this exact header content:
+
+Small label:
+
+**02 / 06**
+
+Main heading:
+
+**What We Create**
+
+Supporting text:
+
+**Six core capabilities that combine design, technology, content, and growth.**
+
+Keep the typography premium and close to the current design.
+
+---
+
+# 3. Service Card Content
+
+Use exactly these six service items.
+
+## Card 01
+
+Label:
+
+**A.01**
+
+Title:
+
+**Digital Product Design**
+
+Description:
+
+**UX strategy, UI design, design systems, wireframes, and prototypes shaped around clarity, usability, and scalable structure.**
+
+---
+
+## Card 02
+
+Label:
+
+**A.02**
+
+Title:
+
+**High-Performance Websites**
+
+Description:
+
+**Responsive websites built with modern frontend architecture, strong performance, and a premium experience across every screen.**
+
+---
+
+## Card 03
+
+Label:
+
+**A.03**
+
+Title:
+
+**Motion & Scroll Experiences**
+
+Description:
+
+**Purposeful animation, cinematic interaction, and smooth scrolling that strengthen storytelling without becoming distracting.**
+
+---
+
+## Card 04
+
+Label:
+
+**A.04**
+
+Title:
+
+**Business Systems & Integrations**
+
+Description:
+
+**Dashboards, CMS platforms, admin panels, APIs, and connected systems that help businesses operate and scale.**
+
+---
+
+## Card 05
+
+Label:
+
+**A.05**
+
+Title:
+
+**Brand & Content Experiences**
+
+Description:
+
+**Brand direction, visual content, marketing assets, video editing, and creative experiences designed for consistent communication.**
+
+---
+
+## Card 06
+
+Label:
+
+**A.06**
+
+Title:
+
+**SEO & Performance**
+
+Description:
+
+**Technical SEO, accessibility, Core Web Vitals, and frontend optimization designed to improve visibility and speed.**
+
+---
+
+# 4. Final Layout
+
+The final state after all animations should be a 2-column grid:
+
+```text
+A.01 Digital Product Design              A.02 High-Performance Websites
+
+A.03 Motion & Scroll Experiences         A.04 Business Systems & Integrations
+
+A.05 Brand & Content Experiences         A.06 SEO & Performance
+```
+
+Desktop layout:
+
+* 2 columns
+* 3 rows
+* thin horizontal dividers between rows
+* thin vertical divider between columns
+* large editorial service cells
+* dark transparent background
+* no heavy card background
+* no bulky glass cards
+* clean premium spacing
+
+The final state should look like the approved Figma screenshot where all 6 service items are visible.
+
+---
+
+# 5. Required Pinned Scroll Behavior
+
+This section must be pinned.
+
+When the user reaches this section:
+
+1. The section pins.
+2. The section header is visible.
+3. The grid area starts empty or with all cards hidden.
+4. On scroll, Card 01 appears from the left into its final place.
+5. On more scroll, Card 02 appears from the right into its final place.
+6. On more scroll, Card 03 appears from the left into its final place.
+7. On more scroll, Card 04 appears from the right into its final place.
+8. On more scroll, Card 05 appears from the left into its final place.
+9. On more scroll, Card 06 appears from the right into its final place.
+10. All previous cards remain visible.
+11. Only after all six cards are fully visible should the section unpin.
+12. The next section must not appear before all six cards are visible.
+
+Do not reveal the cards by time.
+
+The reveal must be controlled by scroll.
+
+---
+
+# 6. Card Reveal Animation
+
+Each card should reveal with premium motion.
+
+Left-column cards:
+
+```text
+Card 01, Card 03, Card 05:
+x: -96px → 0
+opacity: 0 → 1
+filter blur: 8px → 0px
+```
+
+Right-column cards:
+
+```text
+Card 02, Card 04, Card 06:
+x: 96px → 0
+opacity: 0 → 1
+filter blur: 8px → 0px
+```
+
+Motion should feel smooth and premium.
+
+Do not make it bouncy.
+
+Do not make it too fast.
+
+Use scroll-controlled GSAP animation, not timer animation.
+
+---
+
+# 7. Correct GSAP ScrollTrigger Setup
+
+Use GSAP ScrollTrigger for this section.
+
+Important:
+
+Use `pinSpacing: true`.
+
+Do not use `pinSpacing: false` here.
+
+The section must reserve enough scroll space so the next section does not appear early.
+
+Recommended setup:
+
+```ts
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: whatWeCreateSectionRef.current,
+    start: "top top",
+    end: "+=420%",
+    scrub: 1,
+    pin: true,
+    pinSpacing: true,
+    anticipatePin: 1,
+    invalidateOnRefresh: true,
+  },
+});
+```
+
+Recommended scroll length:
+
+```text
+end: "+=420%"
+```
+
+Acceptable range:
+
+```text
+"+=380%" to "+=460%"
+```
+
+Do not use less than `+=360%`, because six cards need enough scroll time to reveal cleanly.
+
+---
+
+# 8. Suggested Timeline Logic
+
+Set all cards hidden initially:
+
+```ts
+gsap.set(cards, {
+  autoAlpha: 0,
+  filter: "blur(8px)",
+});
+```
+
+Then animate each card in sequence:
+
+```ts
+tl.fromTo(card1,
+  { autoAlpha: 0, x: -96, filter: "blur(8px)" },
+  { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.fromTo(card2,
+  { autoAlpha: 0, x: 96, filter: "blur(8px)" },
+  { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.fromTo(card3,
+  { autoAlpha: 0, x: -96, filter: "blur(8px)" },
+  { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.fromTo(card4,
+  { autoAlpha: 0, x: 96, filter: "blur(8px)" },
+  { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.fromTo(card5,
+  { autoAlpha: 0, x: -96, filter: "blur(8px)" },
+  { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.fromTo(card6,
+  { autoAlpha: 0, x: 96, filter: "blur(8px)" },
+  { autoAlpha: 1, x: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.to({}, { duration: 0.8 });
+```
+
+The final empty duration is intentional. It gives the user a short moment to see the full completed grid before the section unpins.
+
+---
+
+# 9. Side Stars
+
+Add subtle stars on the left and right edges of this section.
+
+Create two decorative star layers:
+
+```tsx
+<div className="what-create-stars-left" />
+<div className="what-create-stars-right" />
+```
+
+Style:
+
+```text
+position: absolute
+top: 0
+bottom: 0
+width: 120px–180px
+pointer-events: none
+z-index: behind content
+```
+
+Left:
+
+```text
+left: 0
+```
+
+Right:
+
+```text
+right: 0
+```
+
+Star style:
+
+```text
+small white/cyan dots
+opacity: 0.20–0.60
+1px–3px sizes
+subtle glow
+slow vertical drift
+```
+
+Important:
+
+* stars should be visible on the right and left sides
+* stars should not cover service text
+* stars should stay behind content
+* stars should not become too dense
+* keep them subtle and premium
+
+---
+
+# 10. Blue Glow / Background Atmosphere
+
+Keep the subtle blue glow atmosphere, but make sure it is not cropped.
+
+If a glow is used:
+
+```tsx
+<div
+  className="pointer-events-none absolute right-[-12%] bottom-[-18%] h-[560px] w-[560px] rounded-full blur-[130px] z-0"
+  style={{ backgroundColor: "rgba(38, 100, 255, 0.18)" }}
+/>
+```
+
+Rules:
+
+* glow behind content
+* no square cropping
+* no hard edges
+* does not cover text
+* does not overpower the section
+
+---
+
+# 11. Prevent Next Section From Appearing Early
+
+This is very important.
+
+The section after “What We Create” must not appear until:
+
+* Card 01 is fully visible
+* Card 02 is fully visible
+* Card 03 is fully visible
+* Card 04 is fully visible
+* Card 05 is fully visible
+* Card 06 is fully visible
+* the user gets a short moment to see the completed grid
+
+Do not let the next section appear behind, below, or overlap this pinned section before the animation is complete.
+
+Do not position the next section absolute.
+
+Do not use negative margins.
+
+Do not use `pinSpacing: false`.
+
+---
+
+# 12. Mobile Behavior
+
+On mobile:
+
+* do not use heavy pinning if it causes scroll problems
+* stack cards vertically
+* reveal cards with simple fade-up or show them statically
+* keep all content readable
+* avoid horizontal slide animations that cause overflow
+* no broken scroll behavior
+
+---
+
+# 13. Reduced Motion
+
+If `prefers-reduced-motion` is enabled:
+
+* disable pinning
+* show all six cards immediately
+* disable horizontal reveal motion
+* keep section static and readable
+
+---
+
+# 14. Test Checklist
+
+After fixing, test:
+
+1. The section pins when it reaches the viewport.
+2. No service cards are visible before the reveal starts, or only the correct initial hidden state is used.
+3. Card 01 appears from the left.
+4. Card 02 appears from the right.
+5. Card 03 appears from the left.
+6. Card 04 appears from the right.
+7. Card 05 appears from the left.
+8. Card 06 appears from the right.
+9. Previous cards remain visible.
+10. Final state is a clean 2-column / 3-row grid.
+11. The next section does not appear until all six cards are visible.
+12. Side stars are visible on the left and right edges.
+13. Blue glow is not cropped.
+14. Mobile layout does not break.
+
+Only fix the “What We Create” section.
