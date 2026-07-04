@@ -1,0 +1,487 @@
+Fix only the **Home page “From idea to launch” / Project Journey section**.
+
+Do not edit the Hero.
+Do not edit the Studio Manifesto section.
+Do not edit the What We Create section.
+Do not redesign the whole homepage.
+Only fix this process/journey section.
+
+The current section should become a **pinned scroll-controlled journey section**.
+
+---
+
+# 1. Section Goal
+
+This section explains Lux Studio’s project process from idea to launch.
+
+It should feel:
+
+* premium
+* cinematic
+* structured
+* scroll-controlled
+* clear
+* similar to the approved Figma journey section
+* not like normal cards
+* not like a boring timeline
+
+The final result should look like the approved Figma screenshot where all process points are visible in a vertical timeline.
+
+---
+
+# 2. Keep the Left Side Content
+
+Left side should stay fixed while the section is pinned.
+
+Use this content:
+
+Small label:
+
+**03 / 06**
+
+Main heading:
+
+**From idea to launch.**
+
+Supporting text:
+
+**A clear, collaborative process that turns strategy, content, design, development, and systems into a complete digital experience.**
+
+Small note:
+
+**Every stage is reviewed, refined, and approved before moving forward.**
+
+Keep the left side clean, large, and editorial.
+
+---
+
+# 3. Process Points Content
+
+Use exactly these six process points.
+
+## Point 01
+
+Number:
+
+**01**
+
+Title:
+
+**Discover**
+
+Description:
+
+**We understand the business, audience, goals, challenges, existing digital presence, and what the project needs to achieve.**
+
+Tags:
+
+**Research · Goals · Audience**
+
+---
+
+## Point 02
+
+Number:
+
+**02**
+
+Title:
+
+**Define**
+
+Description:
+
+**We shape the strategy, project scope, content direction, sitemap, features, user journey, and approval milestones.**
+
+Tags:
+
+**Strategy · Structure · Scope**
+
+---
+
+## Point 03
+
+Number:
+
+**03**
+
+Title:
+
+**Create**
+
+Description:
+
+**We produce and refine the creative assets the project needs, including graphic design, image editing, photography, video editing, and visual content direction.**
+
+Tags:
+
+**Graphics · Photography · Video · Content**
+
+---
+
+## Point 04
+
+Number:
+
+**04**
+
+Title:
+
+**Design**
+
+Description:
+
+**We create wireframes, visual direction, UI systems, responsive layouts, and interactive prototypes ready for development.**
+
+Tags:
+
+**UX · UI · Design System**
+
+---
+
+## Point 05
+
+Number:
+
+**05**
+
+Title:
+
+**Build & Connect**
+
+Description:
+
+**We develop the frontend, connect backend systems, integrate dashboards, CMS platforms, APIs, databases, and business tools when needed.**
+
+Tags:
+
+**Frontend · Backend · CMS · Dashboards**
+
+---
+
+## Point 06
+
+Number:
+
+**06**
+
+Title:
+
+**Optimize, Launch & Support**
+
+Description:
+
+**We test responsiveness, performance, accessibility, SEO, and launch readiness, then support future updates and improvements after launch.**
+
+Tags:
+
+**SEO · Performance · Testing · Support**
+
+---
+
+# 4. Required Pinned Scroll Behavior
+
+This section must be pinned.
+
+When the user reaches this section:
+
+1. The section pins.
+2. The left-side text remains fixed.
+3. The right-side timeline area starts with all process points hidden or very faint.
+4. On the first scroll step, Point 01 appears from bottom into its place.
+5. On the next scroll step, Point 02 appears below Point 01.
+6. On the next scroll step, Point 03 appears below Point 02.
+7. On the next scroll step, Point 04 appears below Point 03.
+8. On the next scroll step, Point 05 appears below Point 04.
+9. On the next scroll step, Point 06 appears below Point 05.
+10. Previous points must stay visible.
+11. Previous points must not disappear.
+12. After all six points are visible, keep the section pinned for a short moment.
+13. Only then should the section unpin and allow the next section to appear.
+
+The next section must not appear early.
+
+---
+
+# 5. Reveal Animation
+
+Each point should appear from bottom to its final place.
+
+Animation for each point:
+
+```text id="p7olkt"
+opacity: 0 → 1
+y: 56px → 0
+filter: blur(8px) → blur(0px)
+```
+
+Keep the motion scroll-controlled.
+
+Do not use timer-based animation.
+
+Do not make the points appear automatically by time.
+
+Each point appears only when the user scrolls.
+
+---
+
+# 6. Active / Previous Point Styling
+
+Each point should have a unique active style when it appears.
+
+When a point is currently appearing / active:
+
+```text id="hf5epd"
+Number: cyan / blue
+Title: bright white
+Description: readable muted white
+Timeline dot: glowing cyan
+Timeline line segment: cyan / blue
+```
+
+When a point is already revealed and the next one becomes active:
+
+```text id="bygb4l"
+Previous point stays visible
+Previous point becomes slightly muted
+Opacity around 0.65–0.78
+Do not hide it
+Do not blur it again
+```
+
+Upcoming points:
+
+```text id="hmzn4f"
+Hidden before reveal
+or extremely faint only if needed for layout stability
+```
+
+Final state:
+
+```text id="da2sis"
+All six points visible
+Timeline line completed
+No point cropped
+No next section visible yet
+```
+
+---
+
+# 7. Timeline Visual Style
+
+Use the same style as the Figma design:
+
+* vertical thin timeline line
+* small circular nodes
+* active node glowing cyan
+* inactive nodes muted
+* active line segment cyan/blue
+* points aligned to the right of the timeline
+* clean dark background
+* soft blue/violet glow on the right side
+* subtle stars in the background
+
+Timeline should feel premium and editorial, not like a default stepper.
+
+---
+
+# 8. GSAP ScrollTrigger Setup
+
+Use GSAP ScrollTrigger for this section.
+
+Important:
+
+Use `pinSpacing: true`.
+
+Do not use `pinSpacing: false`.
+
+The section must reserve enough scroll distance so the next section does not appear before all six points are fully visible.
+
+Recommended ScrollTrigger setup:
+
+```ts id="p5lanz"
+const tl = gsap.timeline({
+  scrollTrigger: {
+    trigger: journeySectionRef.current,
+    start: "top top",
+    end: "+=440%",
+    scrub: 1,
+    pin: true,
+    pinSpacing: true,
+    anticipatePin: 1,
+    invalidateOnRefresh: true,
+  },
+});
+```
+
+Acceptable end range:
+
+```text id="effgtw"
++=420% to +=480%
+```
+
+Do not use less than `+=400%`, because six points need enough scroll distance.
+
+---
+
+# 9. Suggested Timeline Animation Logic
+
+Set all points hidden initially:
+
+```ts id="f0156l"
+gsap.set(points, {
+  autoAlpha: 0,
+  y: 56,
+  filter: "blur(8px)",
+});
+```
+
+Then reveal them one by one:
+
+```ts id="14924b"
+tl.fromTo(point1,
+  { autoAlpha: 0, y: 56, filter: "blur(8px)" },
+  { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.to(point1, { opacity: 0.72, duration: 0.35, ease: "none" })
+
+.fromTo(point2,
+  { autoAlpha: 0, y: 56, filter: "blur(8px)" },
+  { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.to(point2, { opacity: 0.72, duration: 0.35, ease: "none" })
+
+.fromTo(point3,
+  { autoAlpha: 0, y: 56, filter: "blur(8px)" },
+  { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.to(point3, { opacity: 0.72, duration: 0.35, ease: "none" })
+
+.fromTo(point4,
+  { autoAlpha: 0, y: 56, filter: "blur(8px)" },
+  { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.to(point4, { opacity: 0.72, duration: 0.35, ease: "none" })
+
+.fromTo(point5,
+  { autoAlpha: 0, y: 56, filter: "blur(8px)" },
+  { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.to(point5, { opacity: 0.72, duration: 0.35, ease: "none" })
+
+.fromTo(point6,
+  { autoAlpha: 0, y: 56, filter: "blur(8px)" },
+  { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+)
+.to({}, { duration: 0.8 });
+```
+
+Important:
+
+If using this opacity-muted logic, make sure the **current active point** stays bright while it is appearing, and previous points only become muted after the next point starts.
+
+---
+
+# 10. Prevent Next Section From Appearing Early
+
+This is critical.
+
+The next section must not appear until:
+
+* Point 01 is fully visible
+* Point 02 is fully visible
+* Point 03 is fully visible
+* Point 04 is fully visible
+* Point 05 is fully visible
+* Point 06 is fully visible
+* the user sees all six points together for a short moment
+
+Do not let the next section overlap this section.
+
+Do not position the next section absolute.
+
+Do not use negative margins.
+
+Do not use `pinSpacing: false`.
+
+---
+
+# 11. Layout Requirements
+
+Desktop:
+
+```text id="4t132v"
+Left side: fixed editorial text
+Right side: vertical process timeline
+```
+
+The section should fit cleanly inside the viewport while pinned.
+
+Do not make the right timeline so tall that the bottom points get cropped.
+
+If needed, reduce spacing between process points slightly so all six can fit in the final pinned view.
+
+The final state should look close to the approved Figma screenshot.
+
+---
+
+# 12. Background Requirements
+
+Keep the same Lux Studio atmosphere:
+
+* dark background
+* subtle stars
+* soft blue/violet glow on the right
+* no cropped glow
+* no hard rectangle edges
+* no distracting particle density
+
+The glow should stay behind the timeline and not cover the text.
+
+---
+
+# 13. Mobile Behavior
+
+On mobile:
+
+* do not use heavy pinning if it breaks scrolling
+* stack the left content and timeline vertically
+* reveal points with simple fade-up or show all points statically
+* keep all six points readable
+* avoid horizontal overflow
+* no broken scroll behavior
+
+---
+
+# 14. Reduced Motion
+
+If `prefers-reduced-motion` is enabled:
+
+* disable pinning
+* show all six points immediately
+* disable blur animation
+* keep the section static and readable
+
+---
+
+# 15. Test Checklist
+
+After fixing, test carefully:
+
+1. The section pins when it reaches the viewport.
+2. Left text stays fixed.
+3. Point 01 appears from bottom on scroll.
+4. Point 02 appears below Point 01 on further scroll.
+5. Point 03 appears below Point 02 on further scroll.
+6. Point 04 appears below Point 03 on further scroll.
+7. Point 05 appears below Point 04 on further scroll.
+8. Point 06 appears below Point 05 on further scroll.
+9. Previous points remain visible.
+10. Active point has cyan/blue highlight.
+11. Timeline line and dots support the active state.
+12. All six points are visible before the section unpins.
+13. Next section does not appear early.
+14. No huge blank gap after the pinned section.
+15. Mobile does not break.
+
+Only fix the “From idea to launch” journey section.

@@ -1,124 +1,239 @@
-import { Card, CardContent } from "@/components/ui/card";
+import { useRef, useState, useEffect } from "react";
+import { useReducedMotion } from "framer-motion";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { SideStars } from "@/components/backgrounds/SideStars";
 
-const progressSteps = [
-  { className: "w-1.5 h-[3px] bg-[#38bdf873]" },
-  { className: "w-1.5 h-[3px] bg-[#38bdf873]" },
-  { className: "w-1.5 h-[3px] bg-[#38bdf873]" },
-  { className: "w-7 h-[3px] bg-sky-400" },
-  { className: "w-1.5 h-[3px] bg-[#ffffff17]" },
-  { className: "w-1.5 h-[3px] bg-[#ffffff17]" },
-];
+gsap.registerPlugin(ScrollTrigger);
 
-const journeySteps = [
+const steps = [
   {
     id: "01",
     title: "Discover",
     description:
       "We understand the business, audience, goals, challenges, existing digital presence, and what the project needs to achieve.",
-    meta: "Research · Goals · Audience",
-    active: true,
+    tags: "Research · Goals · Audience",
+  },
+  {
+    id: "02",
+    title: "Define",
+    description:
+      "We shape the strategy, project scope, content direction, sitemap, features, user journey, and approval milestones.",
+    tags: "Strategy · Structure · Scope",
+  },
+  {
+    id: "03",
+    title: "Create",
+    description:
+      "We produce and refine the creative assets the project needs, including graphic design, image editing, photography, video editing, and visual content direction.",
+    tags: "Graphics · Photography · Video · Content",
+  },
+  {
+    id: "04",
+    title: "Design",
+    description:
+      "We create wireframes, visual direction, UI systems, responsive layouts, and interactive prototypes ready for development.",
+    tags: "UX · UI · Design System",
+  },
+  {
+    id: "05",
+    title: "Build & Connect",
+    description:
+      "We develop the frontend, connect backend systems, integrate dashboards, CMS platforms, APIs, databases, and business tools when needed.",
+    tags: "Frontend · Backend · CMS · Dashboards",
+  },
+  {
+    id: "06",
+    title: "Optimize, Launch & Support",
+    description:
+      "We test responsiveness, performance, accessibility, SEO, and launch readiness, then support future updates and improvements after launch.",
+    tags: "SEO · Performance · Testing · Support",
   },
 ];
 
 export const ProcessJourneySection = (): JSX.Element => {
+  const reduced = useReducedMotion() ?? false;
+
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
+
+  const animOff = reduced || isMobile;
+
+  const sectionRef = useRef<HTMLElement>(null);
+  const pointRefs  = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
+  const dotRefs    = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
+
+  useEffect(() => {
+    if (animOff) return;
+
+    const points = pointRefs.current.filter(Boolean) as HTMLDivElement[];
+    const dots   = dotRefs.current.filter(Boolean) as HTMLDivElement[];
+
+    const ctx = gsap.context(() => {
+      // All points start invisible
+      gsap.set(points, { autoAlpha: 0, y: 56, filter: "blur(8px)" });
+      // All dots start muted
+      gsap.set(dots, { backgroundColor: "rgba(255,255,255,0.12)" });
+
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: sectionRef.current,
+          start: "top top",
+          end: "+=440%",
+          scrub: 1,
+          pin: true,
+          pinSpacing: true,
+          anticipatePin: 1,
+          invalidateOnRefresh: true,
+        },
+      });
+
+      points.forEach((point, i) => {
+        const dot = dots[i];
+        const isLast = i === points.length - 1;
+
+        // Reveal point from below with blur
+        tl.fromTo(
+          point,
+          { autoAlpha: 0, y: 56, filter: "blur(8px)" },
+          { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+        );
+        // Dot lights up cyan in sync with reveal
+        tl.to(dot, { backgroundColor: "#38bdf8", duration: 0.4, ease: "none" }, "<0.2");
+
+        if (!isLast) {
+          // Dim the revealed point so the next one feels "active"
+          tl.to(point, { opacity: 0.72, duration: 0.35, ease: "none" });
+          tl.to(dot,   { opacity: 0.40, duration: 0.35, ease: "none" }, "<");
+        }
+      });
+
+      // Brief hold so user sees the completed timeline
+      tl.to({}, { duration: 0.8 });
+    }, sectionRef);
+
+    return () => ctx.revert();
+  }, [animOff]);
+
   return (
-    <section className="relative w-full overflow-hidden bg-[#03050a] py-20 md:py-28 lg:py-[156px]">
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute right-[-10%] top-[18%] h-[420px] w-[420px] rounded-full bg-[#1d4ed82b] blur-[120px] md:h-[560px] md:w-[560px]" />
-        <div className="absolute right-[10%] top-[-4%] h-[220px] w-[220px] rounded-full bg-[#38bdf81c] blur-[90px] md:h-[300px] md:w-[300px]" />
-        <div className="absolute bottom-[-8%] left-[2%] h-[220px] w-[220px] rounded-full bg-[#7c3aed1a] blur-[100px] md:h-80 md:w-80" />
-        <div className="absolute bottom-[12%] right-[8%] h-[220px] w-[320px] bg-[#38bdf80f] blur-[80px] md:h-[300px] md:w-[500px]" />
-      </div>
-      <div className="container relative z-10">
-        <div className="grid items-start gap-14 lg:grid-cols-[minmax(0,528px)_minmax(0,574px)] lg:justify-between lg:gap-10">
-          <header className="flex max-w-[528.65px] flex-col items-start">
-            <p className="mt-[-1px] [font-family:'JetBrains_Mono',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[1.56px] text-[#f5f7fa61]">
-              03 / 06
-            </p>
-            <div className="pt-7">
-              <h2 className="[font-family:'Bricolage_Grotesque',Helvetica] text-[48px] font-semibold leading-[0.98] tracking-[-1.6px] text-[#f5f7fa] sm:text-[62px] lg:text-[79.8px] lg:tracking-[-2.39px]">
-                From idea
-                <br />
-                to launch.
-              </h2>
-            </div>
-            <div className="pt-6">
-              <p className="max-w-[480px] [font-family:'Inter',Helvetica] text-[17px] font-normal leading-[28.6px] tracking-[0] text-[#f5f7faa6]">
-                A clear, collaborative process that turns strategy, content,
-                design, development, and systems into a complete digital
-                experience.
-              </p>
-            </div>
-            <div className="pt-5">
-              <p className="max-w-[380px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[20.8px] tracking-[0] text-[#f5f7fa61]">
-                Every stage is reviewed, refined, and approved before moving
-                forward.
-              </p>
-            </div>
-            <nav
-              aria-label="Process progress"
-              className="flex h-[57px] w-full items-center gap-2.5 pt-10"
-            >
-              {progressSteps.map((step, index) => (
-                <button
-                  key={`progress-step-${index}`}
-                  type="button"
-                  aria-label={`Go to process step ${index + 1}`}
-                  className={`${step.className} h-auto rounded-full transition-opacity hover:opacity-90`}
-                />
-              ))}
-              <div className="flex h-[17px] w-[57px] items-start pl-1.5">
-                <span className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[16.5px] tracking-[0.66px] text-[#f5f7fa61]">
-                  04 / 06
-                </span>
-              </div>
-            </nav>
-          </header>
-          <div className="flex min-h-[199px] w-full max-w-[574px] flex-col justify-center">
-            {journeySteps.map((step) => (
-              <Card
+    <section
+      ref={sectionRef}
+      className="relative w-full bg-[#03050a]"
+      aria-labelledby="journey-heading"
+    >
+      {/* ── Background image ── */}
+      <img
+        className="pointer-events-none absolute inset-0 h-full w-full object-cover"
+        alt=""
+        aria-hidden="true"
+        src="/figmaAssets/backgroundstars-4.svg"
+      />
+
+      {/* ── Glow orbs (direct section children so pin-spacer overflow:visible can show them) ── */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-[-10%] top-[18%] h-[560px] w-[560px] rounded-full blur-[130px]"
+        style={{ backgroundColor: "rgba(29, 78, 216, 0.18)" }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute right-[10%] top-[-4%] h-[300px] w-[300px] rounded-full blur-[90px]"
+        style={{ backgroundColor: "rgba(56, 189, 248, 0.10)" }}
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute bottom-[-8%] left-[2%] h-[320px] w-[320px] rounded-full blur-[100px]"
+        style={{ backgroundColor: "rgba(124, 58, 237, 0.10)" }}
+      />
+
+      {/* ── Edge stars ── */}
+      <SideStars starsPerSide={isMobile ? 6 : 12} className="z-[1]" />
+
+      {/* ── Main layout ── */}
+      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1360px] items-start gap-10 px-6 py-14 sm:px-8 lg:items-center lg:px-11 lg:py-20">
+
+        {/* ── Left: editorial fixed text ── */}
+        <header className="flex w-full shrink-0 flex-col items-start lg:w-[420px] xl:w-[460px]">
+          <p className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] text-[#f5f7fa61]">
+            03 / 06
+          </p>
+          <h2
+            id="journey-heading"
+            className="pt-5 [font-family:'Bricolage_Grotesque',Helvetica] text-[42px] font-semibold leading-[0.97] tracking-[-1.6px] text-[#f5f7fa] sm:text-[54px] lg:text-[66px] lg:tracking-[-2px]"
+          >
+            From idea
+            <br />
+            to launch.
+          </h2>
+          <p className="pt-5 max-w-[420px] [font-family:'Inter',Helvetica] text-[14px] font-normal leading-[24px] tracking-[0] text-[#f5f7faa6] sm:text-[15px] sm:leading-[26px]">
+            A clear, collaborative process that turns strategy, content, design,
+            development, and systems into a complete digital experience.
+          </p>
+          <p className="pt-4 max-w-[360px] [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[19px] tracking-[0] text-[#f5f7fa61]">
+            Every stage is reviewed, refined, and approved before moving forward.
+          </p>
+        </header>
+
+        {/* ── Right: vertical timeline ── */}
+        <div className="relative flex min-w-0 flex-1 flex-col">
+
+          {/* Thin continuous vertical timeline line */}
+          <div
+            aria-hidden="true"
+            className="pointer-events-none absolute left-[7px] top-[22px] w-px"
+            style={{
+              bottom: "22px",
+              background:
+                "linear-gradient(180deg,rgba(56,189,248,0.35) 0%,rgba(255,255,255,0.08) 100%)",
+            }}
+          />
+
+          <ol className="flex flex-col" aria-label="Project process steps">
+            {steps.map((step, i) => (
+              <li
                 key={step.id}
-                className="border-0 bg-transparent p-0 shadow-none"
+                ref={(el) => { pointRefs.current[i] = el; }}
+                className={[
+                  "flex items-start gap-5",
+                  i < steps.length - 1 ? "pb-[18px] lg:pb-5" : "",
+                  animOff ? "" : "",
+                ].join(" ")}
               >
-                <CardContent className="flex items-start gap-6 p-0">
-                  <div className="flex w-5 shrink-0 flex-col items-center self-stretch pt-[22px]">
-                    <div
-                      className={`h-2.5 w-2.5 rounded-full ${
-                        step.active
-                          ? "bg-sky-400 shadow-[0px_0px_0px_3px_#38bdf828]"
-                          : "bg-[#ffffff17]"
-                      }`}
-                    />
-                    <div className="px-0 pb-0 pt-2.5">
-                      <div className="h-[156.88px] w-px bg-[linear-gradient(180deg,rgba(56,189,248,0.42)_0%,rgba(255,255,255,0.09)_100%)]" />
-                    </div>
-                  </div>
-                  <article className="flex min-w-0 flex-1 flex-col items-start pb-9 pt-1">
-                    <p
-                      className={`[font-family:'JetBrains_Mono',Helvetica] text-[13px] font-medium leading-[13px] tracking-[1.30px] ${
-                        step.active ? "text-sky-400" : "text-[#f5f7fa61]"
-                      }`}
-                    >
-                      {step.id}
-                    </p>
-                    <div className="pt-2.5">
-                      <h3 className="[font-family:'Bricolage_Grotesque',Helvetica] text-3xl font-medium leading-[38.9px] tracking-[-0.72px] text-[#f5f7fa] md:text-4xl">
-                        {step.title}
-                      </h3>
-                    </div>
-                    <div className="pt-3 pb-[13px]">
-                      <p className="max-w-[580px] [font-family:'Inter',Helvetica] text-[15px] font-normal leading-6 tracking-[0] text-[#f5f7faa6]">
-                        {step.description}
-                      </p>
-                    </div>
-                    <p className="[font-family:'Inter',Helvetica] text-[11.5px] font-normal leading-[17.2px] tracking-[0.46px] text-[#f5f7fa61]">
-                      {step.meta}
-                    </p>
-                  </article>
-                </CardContent>
-              </Card>
+                {/* Timeline dot */}
+                <div className="relative flex shrink-0 flex-col items-center pt-[5px]">
+                  <div
+                    ref={(el) => { dotRefs.current[i] = el; }}
+                    className="h-[10px] w-[10px] rounded-full"
+                    style={{
+                      backgroundColor: animOff ? "#38bdf8" : "rgba(255,255,255,0.12)",
+                      boxShadow: animOff ? "0 0 0 3px rgba(56,189,248,0.18)" : "none",
+                    }}
+                  />
+                </div>
+
+                {/* Step content */}
+                <article className="flex min-w-0 flex-1 flex-col items-start">
+                  <p className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-medium leading-[13px] tracking-[1.30px] text-sky-400">
+                    {step.id}
+                  </p>
+                  <h3 className="pt-[7px] [font-family:'Bricolage_Grotesque',Helvetica] text-[22px] font-medium leading-[26px] tracking-[-0.55px] text-[#f5f7fa] lg:text-[26px] lg:leading-[30px]">
+                    {step.title}
+                  </h3>
+                  <p className="pt-[6px] max-w-[560px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[21px] tracking-[0] text-[#f5f7faa6]">
+                    {step.description}
+                  </p>
+                  <p className="pt-[6px] [font-family:'Inter',Helvetica] text-[10.5px] font-normal leading-[16px] tracking-[0.40px] text-[#f5f7fa61]">
+                    {step.tags}
+                  </p>
+                </article>
+              </li>
             ))}
-          </div>
+          </ol>
         </div>
       </div>
     </section>
