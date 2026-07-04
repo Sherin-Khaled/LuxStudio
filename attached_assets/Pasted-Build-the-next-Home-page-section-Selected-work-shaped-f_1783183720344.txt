@@ -1,0 +1,370 @@
+Build the **next Home page section: “Selected work shaped from strategy to launch.”**
+
+Do **not** redesign the whole website.
+Follow the existing Lux Studio style already built:
+
+* dark premium space background
+* subtle stars in the background
+* soft blue / violet glow
+* glassmorphism cards
+* thin elegant borders
+* smooth cinematic motion
+* premium, minimal, Apple-like spacing
+
+Use the screenshots I shared as the visual reference for this section.
+
+---
+
+# Section goal
+
+This is the **Selected Work / Featured Projects** section.
+
+It must feel like a **premium pinned storytelling section**.
+
+The section should show **one large glassmorphism project card at a time**, while the **next cards are stacked underneath** and slightly visible.
+
+When the user scrolls, the **next card comes forward above the current one**, like:
+
+* stacked glass cards
+* cinematic layered transition
+* similar to turning through premium pages
+* but **horizontal card transitions**, not vertical page flips
+
+The user should feel like they are moving through a **deck of projects** one by one.
+
+---
+
+# Pinned behavior
+
+This section must be **pinned**.
+
+While pinned:
+
+* only this section stays on screen
+* each scroll progress reveals the next project card
+* the current top card transitions out
+* the next card rises and becomes the new top card
+* the remaining cards stay underneath in a stacked layered view
+
+The section should remain pinned **until all project cards have been shown**.
+
+After the final card finishes its reveal, then the page can continue to the next section.
+
+---
+
+# Layout structure
+
+## Top content row
+
+At the top of the section, add:
+
+### Left side
+
+Small eyebrow:
+**04 / 06**
+
+Large heading:
+**Selected work shaped from strategy to launch.**
+
+### Right side
+
+Small supporting paragraph:
+**A closer look at websites and digital systems we designed, developed, optimized, and launched across export brands, e-commerce platforms, and business-focused experiences.**
+
+Use the same premium spacing and proportions shown in the screenshots.
+
+---
+
+# Card area
+
+Below the heading area, create a **large featured project card stack**.
+
+## Card style
+
+Each card must be:
+
+* large
+* rounded corners
+* glassmorphism / translucent dark surface
+* thin soft border
+* soft inner glow
+* subtle blue-violet ambient light
+* same visual language as the screenshots
+* two-column layout:
+
+  * left = project info
+  * right = stylized browser / project preview
+
+Do not make the cards flat or plain.
+
+---
+
+# Card stack behavior
+
+At the start of the section:
+
+* **Card 1 (Houd El Nile)** is fully visible on top
+* **other cards are underneath it**, slightly offset downward and visible at the bottom edge, like in the second screenshot
+* the user should understand there are more cards in the stack
+
+When scrolling:
+
+### Transition logic
+
+1. Card 1 is on top
+2. Scroll → Card 2 moves upward and becomes the top card
+3. Scroll again → Card 3 moves upward and becomes the top card
+4. Scroll again → Card 4 moves upward and becomes the top card
+
+Each transition should feel:
+
+* smooth
+* premium
+* layered
+* slightly 3D
+* not too fast
+* not aggressive
+* not bouncing
+
+The cards should feel like they are **stacked sheets / glass panels**.
+
+### Important
+
+Do **not** make them slide like a carousel left/right.
+Do **not** make them fade only.
+Do **not** make them scale too dramatically.
+The effect should be a **stack reveal from below upward to the top layer**.
+
+---
+
+# Visible stack look
+
+When the current card is active:
+
+* the active card is fully readable
+* the next one or two cards underneath are partially visible below it
+* those underneath should look slightly lower in the stack
+* subtle depth/shadow is allowed
+* do not overdo perspective
+
+Like the second screenshot:
+
+* current main card fully shown
+* stacked cards below, partially peeking
+
+---
+
+# Project cards content
+
+Build these 4 project cards.
+
+---
+
+## Card 1 — Houd El Nile
+
+Small label:
+**P.01**
+
+Project name:
+**Houd El Nile**
+
+Subtitle:
+**Agriculture export company**
+
+Description:
+**We rebuilt Houd El Nile's digital presence from an outdated WordPress website into a premium multilingual Next.js experience that better reflects the company's farms, factories, export business, and product quality.**
+
+Tags:
+
+* Website Redesign
+* Next.js
+* Photography
+* 7 Languages
+* SEO & Performance
+
+CTA:
+**View Project →**
+
+Preview style:
+
+* browser-style mockup
+* brand color direction: green
+* match the screenshot styling
+
+---
+
+## Card 2 — X Dental
+
+Small label:
+**P.02**
+
+Project name:
+**X Dental**
+
+Subtitle:
+**Dental supplies e-commerce platform**
+
+Description:
+**We designed and built X Dental as a complete e-commerce platform for doctors and clinics. The project included UI/UX design, product flows, cart and checkout, frontend and backend development, and product image editing.**
+
+Tags:
+
+* E-commerce
+* UI/UX Design
+* Frontend
+* Backend
+* Photoshop
+
+CTA:
+**View Project →**
+
+Preview style:
+
+* browser-style mockup
+* black / gold color direction
+* follow the screenshot style
+
+---
+
+## Card 3 — Al Nours
+
+Small label:
+**P.03**
+
+Project name:
+**Al Nours**
+
+Subtitle:
+**Saudi beverage distribution e-commerce**
+
+Description:
+**We created a complete online shopping platform for Al Nours, a Saudi company with distribution rights for Domty juices. The project included logo creation, brand color direction, full-stack development, and deployment.**
+
+Tags:
+
+* E-commerce
+* Frontend
+* Backend
+* Logo Design
+* Brand Direction
+
+CTA:
+**View Project →**
+
+Preview style:
+
+* browser-style mockup
+* blue brand direction
+* follow the screenshot style
+
+---
+
+## Card 4 — Al Baraka Olives
+
+Small label:
+**P.04**
+
+Project name:
+**Al Baraka Olives**
+
+Subtitle:
+**Olive export company**
+
+Description:
+**We transformed Al Baraka Olives from an outdated website into a cleaner, more premium export-brand experience through full visual redesign, frontend development, photography direction, and cPanel deployment.**
+
+Tags:
+
+* Website Redesign
+* Frontend
+* Export Brand
+* Photography
+* cPanel Deployment
+
+CTA:
+**View Project →**
+
+Preview style:
+
+* browser-style mockup
+* olive green brand direction
+* follow the screenshot style
+
+---
+
+# Motion details
+
+Use smooth pinned animation with GSAP ScrollTrigger.
+
+Suggested behavior:
+
+* pin the whole section
+* use scrub for smooth progress
+* each card transition tied to scroll progress
+* stacked cards should animate upward into the main position
+* active card opacity = 1
+* inactive below cards slightly dimmer
+* slight scale difference is okay:
+
+  * active card: scale(1)
+  * cards below: scale(0.98 / 0.96) very subtly
+* slight Y offset for stacked cards below
+
+Example feel:
+
+* top card fully visible
+* next card below with translateY
+* on scroll, next card rises into place and becomes active
+
+---
+
+# Background and effects
+
+Keep the background aligned with the rest of the website:
+
+* stars visible on left and right
+* subtle floating tiny stars
+* soft blue glow and slight violet glow
+* no heavy distracting animation
+* no removing the space atmosphere
+
+The section should feel alive but not noisy.
+
+---
+
+# Important design rules
+
+Do not:
+
+* convert this into a slider with arrows
+* add pagination bullets
+* make cards too small
+* remove the glassmorphism
+* flatten the design
+* make transitions too fast
+* make cards overlap in a messy way
+* make the section scroll normally before the stack sequence finishes
+
+Do:
+
+* keep it pinned
+* keep it elegant
+* keep it premium
+* keep the content readable
+* keep the stack visible underneath
+* make the transition feel cinematic and intentional
+
+---
+
+# Final required result
+
+At the end, the section should behave like this:
+
+* user enters the section
+* sees heading + intro + Houd El Nile card
+* sees other project cards stacked underneath
+* scroll 1 → X Dental becomes top card
+* scroll 2 → Al Nours becomes top card
+* scroll 3 → Al Baraka Olives becomes top card
+* after final card is shown clearly, the section unpins
+* then the next section starts
