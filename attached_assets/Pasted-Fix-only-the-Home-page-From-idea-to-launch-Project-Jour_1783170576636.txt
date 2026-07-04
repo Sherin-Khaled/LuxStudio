@@ -1,0 +1,295 @@
+Fix only the **Home page “From idea to launch” / Project Journey section**.
+
+Do not redesign the whole website.
+Do not edit the Hero section.
+Do not edit the previous sections.
+Do not remove the stars.
+Keep the background stars exactly in this section because they are part of the Lux Studio atmosphere.
+
+---
+
+# Current Problems
+
+1. The first point **Discover** is too high and is partially hidden/cropped at the top of the viewport.
+2. When the user scrolls, the point list moves in a way that makes the first point disappear too early.
+3. The long blue vertical line in the middle is not wanted.
+4. I want each point to have its own small line and circle, not one continuous vertical line across the whole timeline.
+5. Keep the stars in the background. Do not remove or reduce the star effect.
+
+---
+
+# Required Fix
+
+## 1. Move the Process Points Down
+
+Move the right-side process timeline content slightly lower so **Point 01 Discover** is fully visible when it appears.
+
+The first point should start clearly inside the viewport, not cropped.
+
+Recommended adjustment:
+
+```text
+Move the entire right timeline group down by around 80px–140px on desktop.
+```
+
+The final view should show:
+
+* Point 01 fully visible
+* Point 02 visible below it
+* Point 03 visible below it
+* continuing down naturally
+* last point can be slightly lower, but it should still become readable during scroll
+
+Do not move the left-side text too much.
+Only adjust the right-side points/timeline positioning.
+
+---
+
+## 2. Remove the Long Continuous Blue Vertical Line
+
+Remove the current long blue vertical line that runs through the middle of the timeline.
+
+I do not want one long fixed line.
+
+Instead, each process point should have its own local timeline marker.
+
+---
+
+# 3. New Marker Style for Each Point
+
+Each process point should include:
+
+```text
+Small cyan circle at the top
+Short vertical cyan line below the circle
+Point number
+Title
+Description
+Tags
+```
+
+The circle should stay at the **top of its own short line**.
+
+Each point should look like an individual timeline item.
+
+Do not connect all points with one long line.
+
+---
+
+## Marker Layout
+
+For each point, create a small marker column on the left of the point text:
+
+```text
+●
+│
+│
+```
+
+Where:
+
+* circle is at the top
+* short line extends downward
+* point text sits to the right of the circle/line
+* the line belongs only to that point
+
+Recommended marker dimensions:
+
+```text
+Circle size: 8px–11px
+Line width: 1px
+Line height: 70px–120px depending on the point height
+Gap between circle/line and text: 24px–32px
+```
+
+Color:
+
+```text
+Active circle: #38BDF8
+Active line: rgba(56,189,248,0.55)
+Inactive circle: rgba(255,255,255,0.18)
+Inactive line: rgba(255,255,255,0.10)
+```
+
+Add a soft glow only on the active/revealing point:
+
+```text
+box-shadow: 0 0 16px rgba(56,189,248,0.35)
+```
+
+Keep it premium, not neon.
+
+---
+
+# 4. Reveal Behavior
+
+Keep the pinned scroll behavior.
+
+Each point should appear one by one when the user scrolls.
+
+Behavior:
+
+1. Section pins.
+2. Left-side text stays fixed.
+3. Point 01 appears from bottom into place.
+4. Point 02 appears below Point 01.
+5. Point 03 appears below Point 02.
+6. Point 04 appears below Point 03.
+7. Point 05 appears below Point 04.
+8. Point 06 appears below Point 05.
+9. Previous points stay visible.
+10. Previous points become slightly muted but do not disappear.
+11. Section unpins only after all six points appear.
+
+Each point animation:
+
+```text
+opacity: 0 → 1
+y: 56px → 0
+filter: blur(8px) → blur(0px)
+```
+
+The marker for each point should animate in with the point:
+
+```text
+circle opacity: 0 → 1
+line scaleY: 0 → 1
+line transform-origin: top
+```
+
+---
+
+# 5. Process Points Content
+
+Keep the same process content.
+
+## 01 Discover
+
+Description:
+
+**We understand the business, audience, goals, challenges, existing digital presence, and what the project needs to achieve.**
+
+Tags:
+
+**Research · Goals · Audience**
+
+---
+
+## 02 Define
+
+Description:
+
+**We shape the strategy, project scope, content direction, sitemap, features, user journey, and approval milestones.**
+
+Tags:
+
+**Strategy · Structure · Scope**
+
+---
+
+## 03 Create
+
+Description:
+
+**We produce and refine the creative assets the project needs, including graphic design, image editing, photography, video editing, and visual content direction.**
+
+Tags:
+
+**Graphics · Photography · Video · Content**
+
+---
+
+## 04 Design
+
+Description:
+
+**We create wireframes, visual direction, UI systems, responsive layouts, and interactive prototypes ready for development.**
+
+Tags:
+
+**UX · UI · Design System**
+
+---
+
+## 05 Build & Connect
+
+Description:
+
+**We develop the frontend, connect backend systems, integrate dashboards, CMS platforms, APIs, databases, and business tools when needed.**
+
+Tags:
+
+**Frontend · Backend · CMS · Dashboards**
+
+---
+
+## 06 Optimize, Launch & Support
+
+Description:
+
+**We test responsiveness, performance, accessibility, SEO, and launch readiness, then support future updates and improvements after launch.**
+
+Tags:
+
+**SEO · Performance · Testing · Support**
+
+---
+
+# 6. Do Not Remove Stars
+
+Important:
+
+Keep the background stars in this section.
+
+Do not remove them.
+Do not hide them.
+Do not replace them with a plain background.
+
+The section should still feel galaxy-inspired and cinematic.
+
+The stars should remain:
+
+* subtle
+* behind content
+* not covering text
+* visible on left and right areas
+
+---
+
+# 7. Prevent Cropping
+
+Make sure the process timeline is not clipped.
+
+Check:
+
+```text
+overflow-hidden
+height constraints
+absolute positioning
+top offsets
+timeline container height
+pin wrapper clipping
+```
+
+If any parent is cropping the top of Point 01, fix it.
+
+The timeline container should allow all points to be visible during the pinned sequence.
+
+---
+
+# 8. Final Desired Result
+
+The final section should look like:
+
+* left side: fixed text “From idea to launch.”
+* right side: six process points stacked vertically
+* Point 01 fully visible, not cropped
+* no long central blue line
+* each point has its own small circle + short line
+* each new point appears with its marker
+* previous points stay visible
+* stars remain in the background
+* section stays pinned until all six points appear
+* next section does not appear early
+
+Only fix this Journey / Process section.
