@@ -69,36 +69,31 @@ export const ProcessJourneySection = (): JSX.Element => {
   const pointRefs  = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
   const dotRefs    = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
   const lineRefs   = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
-
-  // Keep a ref to the GSAP context so we can always revert it
-  const ctxRef = useRef<gsap.Context | null>(null);
+  const ctxRef     = useRef<gsap.Context | null>(null);
 
   useEffect(() => {
-    // Clean up any previous context first
     if (ctxRef.current) {
       ctxRef.current.revert();
       ctxRef.current = null;
     }
-
     if (animOff) return;
 
     const points = pointRefs.current.filter(Boolean) as HTMLDivElement[];
     const dots   = dotRefs.current.filter(Boolean)   as HTMLDivElement[];
     const lines  = lineRefs.current.filter(Boolean)  as HTMLDivElement[];
-
     if (!points.length || !sectionRef.current) return;
 
     const ctx = gsap.context(() => {
-      // ── Initial hidden state (GSAP owns these — no conflicting JSX style) ──
-      gsap.set(points, { autoAlpha: 0, y: 56, filter: "blur(8px)" });
-      gsap.set(dots,  { backgroundColor: "rgba(255,255,255,0.15)", boxShadow: "none" });
-      gsap.set(lines, { scaleY: 0, transformOrigin: "top center" });
+      // ── Initial states — GSAP owns these, no conflicting JSX styles ──
+      gsap.set(points, { autoAlpha: 0, y: 50, filter: "blur(8px)" });
+      gsap.set(dots,   { backgroundColor: "rgba(56,189,248,0.25)", boxShadow: "none" });
+      gsap.set(lines,  { scaleY: 0, transformOrigin: "top center" });
 
       const tl = gsap.timeline({
         scrollTrigger: {
           trigger: sectionRef.current,
           start: "top top",
-          end: "+=440%",
+          end: "+=480%",
           scrub: 1,
           pin: true,
           pinSpacing: true,
@@ -112,28 +107,31 @@ export const ProcessJourneySection = (): JSX.Element => {
         const line = lines[i];
         const isLast = i === points.length - 1;
 
-        // Reveal point content
+        // ── Reveal point (active / bright state) ──
         tl.fromTo(
           point,
-          { autoAlpha: 0, y: 56, filter: "blur(8px)" },
-          { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 1, ease: "none" }
+          { autoAlpha: 0, y: 50, filter: "blur(8px)" },
+          { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "none" }
         );
-        // Dot glows cyan + line extends downward in sync
-        tl.to(dot,  { backgroundColor: "#38bdf8", boxShadow: "0 0 16px rgba(56,189,248,0.35)", duration: 0.4, ease: "none" }, "<0.2");
-        tl.to(line, { scaleY: 1, duration: 0.5, ease: "none" }, "<");
+        // Dot brightens + line grows from top
+        tl.to(dot,  { backgroundColor: "#38bdf8", boxShadow: "0 0 12px rgba(56,189,248,0.28)", duration: 0.35, ease: "none" }, "<0.15");
+        tl.to(line, { scaleY: 1, duration: 0.45, ease: "none" }, "<");
 
         if (!isLast) {
-          // Dim previous point so the next feels active
-          tl.to(point, { opacity: 0.70, duration: 0.35, ease: "none" });
-          tl.to(dot,   { boxShadow: "none", opacity: 0.45, duration: 0.35, ease: "none" }, "<");
+          // Brief hold so user clearly sees the active state
+          tl.to({}, { duration: 0.3 });
+          // Dim to "previous / revealed" state — 50% opacity for strong contrast
+          tl.to(point, { opacity: 0.50, duration: 0.4, ease: "none" });
+          tl.to(dot,   { backgroundColor: "rgba(56,189,248,0.45)", boxShadow: "none", opacity: 0.55, duration: 0.4, ease: "none" }, "<");
+          tl.to(line,  { opacity: 0.30, duration: 0.4, ease: "none" }, "<");
         }
       });
 
-      tl.to({}, { duration: 0.8 }); // brief hold on completed timeline
+      // Hold so the user sees the full completed timeline
+      tl.to({}, { duration: 0.8 });
     }, sectionRef);
 
     ctxRef.current = ctx;
-
     return () => {
       ctx.revert();
       ctxRef.current = null;
@@ -154,94 +152,104 @@ export const ProcessJourneySection = (): JSX.Element => {
         src="/figmaAssets/backgroundstars-4.svg"
       />
 
-      {/* ── Glow orbs ── */}
+      {/* ── Atmospheric glows ── */}
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute right-[-10%] top-[18%] h-[560px] w-[560px] rounded-full blur-[130px]"
+        className="pointer-events-none absolute right-[-10%] top-[15%] h-[560px] w-[560px] rounded-full blur-[130px]"
         style={{ backgroundColor: "rgba(29, 78, 216, 0.18)" }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute right-[10%] top-[-4%] h-[300px] w-[300px] rounded-full blur-[90px]"
-        style={{ backgroundColor: "rgba(56, 189, 248, 0.10)" }}
+        className="pointer-events-none absolute right-[10%] top-[-4%] h-[280px] w-[280px] rounded-full blur-[90px]"
+        style={{ backgroundColor: "rgba(56, 189, 248, 0.09)" }}
       />
       <div
         aria-hidden="true"
-        className="pointer-events-none absolute bottom-[-8%] left-[2%] h-[320px] w-[320px] rounded-full blur-[100px]"
-        style={{ backgroundColor: "rgba(124, 58, 237, 0.10)" }}
+        className="pointer-events-none absolute bottom-[-8%] left-[2%] h-[300px] w-[300px] rounded-full blur-[100px]"
+        style={{ backgroundColor: "rgba(124, 58, 237, 0.09)" }}
       />
 
       {/* ── Edge stars ── */}
       <SideStars starsPerSide={isMobile ? 6 : 14} className="z-[1]" />
 
-      {/* ── Main layout ── */}
-      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1360px] flex-col gap-10 px-6 pt-14 pb-10 sm:px-8 md:flex-row md:items-start lg:px-11 lg:pt-16">
+      {/* ── Main content ── */}
+      {/*
+        h-screen keeps the pinned section viewport-height.
+        pt-12/pb-8 are tighter than before so all 6 points fit without cropping.
+        The right column uses pt-8 lg:pt-10 (not pt-20) to reclaim vertical space.
+      */}
+      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1360px] flex-col gap-8 overflow-hidden px-6 pt-12 pb-8 sm:px-8 md:flex-row md:items-start lg:px-11 lg:pt-14">
 
-        {/* ── Left: editorial heading ── */}
-        <header className="flex w-full shrink-0 flex-col items-start md:w-[380px] lg:w-[420px] xl:w-[460px] md:pt-4">
+        {/* ── Left: editorial heading (stays in position while pinned) ── */}
+        <header className="flex w-full shrink-0 flex-col items-start md:w-[360px] lg:w-[400px] xl:w-[440px] md:pt-2">
           <p className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] text-[#f5f7fa61]">
             03 / 06
           </p>
           <h2
             id="journey-heading"
-            className="pt-5 [font-family:'Bricolage_Grotesque',Helvetica] text-[40px] font-semibold leading-[0.97] tracking-[-1.4px] text-[#f5f7fa] sm:text-[52px] lg:text-[64px] lg:tracking-[-2px]"
+            className="pt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[38px] font-semibold leading-[0.97] tracking-[-1.4px] text-[#f5f7fa] sm:text-[48px] lg:text-[60px] lg:tracking-[-1.8px]"
           >
             From idea
             <br />
             to launch.
           </h2>
-          <p className="pt-5 max-w-[400px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[23px] tracking-[0] text-[#f5f7faa6] sm:text-[14.5px] sm:leading-[25px]">
+          <p className="pt-4 max-w-[380px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] tracking-[0] text-[#f5f7faa6] sm:text-[14px] sm:leading-[24px]">
             A clear, collaborative process that turns strategy, content, design,
             development, and systems into a complete digital experience.
           </p>
-          <p className="pt-4 max-w-[340px] [font-family:'Inter',Helvetica] text-[11.5px] font-normal leading-[18px] tracking-[0] text-[#f5f7fa61]">
+          <p className="pt-3 max-w-[320px] [font-family:'Inter',Helvetica] text-[11px] font-normal leading-[17px] tracking-[0] text-[#f5f7fa61]">
             Every stage is reviewed, refined, and approved before moving forward.
           </p>
         </header>
 
-        {/* ── Right: process timeline ── */}
-        {/* pt-16/pt-20 pushes the first point down so it is not cropped */}
-        <div className="flex min-w-0 flex-1 flex-col pt-4 md:pt-14 lg:pt-20">
-          <ol className="flex flex-col gap-[14px] lg:gap-[16px]" aria-label="Project process steps">
+        {/* ── Right: vertical process list ──
+            pt-8 lg:pt-10 is intentionally short to keep all 6 points within viewport.
+            gap-[9px] lg:gap-[11px] is tight so the final state fits without cropping. ── */}
+        <div className="flex min-w-0 flex-1 flex-col pt-2 md:pt-8 lg:pt-10">
+          <ol className="flex flex-col gap-[9px] lg:gap-[11px]" aria-label="Project process steps">
             {steps.map((step, i) => (
               <li
                 key={step.id}
                 ref={(el) => { pointRefs.current[i] = el; }}
-                className="flex items-start gap-5 lg:gap-6"
+                className="flex items-start gap-[18px] lg:gap-5"
               >
-                {/* Per-point marker: dot + short vertical line */}
-                <div className="flex shrink-0 flex-col items-center pt-[4px]">
-                  {/* Dot — GSAP controls backgroundColor, so no conflicting style here */}
+                {/* ── Per-point marker: dot then short line ── */}
+                <div className="flex shrink-0 flex-col items-center pt-[3px]">
+                  {/* Dot — GSAP controls bg/shadow/opacity via refs */}
                   <div
                     ref={(el) => { dotRefs.current[i] = el; }}
                     className="rounded-full"
-                    style={{ width: "9px", height: "9px", flexShrink: 0 }}
+                    style={{ width: "8px", height: "8px", flexShrink: 0 }}
                   />
-                  {/* Short line — GSAP controls scaleY, so only non-animated styles here */}
+                  {/* Short line — GSAP controls scaleY/opacity via ref */}
                   <div
                     ref={(el) => { lineRefs.current[i] = el; }}
                     style={{
                       width: "1px",
-                      height: "66px",
-                      marginTop: "5px",
-                      background: "rgba(56,189,248,0.52)",
+                      height: "52px",
+                      marginTop: "4px",
+                      background: "rgba(56,189,248,0.55)",
                       flexShrink: 0,
                     }}
                   />
                 </div>
 
-                {/* Step text content */}
-                <article className="flex min-w-0 flex-1 flex-col items-start pb-1">
-                  <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] font-medium leading-[13px] tracking-[1.30px] text-sky-400">
+                {/* ── Step text ── */}
+                <article className="flex min-w-0 flex-1 flex-col items-start">
+                  {/* Number — always cyan so it reads as the timeline label */}
+                  <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-medium leading-[12px] tracking-[1.2px] text-sky-400">
                     {step.id}
                   </p>
-                  <h3 className="pt-[5px] [font-family:'Bricolage_Grotesque',Helvetica] text-[20px] font-medium leading-[25px] tracking-[-0.5px] text-[#f5f7fa] sm:text-[22px] lg:text-[24px] lg:leading-[28px]">
+                  {/* Title — bright white at full opacity; dims with parent on previous state */}
+                  <h3 className="pt-[4px] [font-family:'Bricolage_Grotesque',Helvetica] text-[18px] font-semibold leading-[23px] tracking-[-0.45px] text-[#f5f7fa] lg:text-[20px] lg:leading-[25px]">
                     {step.title}
                   </h3>
-                  <p className="pt-[5px] max-w-[540px] [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[20px] tracking-[0] text-[#f5f7faa6]">
+                  {/* Description */}
+                  <p className="pt-[4px] max-w-[540px] [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[19px] tracking-[0] text-[#f5f7faa6]">
                     {step.description}
                   </p>
-                  <p className="pt-[5px] [font-family:'Inter',Helvetica] text-[10px] font-normal leading-[15px] tracking-[0.38px] text-[#f5f7fa61]">
+                  {/* Tags */}
+                  <p className="pt-[4px] [font-family:'Inter',Helvetica] text-[10px] font-normal leading-[14px] tracking-[0.38px] text-[#f5f7fa61]">
                     {step.tags}
                   </p>
                 </article>

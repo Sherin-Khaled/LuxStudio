@@ -1,0 +1,217 @@
+
+Fix only the **“From idea to launch” pinned process section** on the Home page.
+
+Do not redesign the whole website.
+Do not touch previous sections.
+Do not remove the stars.
+Keep the current overall layout, galaxy mood, and blue blur on the right.
+
+## Problems to fix
+
+### 1) Point visual states are wrong
+
+I want **two clear visual states** for the timeline points:
+
+#### A. Previous / already revealed points
+
+These should look like the **first reference screenshot**.
+
+Style for previous points:
+
+* small cyan point number
+* thin cyan vertical line
+* small cyan circle at the top of the line
+* title should be **visible but softer / dimmer**
+* description and tags should be more muted
+* overall appearance should feel “revealed already, but not currently active”
+
+#### B. Current / newly active point
+
+This should look like the **second reference screenshot**.
+
+Style for the active point:
+
+* same cyan number
+* same cyan circle + thin cyan line
+* title should be **bright white and more dominant**
+* body text should be more visible than previous points
+* tags should be clearer
+* this point is the main focus at this scroll step
+
+### Important:
+
+I do **not** want all visible points to look identical.
+The **new/current point** must be visually highlighted.
+The **older revealed points** must stay visible but be less emphasized.
+
+---
+
+## Exact visual behavior wanted
+
+At each scroll step:
+
+* a **new point appears from below into place**
+* that new point becomes the **active point**
+* the previously revealed points remain visible
+* previous points switch to the **dimmed previous-point style**
+* only one point at a time should feel “current / active”
+
+### Animation for the new point
+
+When a new point appears:
+
+* opacity: 0 → 1
+* y: 50px → 0
+* blur: 8px → 0
+* duration around 0.5s–0.8s
+* smooth easing, premium feel
+
+Also animate its marker:
+
+* circle fades in
+* thin line grows downward from top to bottom
+
+---
+
+## 2) Marker style
+
+Use the same marker system for every point:
+
+* small cyan circle at top
+* very thin cyan line directly below it
+* point number near the top
+* text block to the right
+
+### Marker specs
+
+* circle size: around 10px
+* line width: 1px
+* line color: cyan / blue close to current site accent
+* keep it elegant and minimal
+* no heavy glowing effect
+* no thick line
+
+### Very important
+
+Keep the marker style like the references:
+
+* previous point marker remains visible
+* active point marker is slightly stronger / clearer
+* do not replace this with a long heavy full-height line
+
+---
+
+## 3) Last two points are cropped
+
+This is a major issue.
+
+Right now points **05** and **06** are cropped and not fully visible.
+
+Fix this by adjusting the pinned section logic and spacing so that:
+
+* all 6 points can appear correctly
+* the user can fully see point 05
+* the user can fully see point 06
+* the next section should not start interfering too early
+
+### Required fix
+
+Increase the timeline reveal space / scroll distance for this pinned section.
+
+Please check and fix:
+
+* section height
+* min-height
+* pin spacing
+* ScrollTrigger end value
+* overflow clipping
+* any parent with overflow hidden
+* bottom padding of the pinned container
+* vertical offset of the right timeline column
+
+### Goal
+
+The pinned section must remain active until:
+
+* all 6 points are shown
+* point 06 becomes readable enough
+* only then the section can unpin and the next section starts
+
+---
+
+## 4) Keep the stars
+
+Do not remove the stars in the background.
+
+Keep:
+
+* subtle white stars
+* galaxy feeling
+* right-side blue blur
+* premium dark-space mood
+
+The stars should remain visible behind the content.
+
+---
+
+## 5) Content order and reveal behavior
+
+Keep the left side fixed:
+
+* “03 / 06”
+* “From idea to launch.”
+* the supporting paragraphs
+
+On the right side:
+show the process points one by one in this order:
+
+1. Discover
+2. Define
+3. Create
+4. Design
+5. Build & Connect
+6. Optimize, Launch & Support
+
+At each scroll step:
+
+* reveal one new point
+* keep the older points visible
+* older points become dimmed
+* newest point becomes highlighted
+
+---
+
+## 6) State rules summary
+
+### Before a point is revealed
+
+* hidden
+
+### When it becomes current
+
+* bright title
+* brighter text
+* crisp and focused
+* circle + line fully visible
+
+### After the next point appears
+
+* it stays visible
+* but becomes dimmed like the first reference screenshot
+
+---
+
+## 7) Final expected result
+
+I want the section to behave like this:
+
+* pinned section
+* left content stays fixed
+* right timeline reveals one point per scroll step
+* current point = bright highlighted style
+* previous points = dimmed revealed style
+* last two points are no longer cropped
+* section only unpins after all points are properly revealed
+* stars remain in the background
+
+Please fix this section only.
