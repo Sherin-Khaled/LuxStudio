@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { useReducedMotion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -70,7 +70,7 @@ export const OfferingsOverviewSection = (): JSX.Element => {
     null, null, null, null, null, null,
   ]);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (animOff) return;
 
     const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];

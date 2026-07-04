@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { useReducedMotion } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import gsap from "gsap";
@@ -63,22 +63,25 @@ const projects = [
   },
 ];
 
-/* ─────────────────── Browser mockup ─────────────────── */
+/*
+  Stack visual positions indexed by the card's relative position to the active card.
+  relativeIndex 0 = active, 1 = behind 1, 2 = behind 2, 3 = behind 3.
+  transformOrigin "top center" keeps the top edge anchored while scale shrinks the card downward.
+*/
+const STACK = [
+  { y: 0,   scale: 1,     opacity: 1,    zIndex: 40 },
+  { y: 36,  scale: 0.985, opacity: 0.65, zIndex: 30 },
+  { y: 72,  scale: 0.97,  opacity: 0.42, zIndex: 20 },
+  { y: 108, scale: 0.955, opacity: 0.25, zIndex: 10 },
+];
+
+/* ─────────────────────── Browser mockup ─────────────────────── */
 const BrowserMockup = ({
-  domain,
-  headerBg,
-  bodyBg,
-  accent,
-  navLines,
+  domain, headerBg, bodyBg, accent, navLines,
 }: {
-  domain: string;
-  headerBg: string;
-  bodyBg: string;
-  accent: string;
-  navLines: string[];
+  domain: string; headerBg: string; bodyBg: string; accent: string; navLines: string[];
 }) => (
   <div className="overflow-hidden rounded-xl border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.6)]">
-    {/* Chrome bar */}
     <div className="flex items-center gap-2 border-b border-white/10 bg-[#111111] px-3 py-2.5">
       <div className="flex gap-1.5">
         <div className="h-2 w-2 rounded-full bg-[#ff5f57] opacity-80" />
@@ -89,9 +92,7 @@ const BrowserMockup = ({
         <span className="font-mono text-[10px] leading-none text-white/50">{domain}</span>
       </div>
     </div>
-    {/* Page */}
     <div style={{ backgroundColor: bodyBg }}>
-      {/* Nav */}
       <div className="flex items-center justify-between px-5 py-3" style={{ backgroundColor: headerBg }}>
         <div className="h-2 w-20 rounded-full opacity-70" style={{ backgroundColor: navLines[0] }} />
         <div className="flex gap-3">
@@ -101,7 +102,6 @@ const BrowserMockup = ({
         </div>
         <div className="h-5 w-14 rounded" style={{ backgroundColor: accent }} />
       </div>
-      {/* Hero */}
       <div className="px-5 py-5">
         <div className="mb-3 h-4 w-2/3 rounded-full opacity-30" style={{ backgroundColor: headerBg }} />
         <div className="mb-2 h-3 w-1/2 rounded-full opacity-20" style={{ backgroundColor: headerBg }} />
@@ -111,7 +111,6 @@ const BrowserMockup = ({
         </div>
       </div>
       <div className="mx-5 border-t opacity-10" style={{ borderColor: headerBg }} />
-      {/* Content row */}
       <div className="flex gap-4 px-5 py-4">
         {[0, 1, 2].map((i) => (
           <div key={i} className="flex-1 space-y-1.5">
@@ -125,74 +124,9 @@ const BrowserMockup = ({
   </div>
 );
 
-/* ─────────────────── Card content ─────────────────── */
-const ProjectCardContent = ({ project }: { project: typeof projects[0] }) => (
-  <div className="flex h-full w-full flex-col overflow-hidden rounded-[28px] border border-white/[0.14] bg-white/[0.06] shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.08),0_32px_100px_rgba(0,0,0,0.7)] backdrop-blur-sm lg:flex-row">
-    {/* Left: info */}
-    <div className="flex flex-col justify-between p-7 sm:p-8 lg:w-[42%] lg:p-10 xl:p-11">
-      <div>
-        <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] font-normal leading-[16px] tracking-[1.44px] text-[#f5f7fa61]">
-          {project.label}
-        </p>
-        <h3 className="mt-3 [font-family:'Bricolage_Grotesque',Helvetica] text-[28px] font-medium leading-none tracking-[-0.8px] text-[#f5f7fa] sm:text-[34px] lg:text-[42px] lg:tracking-[-1.1px]">
-          {project.name}
-        </h3>
-        <p className="mt-2 [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[18px] tracking-[0.12px] text-[#f5f7fa61]">
-          {project.subtitle}
-        </p>
-        <p className="mt-5 max-w-[400px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] text-[#f5f7faa6]">
-          {project.description}
-        </p>
-      </div>
-      <div className="mt-6">
-        <div className="flex flex-wrap gap-[6px]">
-          {project.tags.map((tag) => (
-            <span
-              key={tag}
-              className="rounded-full border border-white/[0.14] bg-white/[0.08] px-2.5 py-1 [font-family:'Inter',Helvetica] text-[10.5px] font-normal leading-[15px] text-[#f5f7fa99]"
-            >
-              {tag}
-            </span>
-          ))}
-        </div>
-        <button
-          type="button"
-          className="mt-5 flex items-center gap-1.5 [font-family:'Inter',Helvetica] text-[12.5px] font-medium leading-[19px] tracking-[0.12px] text-[#f5f7fa] opacity-80 transition-opacity hover:opacity-100"
-          data-testid={`btn-view-project-${project.label}`}
-        >
-          View Project
-          <ArrowRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
-    </div>
-
-    {/* Vertical divider */}
-    <div className="hidden w-px bg-white/[0.10] lg:block" />
-
-    {/* Right: browser mockup */}
-    <div className="flex flex-1 items-center justify-center p-6 sm:p-7 lg:p-8">
-      <div className="w-full max-w-[600px]">
-        <BrowserMockup
-          domain={project.domain}
-          headerBg={project.headerBg}
-          bodyBg={project.bodyBg}
-          accent={project.accent}
-          navLines={project.navLines}
-        />
-      </div>
-    </div>
-  </div>
-);
-
 /* ─────────────────── Section ─────────────────── */
-
-// Space (px) reserved below the active card's bottom edge for the stack peek
-const PEEK_SPACE = 64;
-// How far each stacked card's top edge is from the active card's bottom edge
-const PEEK_OFFSETS = [6, 22, 36]; // px below active card bottom for cards 1, 2, 3
-
 export const CaseStudyFeatureSection = (): JSX.Element => {
-  const reduced = useReducedMotion() ?? false;
+  const reduced  = useReducedMotion() ?? false;
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.innerWidth < 768
   );
@@ -205,44 +139,45 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
   const animOff = reduced || isMobile;
 
   const sectionRef  = useRef<HTMLElement>(null);
-  const stackRef    = useRef<HTMLDivElement>(null);          // overflow:hidden container
+  /*
+    cardRefs:    outer wrapper div — GSAP controls y / scale / opacity / zIndex
+    contentRefs: inner content div — GSAP controls opacity (0 = inactive, 1 = active)
+    Only one card should have readable content at a time.
+  */
   const cardRefs    = useRef<(HTMLDivElement | null)[]>([null, null, null, null]);
+  const contentRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null]);
   const tlRef       = useRef<gsap.core.Timeline | null>(null);
 
-  useEffect(() => {
-    // Clean up previous timeline
+  useLayoutEffect(() => {
+    // Cleanup previous timeline. useLayoutEffect ensures cleanup runs synchronously
+    // BEFORE React's commit-phase DOM mutations, so GSAP's pin-spacer is removed
+    // before React tries to reconcile — preventing the "removeChild" HMR crash.
     if (tlRef.current) {
-      tlRef.current.scrollTrigger?.kill();
-      tlRef.current.kill();
+      try { tlRef.current.scrollTrigger?.kill(); tlRef.current.kill(); } catch (_) {}
       tlRef.current = null;
     }
     if (animOff) return;
 
-    const cards = cardRefs.current.filter(Boolean) as HTMLDivElement[];
-    if (cards.length < 4 || !sectionRef.current || !stackRef.current) return;
+    const cards    = cardRefs.current.filter(Boolean) as HTMLDivElement[];
+    const contents = contentRefs.current.filter(Boolean) as HTMLDivElement[];
+    if (cards.length < 4 || contents.length < 4 || !sectionRef.current) return;
 
-    const CH = stackRef.current.clientHeight; // container height
-    // Card height is set by CSS: calc(100% - PEEK_SPACE px).
-    // GSAP only animates y / opacity / zIndex — never height.
-    const activeH = CH - PEEK_SPACE;
-
-    // Initial y positions
-    const peekY = [
-      activeH + PEEK_OFFSETS[0], // card 1 peek top
-      activeH + PEEK_OFFSETS[1], // card 2 peek top
-      activeH + PEEK_OFFSETS[2], // card 3 peek top
-    ];
-
-    gsap.set(cards[0], { y: 0,        opacity: 1,    zIndex: 40 });
-    gsap.set(cards[1], { y: peekY[0], opacity: 1,    zIndex: 30 });
-    gsap.set(cards[2], { y: peekY[1], opacity: 0.90, zIndex: 20 });
-    gsap.set(cards[3], { y: peekY[2], opacity: 0.80, zIndex: 10 });
+    // ── Initial stack positions ──
+    // All cards share absolute top:0 and have the same height (h-full of the stack container).
+    // Stacked cards are offset downward (y=36/72/108) so their bottom edge peeks below
+    // the active card into the h-28 peek spacer reserved at the bottom of the layout.
+    cards.forEach((card, i) => {
+      gsap.set(card, { ...STACK[i], transformOrigin: "top center" });
+    });
+    // Active card content visible; others hidden
+    gsap.set(contents[0], { opacity: 1 });
+    contents.slice(1).forEach((c) => gsap.set(c, { opacity: 0 }));
 
     const tl = gsap.timeline({
       scrollTrigger: {
         trigger: sectionRef.current,
         start: "top top",
-        end: "+=320%",
+        end: "+=310%",
         scrub: 1.2,
         pin: true,
         pinSpacing: true,
@@ -251,49 +186,52 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
       },
     });
 
-    // Brief opening hold
+    // Opening hold — user sees the full first card before scrolling triggers a transition
     tl.to({}, { duration: 0.3 });
 
     for (let t = 0; t < 3; t++) {
       const exiting  = cards[t];
       const incoming = cards[t + 1];
+      const exitContent  = contents[t];
+      const enterContent = contents[t + 1];
 
-      // Z-index: incoming rises above exiting immediately
+      // ── Z-index swap: incoming card rises above exiting card ──
       tl.set(exiting,  { zIndex: 5 });
       tl.set(incoming, { zIndex: 40 }, "<");
 
-      // Exiting card: quick opacity fade + slow upward exit (clipped by overflow:hidden)
-      tl.to(exiting, { opacity: 0, duration: 0.3, ease: "none" }, "<");
-      tl.to(exiting, { y: -(activeH + 30), duration: 1.1, ease: "none" }, "<");
+      // ── Content: hide exiting text fast, reveal incoming text as card rises ──
+      tl.to(exitContent,  { opacity: 0, duration: 0.25, ease: "none" }, "<");
+      tl.to(enterContent, { opacity: 1, duration: 0.65, ease: "none" }, "<0.35");
 
-      // Incoming card: rises from peek position into full active position
-      tl.to(incoming, { y: 0, opacity: 1, duration: 1.1, ease: "none" }, "<");
+      // ── Exiting card: moves backward into deck (y=108) and fades out ──
+      tl.to(exiting, {
+        y: 108, scale: STACK[3].scale, opacity: 0,
+        duration: 1.05, ease: "none",
+      }, "<");
 
-      // Remaining stacked cards shift up one position
+      // ── Incoming card: rises from its stack position to active (y=0) ──
+      tl.to(incoming, {
+        y: 0, scale: 1, opacity: 1,
+        duration: 1.05, ease: "none",
+      }, "<");
+
+      // ── Remaining stacked cards shift one position forward in the deck ──
       for (let r = t + 2; r < 4; r++) {
-        const newPeekIdx = r - (t + 1) - 1; // 0, 1
+        const newPos = STACK[r - (t + 1)]; // shift up one slot
         tl.to(cards[r], {
-          y: peekY[newPeekIdx],
-          duration: 0.9,
-          ease: "none",
+          y: newPos.y, scale: newPos.scale, opacity: newPos.opacity,
+          duration: 0.9, ease: "none",
         }, "<");
       }
 
-      // Hold at new active state
-      tl.to({}, { duration: t === 2 ? 0.9 : 0.4 });
+      // Hold at the new active card so the user can read it before next scroll
+      tl.to({}, { duration: t === 2 ? 0.9 : 0.45 });
     }
 
     tlRef.current = tl;
 
     return () => {
-      // Wrap in try-catch: during HMR, React may detach DOM nodes before this
-      // cleanup runs, causing GSAP's pin-spacer removeChild to race and throw.
-      try {
-        tl.scrollTrigger?.kill();
-        tl.kill();
-      } catch (_) {
-        // suppress HMR pin-spacer race
-      }
+      try { tl.scrollTrigger?.kill(); tl.kill(); } catch (_) {}
       tlRef.current = null;
     };
   }, [animOff]);
@@ -304,7 +242,7 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
       className="relative w-full bg-[#03050a]"
       aria-labelledby="selected-work-heading"
     >
-      {/* Stars */}
+      {/* Background stars */}
       <img
         className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-90"
         alt=""
@@ -312,19 +250,22 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
         src="/figmaAssets/backgroundstars-2.svg"
       />
 
-      {/* Glows */}
-      <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-10 h-[55vw] w-[55vw] max-h-[800px] max-w-[800px] -translate-x-1/2 rounded-full blur-[160px]"
+      {/* Atmospheric glows */}
+      <div aria-hidden="true"
+        className="pointer-events-none absolute left-1/2 top-10 h-[55vw] w-[55vw] max-h-[800px] max-w-[800px] -translate-x-1/2 rounded-full blur-[160px]"
         style={{ backgroundColor: "rgba(29,78,216,0.15)" }} />
-      <div aria-hidden="true" className="pointer-events-none absolute right-[-8%] top-[22%] h-[420px] w-[420px] rounded-full blur-[120px]"
+      <div aria-hidden="true"
+        className="pointer-events-none absolute right-[-8%] top-[22%] h-[420px] w-[420px] rounded-full blur-[120px]"
         style={{ backgroundColor: "rgba(124,58,237,0.10)" }} />
-      <div aria-hidden="true" className="pointer-events-none absolute left-[4%] top-[60%] h-[300px] w-[300px] rounded-full blur-[90px]"
+      <div aria-hidden="true"
+        className="pointer-events-none absolute left-[4%] top-[55%] h-[300px] w-[300px] rounded-full blur-[90px]"
         style={{ backgroundColor: "rgba(56,189,248,0.08)" }} />
 
       {/* Edge stars */}
       <SideStars starsPerSide={isMobile ? 6 : 14} className="z-[1]" />
 
-      {/* ── Main layout ── */}
-      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1400px] flex-col px-6 pb-6 pt-12 sm:px-8 lg:px-11 lg:pt-14">
+      {/* ──────────────────── Main layout ──────────────────── */}
+      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1400px] flex-col px-6 pt-12 pb-0 sm:px-8 lg:px-11 lg:pt-14">
 
         {/* Section header */}
         <header className="flex w-full shrink-0 flex-col items-start justify-between gap-4 lg:flex-row lg:items-end lg:gap-10">
@@ -348,44 +289,142 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
         </header>
 
         {/*
-          ── Card stack container ──
-          overflow:hidden clips:
-            (a) cards exiting upward (above y=0)
-            (b) stacked cards that extend below the container bottom
-          The bottom PEEK_SPACE px of the container is the "peek zone" where
-          stacked cards' top edges appear.
+          ── CARD STACK STAGE ──
+          All 4 cards share this same absolute area (position: relative, overflow: visible).
+          overflow:visible allows the stacked cards (y=36/72/108) to extend downward
+          into the h-28 peek spacer, creating the layered-deck visual.
+
+          Stack container uses flex-1 to fill the space between the header and the peek spacer.
+          Each card is absolute top-0 left-0 right-0 h-full — they all occupy the same area.
+          GSAP controls y / scale / opacity / zIndex to create the stacked appearance.
         */}
         {animOff ? (
-          /* Mobile: vertical list */
-          <div className="mt-6 flex flex-col gap-5 overflow-y-auto">
-            {projects.map((p) => (
-              <div key={p.label} className="h-auto min-h-[480px]">
-                <ProjectCardContent project={p} />
+          /* Mobile: vertical list of full cards */
+          <div className="mt-6 flex flex-col gap-5 overflow-y-auto pb-8">
+            {projects.map((project) => (
+              <div key={project.label} className="flex min-h-[480px] flex-col overflow-hidden rounded-[24px] border border-white/[0.14] bg-white/[0.06] shadow-[0_32px_100px_rgba(0,0,0,0.7)] backdrop-blur-sm">
+                <div className="flex flex-col p-7">
+                  <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.44px] text-[#f5f7fa61]">{project.label}</p>
+                  <h3 className="mt-3 [font-family:'Bricolage_Grotesque',Helvetica] text-[28px] font-medium text-[#f5f7fa]">{project.name}</h3>
+                  <p className="mt-1 text-[12px] text-[#f5f7fa61]">{project.subtitle}</p>
+                  <p className="mt-4 text-[13px] leading-[22px] text-[#f5f7faa6]">{project.description}</p>
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {project.tags.map((tag) => (
+                      <span key={tag} className="rounded-full border border-white/[0.14] bg-white/[0.08] px-2.5 py-1 text-[10.5px] text-[#f5f7fa99]">{tag}</span>
+                    ))}
+                  </div>
+                  <button type="button" className="mt-4 flex items-center gap-1.5 text-[12.5px] font-medium text-[#f5f7fa] opacity-80">
+                    View Project <ArrowRight className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="p-6">
+                  <BrowserMockup domain={project.domain} headerBg={project.headerBg} bodyBg={project.bodyBg} accent={project.accent} navLines={project.navLines} />
+                </div>
               </div>
             ))}
           </div>
         ) : (
-          <div
-            ref={stackRef}
-            className="relative mt-5 flex-1 overflow-hidden lg:mt-6"
-          >
-            {projects.map((project, i) => (
-              <div
-                key={project.label}
-                ref={(el) => { cardRefs.current[i] = el; }}
-                /*
-                  width: 100%, position: absolute, top: 0.
-                  Height and y-transform are set by GSAP in useEffect.
-                  Initially rendered with a fallback height so the card
-                  is visible before GSAP runs.
-                */
-                className="absolute inset-x-0 top-0 will-change-transform"
-                style={{ height: `calc(100% - ${PEEK_SPACE}px)` }}
-              >
-                <ProjectCardContent project={project} />
-              </div>
-            ))}
-          </div>
+          <>
+            {/*
+              Stack container: flex-1 fills remaining space after header.
+              overflow:visible lets stacked cards' bottom edges show in the peek spacer below.
+            */}
+            <div className="relative mt-5 flex-1 overflow-visible lg:mt-6">
+              {projects.map((project, i) => (
+                <div
+                  key={project.label}
+                  ref={(el) => { cardRefs.current[i] = el; }}
+                  /*
+                    All cards: absolute, same top-0, same full size (h-full, w-full).
+                    GSAP drives y/scale/opacity/zIndex.
+                    transformOrigin "top center" (set by GSAP) keeps the top edge anchored.
+                  */
+                  className="absolute inset-x-0 top-0 h-full will-change-transform"
+                >
+                  {/* Card shell — glassmorphism surface always visible at the card's opacity */}
+                  <div className="relative flex h-full w-full overflow-hidden rounded-[28px] border border-white/[0.14] bg-white/[0.06] shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.08),0_32px_100px_rgba(0,0,0,0.7)] backdrop-blur-sm">
+
+                    {/*
+                      Content wrapper — GSAP controls opacity: 0 (inactive) or 1 (active).
+                      Only the top active card has opacity=1 here; stacked cards have opacity=0.
+                      This prevents multiple project titles/descriptions from being visible simultaneously.
+                    */}
+                    <div
+                      ref={(el) => { contentRefs.current[i] = el; }}
+                      className="flex h-full w-full flex-col lg:flex-row"
+                    >
+                      {/* Left: project info */}
+                      <div className="flex flex-col justify-between p-7 sm:p-8 lg:w-[42%] lg:p-10 xl:p-11">
+                        <div>
+                          <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] font-normal leading-[16px] tracking-[1.44px] text-[#f5f7fa61]">
+                            {project.label}
+                          </p>
+                          <h3 className="mt-3 [font-family:'Bricolage_Grotesque',Helvetica] text-[28px] font-medium leading-none tracking-[-0.8px] text-[#f5f7fa] sm:text-[34px] lg:text-[42px] lg:tracking-[-1.1px]">
+                            {project.name}
+                          </h3>
+                          <p className="mt-2 [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[18px] tracking-[0.12px] text-[#f5f7fa61]">
+                            {project.subtitle}
+                          </p>
+                          <p className="mt-5 max-w-[400px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] text-[#f5f7faa6]">
+                            {project.description}
+                          </p>
+                        </div>
+                        <div className="mt-6">
+                          <div className="flex flex-wrap gap-[6px]">
+                            {project.tags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="rounded-full border border-white/[0.14] bg-white/[0.08] px-2.5 py-1 [font-family:'Inter',Helvetica] text-[10.5px] font-normal leading-[15px] text-[#f5f7fa99]"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                          <button
+                            type="button"
+                            className="mt-5 flex items-center gap-1.5 [font-family:'Inter',Helvetica] text-[12.5px] font-medium leading-[19px] tracking-[0.12px] text-[#f5f7fa] opacity-80 transition-opacity hover:opacity-100"
+                            data-testid={`btn-view-project-${project.label}`}
+                          >
+                            View Project
+                            <ArrowRight className="h-3.5 w-3.5" />
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Vertical divider */}
+                      <div className="hidden w-px bg-white/[0.10] lg:block" />
+
+                      {/* Right: browser mockup */}
+                      <div className="flex flex-1 items-center justify-center p-6 sm:p-7 lg:p-8">
+                        <div className="w-full max-w-[600px]">
+                          <BrowserMockup
+                            domain={project.domain}
+                            headerBg={project.headerBg}
+                            bodyBg={project.bodyBg}
+                            accent={project.accent}
+                            navLines={project.navLines}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                    {/* End content wrapper */}
+                  </div>
+                  {/* End card shell */}
+                </div>
+                /* End card outer wrapper */
+              ))}
+            </div>
+
+            {/*
+              ── Peek spacer ──
+              This h-28 (112px) block at the bottom of the flex column is intentionally
+              empty. It reserves visible room within the section for the stacked cards'
+              bottom edges to peek into, creating the layered-deck look.
+              Without this, the overflow-visible cards' peeking portions would land
+              outside/below the h-screen section boundary and be invisible.
+            */}
+            <div className="shrink-0 h-28" aria-hidden="true" />
+          </>
         )}
       </div>
     </section>

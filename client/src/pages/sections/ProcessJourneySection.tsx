@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useLayoutEffect } from "react";
 import { useReducedMotion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -73,11 +73,11 @@ export const ProcessJourneySection = (): JSX.Element => {
   // Store the timeline so cleanup kills it without ctx.revert() DOM conflicts
   const tlRef      = useRef<gsap.core.Timeline | null>(null);
 
-  useEffect(() => {
-    // Clean up any previous timeline + ScrollTrigger without reverting DOM
+  useLayoutEffect(() => {
+    // useLayoutEffect: cleanup runs synchronously before React's DOM mutations,
+    // ensuring GSAP's pin-spacer is removed before React reconciles the tree.
     if (tlRef.current) {
-      tlRef.current.scrollTrigger?.kill();
-      tlRef.current.kill();
+      try { tlRef.current.scrollTrigger?.kill(); tlRef.current.kill(); } catch (_) {}
       tlRef.current = null;
     }
 

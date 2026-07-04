@@ -1,4 +1,4 @@
-import { useRef, useState, useEffect, type Ref } from "react";
+import { useRef, useState, useEffect, useLayoutEffect, type Ref } from "react";
 import { useReducedMotion } from "framer-motion";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -23,7 +23,7 @@ export const MissionStatementSection = (): JSX.Element => {
   const p2Ref = useRef<HTMLElement>(null);
   const p3Ref = useRef<HTMLElement>(null);
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (animOff) return;
 
     const pts = [p1Ref.current, p2Ref.current, p3Ref.current];

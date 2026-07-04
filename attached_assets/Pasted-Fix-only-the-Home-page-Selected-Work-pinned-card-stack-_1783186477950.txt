@@ -1,0 +1,294 @@
+Fix only the **Home page Selected Work pinned card-stack section**.
+
+Do not redesign the whole website.
+Do not edit previous sections.
+Do not remove the stars.
+Do not change the project content.
+Only fix the **card stacking layout and pinned scroll behavior**.
+
+## Current problem
+
+The project cards are now displayed like a vertical row/list.
+
+This is wrong.
+
+I do **not** want the cards to appear one under another as normal page sections.
+
+I want them to be stacked **behind each other in the same card area**, like a premium glass deck.
+
+The correct reference is the earlier design where:
+
+* one large card is on top
+* the next cards are behind it
+* only the bottom edge of the cards behind is visible
+* cards overlap each other in depth
+* not a normal vertical list
+
+---
+
+## Required visual result
+
+At any moment, the card stack should look like this:
+
+```text
+[ Active Project Card - full content visible ]
+   [ Next card behind, only bottom edge visible ]
+      [ Third card behind, only bottom edge visible ]
+         [ Fourth card behind, only bottom edge visible ]
+```
+
+The lower cards should be positioned **behind the active card**, not below it as separate rows.
+
+They should look like layered glass sheets.
+
+---
+
+## Important layout rule
+
+All project cards must share the **same card stage / same absolute stack area**.
+
+Do not render them in normal document flow.
+
+Use a stack container like:
+
+```tsx
+<div className="project-stack-stage">
+  <ProjectCard className="absolute ..." />
+  <ProjectCard className="absolute ..." />
+  <ProjectCard className="absolute ..." />
+  <ProjectCard className="absolute ..." />
+</div>
+```
+
+The stack container should be:
+
+```css
+position: relative;
+height: enough for one card plus visible stacked edges;
+overflow: visible;
+```
+
+Each card inside should be:
+
+```css
+position: absolute;
+left: 0;
+right: 0;
+top: 0;
+```
+
+Do **not** let project cards take vertical space one after another.
+
+Do **not** use flex-column for the cards.
+
+Do **not** use grid rows for the cards.
+
+---
+
+## Card stack positions
+
+Use layered positions like this:
+
+### Active card
+
+```css
+z-index: 40;
+transform: translateY(0px) scale(1);
+opacity: 1;
+```
+
+### Card behind 1
+
+```css
+z-index: 30;
+transform: translateY(36px) scale(0.985);
+opacity: 0.65;
+```
+
+### Card behind 2
+
+```css
+z-index: 20;
+transform: translateY(72px) scale(0.97);
+opacity: 0.42;
+```
+
+### Card behind 3
+
+```css
+z-index: 10;
+transform: translateY(108px) scale(0.955);
+opacity: 0.25;
+```
+
+Only the bottom edges / surface of behind cards should be visible.
+
+---
+
+## Hide inactive card content
+
+Only the active top card should show full readable content.
+
+For inactive cards behind:
+
+* hide full text content
+* hide tags
+* hide CTA
+* hide project description
+* keep only the glass card shell / faint edge / maybe partial preview shape
+
+This prevents text overlap.
+
+At all times:
+
+```text
+Only one card has readable content.
+All other cards are visual stack layers only.
+```
+
+---
+
+## Correct scroll behavior
+
+This section must remain pinned.
+
+Scroll sequence:
+
+1. Houd El Nile is active on top.
+2. User scrolls → X Dental rises from behind and becomes active.
+3. User scrolls → Al Nours rises from behind and becomes active.
+4. User scrolls → Al Baraka Olives rises from behind and becomes active.
+5. After Al Baraka Olives is fully active and readable, section unpins.
+
+Do not show all cards as vertical cards.
+
+Do not make them appear below each other.
+
+Do not let the next card push the active card down like a list.
+
+The next card should come **from the stacked deck behind the active card**.
+
+---
+
+## Motion style
+
+When a new card becomes active:
+
+* it rises from the stack position into the active position
+* it becomes fully opaque
+* its content becomes readable
+* the previous active card moves backward/down into the stack or fades out cleanly
+* the remaining cards shift into new behind positions
+
+Motion should feel:
+
+* smooth
+* premium
+* cinematic
+* like glass pages/deck layers
+* not like a carousel
+* not like a vertical list
+* not like normal scrolling cards
+
+---
+
+## GSAP / state logic suggestion
+
+Use an active index based on scroll progress.
+
+For each card, compute its relative index:
+
+```ts
+relativeIndex = cardIndex - activeIndex
+```
+
+Then apply:
+
+### relativeIndex === 0
+
+Active full card.
+
+### relativeIndex > 0
+
+Cards behind active card, stacked downward.
+
+### relativeIndex < 0
+
+Previous cards moved out / hidden / behind.
+
+Example state logic:
+
+```ts
+if (relativeIndex === 0) {
+  y = 0;
+  scale = 1;
+  opacity = 1;
+  zIndex = 40;
+  contentOpacity = 1;
+}
+
+if (relativeIndex === 1) {
+  y = 36;
+  scale = 0.985;
+  opacity = 0.65;
+  zIndex = 30;
+  contentOpacity = 0;
+}
+
+if (relativeIndex === 2) {
+  y = 72;
+  scale = 0.97;
+  opacity = 0.42;
+  zIndex = 20;
+  contentOpacity = 0;
+}
+
+if (relativeIndex === 3) {
+  y = 108;
+  scale = 0.955;
+  opacity = 0.25;
+  zIndex = 10;
+  contentOpacity = 0;
+}
+```
+
+---
+
+## Section structure
+
+Keep the top section content:
+
+Small label:
+
+**04 / 06**
+
+Heading:
+
+**Selected work shaped from strategy to launch.**
+
+Supporting paragraph:
+
+**A closer look at websites and digital systems we designed, developed, optimized, and launched across export brands, e-commerce platforms, and business-focused experiences.**
+
+Below that, use one single stack area.
+
+Do not place cards as normal rows.
+
+---
+
+## Test checklist
+
+After fixing, check:
+
+1. The cards are stacked behind each other in one shared area.
+2. They are not displayed as a vertical list.
+3. Only one active card shows full text.
+4. Lower cards show only partial stacked glass layers.
+5. No overlapping readable text.
+6. On scroll, the next card rises from behind into the active position.
+7. The section stays pinned until all 4 cards are shown.
+8. After the final card, the section unpins.
+9. Stars remain in the background.
+10. The section looks like the first reference screenshot, not the current row/list layout.
+
+Only fix the Selected Work card-stack layout and motion.
