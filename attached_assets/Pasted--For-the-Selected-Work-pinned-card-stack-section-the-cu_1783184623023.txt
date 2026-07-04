@@ -1,0 +1,120 @@
+
+For the **Selected Work pinned card-stack section**, the current result is wrong because the **text of the cards is overlapping**.
+
+I want this section to look like the **first screenshot**, **not** like the second screenshot.
+
+## What is wrong now
+
+* Multiple project cards are showing their text at the same time
+* The stack looks messy
+* The lower cards should not reveal their full content
+* Only the active top card should be readable
+
+## What I want instead
+
+Make the card stack behave like a **premium stacked deck**:
+
+* The **active top card only** is fully visible and readable
+* The cards underneath appear only as **stacked glassmorphism layers**
+* The cards below should be **partially visible only**
+* Do **not** show the full headings, paragraphs, tags, and CTA of the lower cards
+* The lower cards are just there to show depth and that more projects are coming
+
+## Important visual rule
+
+At any moment:
+
+* **1 card only** = full content visible
+* **all other cards** = hidden behind it as partial stacked layers
+
+## Desired stacked look
+
+Use the first screenshot as the rule:
+
+* main card on top
+* 2–3 cards underneath
+* each lower card slightly offset downward
+* each lower card slightly smaller or dimmer if needed
+* only the top portions / surfaces of lower cards should be visible
+* no overlapping readable text
+
+## Motion behavior
+
+This section is still **pinned**.
+
+When the user scrolls:
+
+1. The current active card moves away
+2. The next card rises from the stack and becomes the new active top card
+3. Once it becomes active, **its full content becomes readable**
+4. The previous active card should go behind or out of view cleanly
+5. The remaining cards stay below as stacked layers
+
+The motion should feel like:
+
+* premium
+* smooth
+* cinematic
+* like a glass card deck
+* not chaotic
+* not like all cards are rendered fully together
+
+## Technical instruction
+
+Please separate the cards into two states:
+
+### Active card
+
+* full opacity
+* full text visible
+* full CTA visible
+* full browser preview visible
+* highest z-index
+
+### Inactive stacked cards
+
+* only partial card visible
+* no readable full text
+* no full tag group visible
+* no CTA visible
+* clipped / masked / hidden content
+* lower z-index
+* slightly offset downward
+* can have slightly lower opacity
+
+## Recommended implementation approach
+
+Use a wrapper with `overflow: hidden` so the lower cards stay clipped.
+
+For non-active cards:
+
+* hide or mask the text/content area
+* show only the card shell / edge / a little preview area
+* keep only enough visible to show the stack
+
+Possible ways:
+
+* render only the active card content fully
+* for inactive cards render simplified card shells
+* or clip inactive card content using overflow and fixed stack height
+
+## Very important
+
+Do **not** allow these to appear together:
+
+* all project titles
+* all descriptions
+* all tags
+* all CTA links
+
+That is the current bug and must be fixed.
+
+## Final visual target
+
+The section should look like:
+
+* **first screenshot** = correct
+* **second screenshot** = incorrect
+
+Please fix the stack so that the active card is the only readable one, and the cards below behave as elegant layered glass cards.
+
