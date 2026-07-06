@@ -9,8 +9,8 @@ import { SideStars } from "@/components/backgrounds/SideStars";
 const navLinks = [
   { label: "Work", href: "/work" },
   { label: "Services", href: "/services" },
-  { label: "Process", href: null },
-  { label: "About", href: null },
+  { label: "Process", href: "/process" },
+  { label: "About", href: "/about" },
   { label: "Contact", href: null },
 ];
 

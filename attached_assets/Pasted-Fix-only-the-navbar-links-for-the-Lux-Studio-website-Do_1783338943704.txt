@@ -1,0 +1,101 @@
+Fix only the navbar links for the Lux Studio website.
+
+Do not redesign the navbar.
+Do not change the navbar styling.
+Do not edit page designs.
+Do not edit homepage sections.
+Only make the navbar items clickable and connected to the correct routes.
+
+Current problem:
+The Process and About pages exist, but when I click Process or About in the navbar, nothing happens.
+
+Required behavior:
+Navbar links must navigate like this:
+
+Home → /
+Work → /work
+Services → /services
+Process → /process
+About → /about
+Contact → /contact
+
+Important:
+- Process must be clickable.
+- About must be clickable.
+- Contact must be clickable.
+- Do not leave any nav item disabled.
+- Do not use href="#".
+- Do not use placeholder buttons without navigation.
+- Do not use opacity/cursor styles that make Process or About look disabled.
+- Do not block clicks with pointer-events: none.
+- Do not cover the navbar with an invisible overlay.
+
+Please check the project routing system and use the correct link method.
+
+If this is React Router:
+Use:
+
+<Link to="/process">Process</Link>
+<Link to="/about">About</Link>
+
+and make sure routes exist:
+
+<Route path="/process" element={<ProcessPage />} />
+<Route path="/about" element={<AboutPage />} />
+
+If this is Wouter:
+Use:
+
+<Link href="/process">Process</Link>
+<Link href="/about">About</Link>
+
+and make sure routes exist:
+
+<Route path="/process" component={ProcessPage} />
+<Route path="/about" component={AboutPage} />
+
+If this is Next.js:
+Use:
+
+<Link href="/process">Process</Link>
+<Link href="/about">About</Link>
+
+and make sure page files exist:
+
+app/process/page.tsx
+app/about/page.tsx
+
+or:
+
+pages/process.tsx
+pages/about.tsx
+
+Also fix the active navbar state:
+- On /process, Process should be active.
+- On /about, About should be active.
+- On /contact, Contact should be active.
+- On /work, Work should be active.
+- On /services, Services should be active.
+- On /, Home should be active.
+
+Check for common issues:
+- nav items rendered as <span> instead of links
+- disabled class on Process/About
+- pointer-events-none
+- preventDefault on click
+- wrong href like "/#process"
+- wrong route name like "/process-page"
+- invisible overlay above navbar
+- z-index issue preventing clicks
+
+Test checklist:
+1. Click Process → opens /process.
+2. Click About → opens /about.
+3. Click Contact → opens /contact.
+4. Type /process manually → page opens.
+5. Type /about manually → page opens.
+6. Active nav highlight works correctly.
+7. Navbar visual design stays the same.
+8. No homepage sections are changed.
+
+Only fix navbar routing/clickability.
