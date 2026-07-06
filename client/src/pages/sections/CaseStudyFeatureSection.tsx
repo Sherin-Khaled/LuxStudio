@@ -64,15 +64,16 @@ const projects = [
 ];
 
 /*
-  Stack visual positions indexed by the card's relative position to the active card.
-  relativeIndex 0 = active, 1 = behind 1, 2 = behind 2, 3 = behind 3.
-  transformOrigin "top center" keeps the top edge anchored while scale shrinks the card downward.
+  Stack visual positions indexed by relative position to the active card.
+  y=0/42/84/126: stacked cards offset downward so their bottom strip peeks
+  below the active card into the 160px peek spacer below the stack container.
+  transformOrigin "top center" keeps the top edge anchored while scale shrinks downward.
 */
 const STACK = [
   { y: 0,   scale: 1,     opacity: 1,    zIndex: 40 },
-  { y: 36,  scale: 0.985, opacity: 0.65, zIndex: 30 },
-  { y: 72,  scale: 0.97,  opacity: 0.42, zIndex: 20 },
-  { y: 108, scale: 0.955, opacity: 0.25, zIndex: 10 },
+  { y: 42,  scale: 0.985, opacity: 0.65, zIndex: 30 },
+  { y: 84,  scale: 0.97,  opacity: 0.42, zIndex: 20 },
+  { y: 126, scale: 0.955, opacity: 0.25, zIndex: 10 },
 ];
 
 /* ─────────────────────── Browser mockup ─────────────────────── */
@@ -81,42 +82,61 @@ const BrowserMockup = ({
 }: {
   domain: string; headerBg: string; bodyBg: string; accent: string; navLines: string[];
 }) => (
-  <div className="overflow-hidden rounded-xl border border-white/10 shadow-[0_12px_48px_rgba(0,0,0,0.6)]">
-    <div className="flex items-center gap-2 border-b border-white/10 bg-[#111111] px-3 py-2.5">
+  <div className="overflow-hidden rounded-2xl border border-white/10 shadow-[0_20px_64px_rgba(0,0,0,0.65)]">
+    {/* Chrome bar */}
+    <div className="flex items-center gap-2.5 border-b border-white/10 bg-[#111111] px-4 py-3">
       <div className="flex gap-1.5">
-        <div className="h-2 w-2 rounded-full bg-[#ff5f57] opacity-80" />
-        <div className="h-2 w-2 rounded-full bg-[#ffbc2e] opacity-80" />
-        <div className="h-2 w-2 rounded-full bg-[#28c840] opacity-80" />
+        <div className="h-2.5 w-2.5 rounded-full bg-[#ff5f57] opacity-80" />
+        <div className="h-2.5 w-2.5 rounded-full bg-[#ffbc2e] opacity-80" />
+        <div className="h-2.5 w-2.5 rounded-full bg-[#28c840] opacity-80" />
       </div>
-      <div className="flex h-5 items-center rounded bg-white/10 px-2.5">
-        <span className="font-mono text-[10px] leading-none text-white/50">{domain}</span>
+      <div className="flex h-5 flex-1 items-center rounded bg-white/10 px-3">
+        <span className="font-mono text-[10px] leading-none text-white/45">{domain}</span>
       </div>
     </div>
+    {/* Page content */}
     <div style={{ backgroundColor: bodyBg }}>
-      <div className="flex items-center justify-between px-5 py-3" style={{ backgroundColor: headerBg }}>
-        <div className="h-2 w-20 rounded-full opacity-70" style={{ backgroundColor: navLines[0] }} />
-        <div className="flex gap-3">
+      {/* Nav */}
+      <div className="flex items-center justify-between px-6 py-4" style={{ backgroundColor: headerBg }}>
+        <div className="h-2.5 w-24 rounded-full opacity-75" style={{ backgroundColor: navLines[0] }} />
+        <div className="flex gap-4">
           {navLines.map((c, i) => (
-            <div key={i} className="h-1.5 w-10 rounded-full opacity-50" style={{ backgroundColor: c }} />
+            <div key={i} className="h-1.5 w-12 rounded-full opacity-50" style={{ backgroundColor: c }} />
           ))}
         </div>
-        <div className="h-5 w-14 rounded" style={{ backgroundColor: accent }} />
+        <div className="h-6 w-16 rounded-md" style={{ backgroundColor: accent }} />
       </div>
-      <div className="px-5 py-5">
-        <div className="mb-3 h-4 w-2/3 rounded-full opacity-30" style={{ backgroundColor: headerBg }} />
-        <div className="mb-2 h-3 w-1/2 rounded-full opacity-20" style={{ backgroundColor: headerBg }} />
-        <div className="mt-4 flex gap-2">
-          <div className="h-7 w-20 rounded opacity-90" style={{ backgroundColor: headerBg }} />
-          <div className="h-7 w-20 rounded border opacity-40" style={{ borderColor: headerBg }} />
+      {/* Hero */}
+      <div className="px-6 py-6">
+        <div className="mb-1.5 h-2 w-16 rounded-full opacity-25" style={{ backgroundColor: headerBg }} />
+        <div className="mb-3 h-5 w-3/4 rounded-full opacity-35" style={{ backgroundColor: headerBg }} />
+        <div className="mb-1 h-2.5 w-2/3 rounded-full opacity-20" style={{ backgroundColor: headerBg }} />
+        <div className="mb-1 h-2.5 w-1/2 rounded-full opacity-15" style={{ backgroundColor: headerBg }} />
+        <div className="mt-5 flex gap-3">
+          <div className="h-8 w-24 rounded-lg opacity-90" style={{ backgroundColor: headerBg }} />
+          <div className="h-8 w-24 rounded-lg border-2 opacity-35" style={{ borderColor: headerBg }} />
         </div>
       </div>
-      <div className="mx-5 border-t opacity-10" style={{ borderColor: headerBg }} />
-      <div className="flex gap-4 px-5 py-4">
+      {/* Divider */}
+      <div className="mx-6 border-t opacity-10" style={{ borderColor: headerBg }} />
+      {/* Feature images row */}
+      <div className="flex gap-3 px-6 py-5">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="flex-1 space-y-1.5">
-            <div className="h-8 w-full rounded opacity-15" style={{ backgroundColor: headerBg }} />
-            <div className="h-2 w-3/4 rounded-full opacity-10" style={{ backgroundColor: headerBg }} />
-            <div className="h-2 w-2/3 rounded-full opacity-10" style={{ backgroundColor: headerBg }} />
+          <div key={i} className="flex-1 space-y-2">
+            <div className="h-20 w-full rounded-lg opacity-[0.13]" style={{ backgroundColor: headerBg }} />
+            <div className="h-2 w-3/4 rounded-full opacity-[0.12]" style={{ backgroundColor: headerBg }} />
+            <div className="h-2 w-1/2 rounded-full opacity-[0.08]" style={{ backgroundColor: headerBg }} />
+          </div>
+        ))}
+      </div>
+      {/* Second divider */}
+      <div className="mx-6 border-t opacity-[0.07]" style={{ borderColor: headerBg }} />
+      {/* Stats / testimonial row */}
+      <div className="flex items-center gap-8 px-6 py-4">
+        {[{ w: "w-1/3" }, { w: "w-1/4" }, { w: "w-1/5" }].map(({ w }, i) => (
+          <div key={i} className="flex flex-col gap-1">
+            <div className={`h-4 ${w} rounded-full opacity-25`} style={{ backgroundColor: headerBg }} />
+            <div className="h-2 w-16 rounded-full opacity-12" style={{ backgroundColor: headerBg }} />
           </div>
         ))}
       </div>
@@ -124,7 +144,7 @@ const BrowserMockup = ({
   </div>
 );
 
-/* ─────────────────── Section ─────────────────── */
+/* ─────────────────────────── Section ─────────────────────────── */
 export const CaseStudyFeatureSection = (): JSX.Element => {
   const reduced  = useReducedMotion() ?? false;
   const [isMobile, setIsMobile] = useState(
@@ -139,19 +159,13 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
   const animOff = reduced || isMobile;
 
   const sectionRef  = useRef<HTMLElement>(null);
-  /*
-    cardRefs:    outer wrapper div — GSAP controls y / scale / opacity / zIndex
-    contentRefs: inner content div — GSAP controls opacity (0 = inactive, 1 = active)
-    Only one card should have readable content at a time.
-  */
   const cardRefs    = useRef<(HTMLDivElement | null)[]>([null, null, null, null]);
   const contentRefs = useRef<(HTMLDivElement | null)[]>([null, null, null, null]);
   const tlRef       = useRef<gsap.core.Timeline | null>(null);
 
   useLayoutEffect(() => {
-    // Cleanup previous timeline. useLayoutEffect ensures cleanup runs synchronously
-    // BEFORE React's commit-phase DOM mutations, so GSAP's pin-spacer is removed
-    // before React tries to reconcile — preventing the "removeChild" HMR crash.
+    // useLayoutEffect: cleanup runs synchronously before React's DOM mutations,
+    // removing GSAP's pin-spacer before React reconciles — prevents "removeChild" crash.
     if (tlRef.current) {
       try { tlRef.current.scrollTrigger?.kill(); tlRef.current.kill(); } catch (_) {}
       tlRef.current = null;
@@ -162,14 +176,10 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
     const contents = contentRefs.current.filter(Boolean) as HTMLDivElement[];
     if (cards.length < 4 || contents.length < 4 || !sectionRef.current) return;
 
-    // ── Initial stack positions ──
-    // All cards share absolute top:0 and have the same height (h-full of the stack container).
-    // Stacked cards are offset downward (y=36/72/108) so their bottom edge peeks below
-    // the active card into the h-28 peek spacer reserved at the bottom of the layout.
+    // Initial stack positions — transformOrigin "top center" keeps top edges aligned
     cards.forEach((card, i) => {
       gsap.set(card, { ...STACK[i], transformOrigin: "top center" });
     });
-    // Active card content visible; others hidden
     gsap.set(contents[0], { opacity: 1 });
     contents.slice(1).forEach((c) => gsap.set(c, { opacity: 0 }));
 
@@ -186,46 +196,38 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
       },
     });
 
-    // Opening hold — user sees the full first card before scrolling triggers a transition
-    tl.to({}, { duration: 0.3 });
+    tl.to({}, { duration: 0.3 }); // opening hold
 
     for (let t = 0; t < 3; t++) {
-      const exiting  = cards[t];
-      const incoming = cards[t + 1];
+      const exiting      = cards[t];
+      const incoming     = cards[t + 1];
       const exitContent  = contents[t];
       const enterContent = contents[t + 1];
 
-      // ── Z-index swap: incoming card rises above exiting card ──
+      // Z-swap: incoming card rises above exiting
       tl.set(exiting,  { zIndex: 5 });
       tl.set(incoming, { zIndex: 40 }, "<");
 
-      // ── Content: hide exiting text fast, reveal incoming text as card rises ──
+      // Content: hide exiting fast, reveal incoming as card rises
       tl.to(exitContent,  { opacity: 0, duration: 0.25, ease: "none" }, "<");
       tl.to(enterContent, { opacity: 1, duration: 0.65, ease: "none" }, "<0.35");
 
-      // ── Exiting card: moves backward into deck (y=108) and fades out ──
-      tl.to(exiting, {
-        y: 108, scale: STACK[3].scale, opacity: 0,
-        duration: 1.05, ease: "none",
-      }, "<");
+      // Exiting card fades backward into the deck
+      tl.to(exiting, { y: 126, scale: STACK[3].scale, opacity: 0, duration: 1.05, ease: "none" }, "<");
 
-      // ── Incoming card: rises from its stack position to active (y=0) ──
-      tl.to(incoming, {
-        y: 0, scale: 1, opacity: 1,
-        duration: 1.05, ease: "none",
-      }, "<");
+      // Incoming card rises to active position
+      tl.to(incoming, { y: 0, scale: 1, opacity: 1, duration: 1.05, ease: "none" }, "<");
 
-      // ── Remaining stacked cards shift one position forward in the deck ──
+      // Remaining stacked cards shift one position forward
       for (let r = t + 2; r < 4; r++) {
-        const newPos = STACK[r - (t + 1)]; // shift up one slot
+        const newPos = STACK[r - (t + 1)];
         tl.to(cards[r], {
           y: newPos.y, scale: newPos.scale, opacity: newPos.opacity,
           duration: 0.9, ease: "none",
         }, "<");
       }
 
-      // Hold at the new active card so the user can read it before next scroll
-      tl.to({}, { duration: t === 2 ? 0.9 : 0.45 });
+      tl.to({}, { duration: t === 2 ? 0.9 : 0.45 }); // hold at new active
     }
 
     tlRef.current = tl;
@@ -245,8 +247,7 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
       {/* Background stars */}
       <img
         className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-90"
-        alt=""
-        aria-hidden="true"
+        alt="" aria-hidden="true"
         src="/figmaAssets/backgroundstars-2.svg"
       />
 
@@ -264,42 +265,41 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
       {/* Edge stars */}
       <SideStars starsPerSide={isMobile ? 6 : 14} className="z-[1]" />
 
-      {/* ──────────────────── Main layout ──────────────────── */}
-      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1400px] flex-col px-6 pt-12 pb-0 sm:px-8 lg:px-11 lg:pt-14">
+      {/* ── Main layout ── */}
+      {/*
+        h-screen ensures the section fills the viewport for GSAP pinning.
+        Layout budget (1080px example):
+          pt-10 (40px) + header (~75px) + mt-4 (16px) + stack (flex-1 ≈ 789px) + peek-spacer (160px) = 1080px
+        The peek spacer is the reserved area where stacked cards' bottom strips peek below
+        the active card (y=42/84/126 offsets × 1px per unit → 42px/84px/126px strips).
+      */}
+      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1560px] flex-col px-5 pt-10 sm:px-8 lg:px-12">
 
-        {/* Section header */}
-        <header className="flex w-full shrink-0 flex-col items-start justify-between gap-4 lg:flex-row lg:items-end lg:gap-10">
+        {/* ── Section header — kept compact so the stack gets maximum height ── */}
+        <header className="flex w-full shrink-0 flex-col items-start justify-between gap-3 lg:flex-row lg:items-end lg:gap-12">
           <div className="flex flex-col items-start">
-            <p className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] text-[#f5f7fa61]">
+            <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] font-normal leading-[17px] tracking-[1.5px] text-[#f5f7fa61]">
               04 / 06
             </p>
             <h2
               id="selected-work-heading"
-              className="pt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[30px] font-medium leading-[1.05] tracking-[-1px] text-[#f5f7fa] sm:text-[40px] lg:text-[52px] lg:tracking-[-1.6px]"
+              className="pt-3 [font-family:'Bricolage_Grotesque',Helvetica] text-[28px] font-medium leading-[1.06] tracking-[-0.8px] text-[#f5f7fa] sm:text-[36px] lg:text-[44px] lg:tracking-[-1.4px]"
             >
               Selected work shaped
               <br className="hidden sm:block" />
               {" "}from strategy to launch.
             </h2>
           </div>
-          <p className="max-w-[400px] shrink-0 [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[21px] text-[#f5f7faa6] lg:text-[13.5px] lg:leading-[23px]">
-            A closer look at websites and digital systems we designed, developed, optimized,
-            and launched across export brands, e-commerce platforms, and business-focused experiences.
+          <p className="max-w-[380px] shrink-0 [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[20px] text-[#f5f7faa6] lg:text-[13px] lg:leading-[22px]">
+            A closer look at websites and digital systems we designed, developed,
+            optimized, and launched across export brands, e-commerce platforms,
+            and business-focused experiences.
           </p>
         </header>
 
-        {/*
-          ── CARD STACK STAGE ──
-          All 4 cards share this same absolute area (position: relative, overflow: visible).
-          overflow:visible allows the stacked cards (y=36/72/108) to extend downward
-          into the h-28 peek spacer, creating the layered-deck visual.
-
-          Stack container uses flex-1 to fill the space between the header and the peek spacer.
-          Each card is absolute top-0 left-0 right-0 h-full — they all occupy the same area.
-          GSAP controls y / scale / opacity / zIndex to create the stacked appearance.
-        */}
+        {/* ── CARD STACK STAGE ── */}
         {animOff ? (
-          /* Mobile: vertical list of full cards */
+          /* Mobile / reduced-motion: vertical list */
           <div className="mt-6 flex flex-col gap-5 overflow-y-auto pb-8">
             {projects.map((project) => (
               <div key={project.label} className="flex min-h-[480px] flex-col overflow-hidden rounded-[24px] border border-white/[0.14] bg-white/[0.06] shadow-[0_32px_100px_rgba(0,0,0,0.7)] backdrop-blur-sm">
@@ -326,55 +326,61 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
         ) : (
           <>
             {/*
-              Stack container: flex-1 fills remaining space after header.
-              overflow:visible lets stacked cards' bottom edges show in the peek spacer below.
+              Stack container — flex-1 fills the space between the section header and the peek spacer.
+              overflow:visible is critical: stacked cards (y=42/84/126) extend downward into
+              the 160px peek spacer below, where their bottom strips remain visible.
+              Cards are absolute top-0, same size (h-full), controlled by GSAP.
             */}
-            <div className="relative mt-5 flex-1 overflow-visible lg:mt-6">
+            <div className="relative mt-4 flex-1 overflow-visible lg:mt-5">
               {projects.map((project, i) => (
                 <div
                   key={project.label}
                   ref={(el) => { cardRefs.current[i] = el; }}
-                  /*
-                    All cards: absolute, same top-0, same full size (h-full, w-full).
-                    GSAP drives y/scale/opacity/zIndex.
-                    transformOrigin "top center" (set by GSAP) keeps the top edge anchored.
-                  */
                   className="absolute inset-x-0 top-0 h-full will-change-transform"
                 >
-                  {/* Card shell — glassmorphism surface always visible at the card's opacity */}
-                  <div className="relative flex h-full w-full overflow-hidden rounded-[28px] border border-white/[0.14] bg-white/[0.06] shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.08),0_32px_100px_rgba(0,0,0,0.7)] backdrop-blur-sm">
+                  {/*
+                    Card shell — glassmorphism surface.
+                    overflow-hidden clips child elements to the rounded card boundary.
+                    The card must be tall enough (via h-full of the stack container) that
+                    no content is hidden by this clip; if it were too short, the CTA would
+                    be cut off. The peek spacer guarantees adequate stack height.
+                  */}
+                  <div className="relative flex h-full w-full overflow-hidden rounded-[28px] border border-white/[0.14] bg-white/[0.06] shadow-[inset_0_0_0_0.5px_rgba(255,255,255,0.08),0_40px_120px_rgba(0,0,0,0.75)] backdrop-blur-sm">
 
                     {/*
-                      Content wrapper — GSAP controls opacity: 0 (inactive) or 1 (active).
-                      Only the top active card has opacity=1 here; stacked cards have opacity=0.
-                      This prevents multiple project titles/descriptions from being visible simultaneously.
+                      Content wrapper — GSAP drives opacity: 0 (inactive) → 1 (active).
+                      opacity-0 hides all readable text for stacked cards; their glass shell
+                      remains visible because opacity is on the shell's parent (the card wrapper),
+                      not on the shell itself — the content ref controls only content visibility.
                     */}
                     <div
                       ref={(el) => { contentRefs.current[i] = el; }}
                       className="flex h-full w-full flex-col lg:flex-row"
                     >
-                      {/* Left: project info */}
-                      <div className="flex flex-col justify-between p-7 sm:p-8 lg:w-[42%] lg:p-10 xl:p-11">
+                      {/* ── Left column: project info ── */}
+                      <div className="flex flex-col justify-between p-8 sm:p-10 lg:w-[42%] lg:p-14 xl:p-16">
                         <div>
                           <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] font-normal leading-[16px] tracking-[1.44px] text-[#f5f7fa61]">
                             {project.label}
                           </p>
-                          <h3 className="mt-3 [font-family:'Bricolage_Grotesque',Helvetica] text-[28px] font-medium leading-none tracking-[-0.8px] text-[#f5f7fa] sm:text-[34px] lg:text-[42px] lg:tracking-[-1.1px]">
+                          <h3 className="mt-3.5 [font-family:'Bricolage_Grotesque',Helvetica] text-[28px] font-medium leading-[1.02] tracking-[-0.8px] text-[#f5f7fa] sm:text-[34px] lg:text-[44px] lg:tracking-[-1.2px]">
                             {project.name}
                           </h3>
-                          <p className="mt-2 [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[18px] tracking-[0.12px] text-[#f5f7fa61]">
+                          <p className="mt-2.5 [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[18px] tracking-[0.12px] text-[#f5f7fa61]">
                             {project.subtitle}
                           </p>
-                          <p className="mt-5 max-w-[400px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] text-[#f5f7faa6]">
+                          <p className="mt-6 max-w-[420px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[24px] text-[#f5f7faa6]">
                             {project.description}
                           </p>
                         </div>
-                        <div className="mt-6">
-                          <div className="flex flex-wrap gap-[6px]">
+
+                        {/* Tags + CTA pinned to bottom */}
+                        <div className="mt-8">
+                          <div className="flex flex-wrap gap-2">
                             {project.tags.map((tag) => (
                               <span
                                 key={tag}
-                                className="rounded-full border border-white/[0.14] bg-white/[0.08] px-2.5 py-1 [font-family:'Inter',Helvetica] text-[10.5px] font-normal leading-[15px] text-[#f5f7fa99]"
+                                className="rounded-full border border-white/[0.15] bg-white/[0.08] px-3 py-1.5 [font-family:'Inter',Helvetica] text-[11px] font-normal leading-[15px] text-[#f5f7fa99]"
                               >
                                 {tag}
                               </span>
@@ -382,21 +388,21 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
                           </div>
                           <button
                             type="button"
-                            className="mt-5 flex items-center gap-1.5 [font-family:'Inter',Helvetica] text-[12.5px] font-medium leading-[19px] tracking-[0.12px] text-[#f5f7fa] opacity-80 transition-opacity hover:opacity-100"
+                            className="mt-7 flex items-center gap-2 [font-family:'Inter',Helvetica] text-[13.5px] font-medium leading-[20px] tracking-[0.12px] text-[#f5f7fa] opacity-75 transition-opacity hover:opacity-100"
                             data-testid={`btn-view-project-${project.label}`}
                           >
                             View Project
-                            <ArrowRight className="h-3.5 w-3.5" />
+                            <ArrowRight className="h-4 w-4" />
                           </button>
                         </div>
                       </div>
 
                       {/* Vertical divider */}
-                      <div className="hidden w-px bg-white/[0.10] lg:block" />
+                      <div className="hidden w-px shrink-0 bg-white/[0.09] lg:block" />
 
-                      {/* Right: browser mockup */}
-                      <div className="flex flex-1 items-center justify-center p-6 sm:p-7 lg:p-8">
-                        <div className="w-full max-w-[600px]">
+                      {/* ── Right column: browser preview ── */}
+                      <div className="flex flex-1 items-center justify-center overflow-visible p-8 sm:p-10 lg:p-10 xl:p-12">
+                        <div className="w-[92%] max-w-[760px]">
                           <BrowserMockup
                             domain={project.domain}
                             headerBg={project.headerBg}
@@ -407,23 +413,21 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
                         </div>
                       </div>
                     </div>
-                    {/* End content wrapper */}
                   </div>
-                  {/* End card shell */}
                 </div>
-                /* End card outer wrapper */
               ))}
             </div>
 
             {/*
               ── Peek spacer ──
-              This h-28 (112px) block at the bottom of the flex column is intentionally
-              empty. It reserves visible room within the section for the stacked cards'
-              bottom edges to peek into, creating the layered-deck look.
-              Without this, the overflow-visible cards' peeking portions would land
-              outside/below the h-screen section boundary and be invisible.
+              160px of empty space below the stack container.
+              This is where the 3 stacked cards' bottom strips become visible:
+                strip 1 (card at y=42): last 42px of its height appears here
+                strip 2 (card at y=84): last 84px minus strip-1 coverage = 42px
+                strip 3 (card at y=126): last 126px minus strip-1&2 coverage = 42px
+              Total: 3 × 42px = 126px of peeking strips, within the 160px spacer. ✓
             */}
-            <div className="shrink-0 h-28" aria-hidden="true" />
+            <div className="shrink-0" style={{ height: "160px" }} aria-hidden="true" />
           </>
         )}
       </div>

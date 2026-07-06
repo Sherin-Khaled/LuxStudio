@@ -1,0 +1,157 @@
+Fix only the Home page “Selected Work” pinned card-stack section.
+
+Do not redesign the whole website.
+Do not edit previous sections.
+Do not remove the stars.
+Do not change the project content.
+Do not change the pinned stack behavior.
+Only fix the card sizing, spacing, and cropping so it matches the Figma design better.
+
+Current problem:
+The active project card is cropped and does not look like the Figma version.
+The bottom of the card content, especially the “View Project →” CTA, is being cut off.
+The card feels too compressed vertically.
+The browser preview is too close to the edges.
+The stack stage is not giving enough room for the active card and the layered cards underneath.
+
+Reference:
+The Figma card should look like:
+- large premium glassmorphism card
+- enough vertical height
+- content fully visible
+- CTA fully visible
+- browser preview fully visible
+- stacked cards visible underneath without cropping the active card
+- generous internal padding
+- balanced two-column layout
+
+Required fix:
+
+1. Increase the active project card height.
+
+Recommended desktop card size:
+- width: 86vw to 88vw
+- max-width: 1500px to 1560px
+- min-height: 620px
+- preferred height: 640px to 700px
+
+Do not make the active card too short.
+
+2. Increase the stack stage height.
+
+The stack container must allow:
+- the full active card
+- plus visible lower stacked card edges
+
+Recommended:
+- stack stage min-height: 760px to 840px
+- overflow: visible
+
+Do not let the stack stage clip the active card.
+
+3. Fix overflow clipping.
+
+Check all parents of the card stack:
+- selected work section
+- stack stage
+- card wrapper
+- project card
+- pinned wrapper
+
+If any of them clips the active card or CTA, fix it.
+
+Use:
+overflow: visible
+
+where needed.
+
+Only use overflow hidden inside small decorative areas if necessary, not on the main active card.
+
+4. Fix active card internal spacing.
+
+Active card should have generous padding similar to Figma:
+
+Recommended:
+- card padding desktop: 56px to 72px
+- left content column padding should not be compressed
+- bottom spacing under tags before CTA: 32px to 44px
+- CTA should sit comfortably above the bottom edge
+- no content should be cropped
+
+5. Fix two-column layout.
+
+Inside the active card:
+- left column width: around 42%
+- right preview column width: around 50%
+- gap between columns: 56px to 72px
+- vertical divider line between columns stays subtle
+- browser preview should be centered vertically
+- browser preview should not touch the card edges
+
+6. Fix browser preview size and position.
+
+The preview should look like the Figma version:
+- large but not oversized
+- centered inside the right side
+- full browser mockup visible
+- no cropping
+- no touching bottom edge
+
+Recommended:
+- preview width: 92% of right column
+- max-width: 720px to 760px
+- preview height: 420px to 480px
+- border radius: 16px to 22px
+
+7. Keep stacked cards underneath.
+
+The lower cards should remain visible underneath the active card like layered glass sheets.
+
+Recommended stack offsets:
+- card behind 1: translateY(42px) scale(0.985)
+- card behind 2: translateY(84px) scale(0.97)
+- card behind 3: translateY(126px) scale(0.955)
+
+But make sure the active card itself is not cropped.
+
+8. Hide inactive card content.
+
+Inactive cards underneath should still not show readable text.
+Only the active top card should show:
+- project title
+- subtitle
+- description
+- tags
+- CTA
+- browser preview
+
+Cards underneath should show only glass layers / edges.
+
+9. Preserve the pinned scroll behavior.
+
+Keep the same scroll behavior:
+- section pins
+- Houd El Nile starts active
+- scroll brings X Dental to active
+- scroll brings Al Nours to active
+- scroll brings Al Baraka Olives to active
+- section unpins after final card is clearly shown
+
+Do not convert this into a vertical list.
+Do not make the cards normal page rows.
+Do not remove the stacked deck effect.
+
+10. Final desired result.
+
+The card should match the Figma reference:
+- bigger active card
+- full content visible
+- CTA not cropped
+- browser preview fully visible
+- glassmorphism feel
+- layered cards underneath
+- no text overlap
+- no card clipping
+- premium spacing and proportions
+
+Only fix the Selected Work card sizing, spacing, overflow, and stack container height.
