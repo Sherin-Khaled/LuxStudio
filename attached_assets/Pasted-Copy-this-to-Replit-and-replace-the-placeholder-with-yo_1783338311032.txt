@@ -1,0 +1,711 @@
+Copy this to Replit, and replace the placeholder with your Figma share link:
+
+```text
+Create the missing Lux Studio pages from the Figma design:
+
+/process
+/about
+
+Figma share link:
+[PASTE FIGMA SHARE LINK HERE]
+
+Use the Figma file as the main visual reference for layout, spacing, typography, colors, glassmorphism, stars, glow, and responsive behavior.
+
+Important:
+Do not redesign the Home page.
+Do not redesign the Work page.
+Do not redesign the Services page.
+Do not redesign the Contact page.
+Do not change existing finished pages or homepage sections.
+Only create and connect the Process and About pages.
+
+The goal is to match the Figma pages as closely as possible while using the existing Lux Studio code style and reusable components.
+
+---
+
+# Routing and Navbar
+
+Create these routes:
+
+/process
+/about
+
+Update the navbar links:
+
+Home → /
+Work → /work
+Services → /services
+Process → /process
+About → /about
+Contact → /contact
+
+When the user is on /process, highlight Process as active.
+When the user is on /about, highlight About as active.
+
+Do not leave Process or About disabled.
+Do not use href="#".
+Do not make them scroll inside the homepage.
+They must open real pages.
+
+---
+
+# Shared Lux Studio Design System
+
+Use the same design system already used across the website:
+
+Base background: #03050A
+Primary text: #F5F7FA
+Muted text: rgba(245,247,250,0.62–0.72)
+Subtle text: rgba(245,247,250,0.42–0.55)
+Accent cyan: #38BDF8
+Accent blue: #2664FF
+Accent violet: #7C3AED
+Footer blue: #06152D
+Glass border: rgba(255,255,255,0.12–0.16)
+
+Use:
+- dark cinematic background
+- subtle stars
+- side star fields
+- blue/violet atmosphere
+- glassmorphism panels
+- premium large typography
+- smooth reveal animations
+- rounded navbar
+- rounded dark-blue footer
+- responsive layout
+- reduced-motion support
+
+Reuse existing components where possible:
+Navbar
+Footer
+SideStars
+AuroraGlow
+GlassPanel
+SectionWrapper
+CTA buttons
+
+Do not create a different visual language.
+
+---
+
+# Page 1: Process Page
+
+Route:
+
+/process
+
+Page concept:
+
+The Lux Studio Flight Path
+
+This page explains how Lux Studio takes a client project from idea to final launch.
+
+The page should feel:
+premium, clear, structured, cinematic, trustworthy, collaborative, and client-friendly.
+
+The Process page should be more detailed than the homepage process section.
+
+---
+
+## Process Page Sections
+
+Build these sections:
+
+1. Process Hero
+2. Process Flight Path Overview
+3. Detailed Process Stages
+4. Approval Gates / Collaboration Points
+5. What We Need From You
+6. Launch Checklist
+7. Compact CTA
+8. Shared Footer
+
+---
+
+## Process Hero
+
+Small label:
+Process
+
+Headline:
+A clear path from idea to launch.
+
+Supporting paragraph:
+We guide every project through strategy, content, design, development, testing, and launch — so the final experience feels premium, functional, and ready to grow.
+
+Proof line:
+Discovery · Design · Build · Connect · Optimize · Launch
+
+Visual direction:
+- cinematic galaxy background
+- side stars
+- soft blue/violet glow
+- subtle constellation / route-line visual
+- premium spacing
+- no heavy pinned behavior in the hero
+
+---
+
+## Process Flight Path Overview
+
+Create a compact mission-route visual with 6 nodes:
+
+01 Discover
+02 Define
+03 Create
+04 Design
+05 Build & Connect
+06 Optimize, Launch & Support
+
+Style:
+- thin glowing route line
+- circular glassy nodes
+- cyan active highlights
+- subtle star particles
+- dark premium background
+
+This can animate softly on scroll, but keep it readable and not overanimated.
+
+---
+
+## Detailed Process Stages
+
+Create a premium vertical process section with six detailed stages.
+
+Use a glowing vertical path / timeline or premium glass stage cards, matching the Figma design.
+
+Use this exact content:
+
+### 01 Discover
+
+Description:
+We start by understanding the business, audience, goals, services, products, competitors, and the digital problem the website or system needs to solve.
+
+What happens:
+Business discovery
+Audience understanding
+Project goals
+Competitor review
+Website purpose
+Initial direction
+
+Client involvement:
+Client shares business details, current problems, goals, and available references.
+
+---
+
+### 02 Define
+
+Description:
+We turn the discovery into structure: sitemap, user journey, page priorities, features, content needs, and the experience direction.
+
+What happens:
+Sitemap
+User flows
+Page structure
+Feature planning
+Content outline
+Technical direction
+
+Client involvement:
+Client reviews and approves the structure before visual design begins.
+
+---
+
+### 03 Create
+
+Description:
+We prepare the content and visual assets that support the website, including written content, product data, images, graphics, and media direction when needed.
+
+What happens:
+Website copy
+Content shaping
+Product data
+Image direction
+Photo editing
+Video / graphic support
+
+Client involvement:
+Client provides business information, numbers, product details, and brand assets. We shape them into website-ready content.
+
+---
+
+### 04 Design
+
+Description:
+We design the interface, visual system, responsiveness, interactions, and page experience with both users and development in mind.
+
+What happens:
+Wireframes
+UI direction
+High-fidelity screens
+Responsive layouts
+Design system
+Motion direction
+
+Client involvement:
+Client reviews the design, gives feedback, and approves the visual direction before development.
+
+---
+
+### 05 Build & Connect
+
+Description:
+We build the frontend, connect backend logic when needed, prepare dashboards, CMS systems, APIs, authentication, product flows, and real business functionality.
+
+What happens:
+Frontend development
+Backend development
+CMS / dashboard
+APIs
+Authentication
+E-commerce logic
+Database structure
+
+Client involvement:
+Client tests key flows and confirms that the system behavior matches the business needs.
+
+---
+
+### 06 Optimize, Launch & Support
+
+Description:
+We test responsiveness, speed, SEO, accessibility basics, content accuracy, deployment readiness, hosting, and post-launch updates.
+
+What happens:
+Performance testing
+SEO setup
+Responsive QA
+Accessibility basics
+Hosting / deployment
+Future support
+
+Client involvement:
+Client gives final approval before launch and can continue with future improvements or maintenance.
+
+---
+
+## Approval Gates / Collaboration Points
+
+Small label:
+Collaboration
+
+Headline:
+Every stage has a clear review point.
+
+Supporting paragraph:
+We avoid surprises by reviewing the structure, content, design, development, and launch details with the client before moving forward.
+
+Use 4 premium glass mini-cards or editorial rows:
+
+01 Structure Approval
+Sitemap, pages, user flow, and feature direction are reviewed before design.
+
+02 Design Approval
+Visual direction, layouts, responsiveness, and interaction ideas are approved before development.
+
+03 Build Review
+Core flows, backend behavior, dashboards, CMS, and forms are tested before final polish.
+
+04 Launch Approval
+Speed, SEO, responsiveness, content, and deployment readiness are checked before going live.
+
+---
+
+## What We Need From You
+
+Small label:
+Client Inputs
+
+Headline:
+What helps us move faster.
+
+Supporting paragraph:
+The better the starting information, the smoother the strategy, design, and build process becomes.
+
+Create a premium checklist:
+
+Business details
+Services or product information
+Brand assets or references
+Photos, videos, or visual material
+Target audience information
+Website goals
+Access to hosting, domain, or existing systems when needed
+Feedback and approvals at key stages
+
+---
+
+## Launch Checklist
+
+Small label:
+Before Launch
+
+Headline:
+Launch is part of the process, not the end of it.
+
+Supporting paragraph:
+Before a website goes live, we check the details that affect real performance, visibility, usability, and client confidence.
+
+Checklist items:
+
+Responsive behavior
+Speed and performance
+SEO structure
+Content accuracy
+Forms and contact flows
+CMS / dashboard access
+Image optimization
+Hosting and deployment
+Basic accessibility
+Post-launch updates
+
+---
+
+## Process CTA
+
+Headline:
+Ready to move from idea to launch?
+
+Supporting text:
+Tell us what you want to build, and we will shape the right process around your goals, content, design, and technical needs.
+
+Buttons:
+Start a Project →
+View Work
+
+Start a Project should link to /contact.
+View Work should link to /work.
+
+---
+
+# Page 2: About Page
+
+Route:
+
+/about
+
+Page concept:
+
+Lux Studio is where creative direction meets technical execution.
+
+The About page should explain the studio identity, philosophy, and why Lux Studio is different.
+
+The page should feel:
+cinematic, personal but still studio-level, premium, creative, technical, confident, and not corporate.
+
+Do not make it look like a freelancer bio page.
+
+Use the Figma design as the main visual reference.
+
+---
+
+## About Page Sections
+
+Build these sections:
+
+1. About Hero
+2. Studio Philosophy
+3. Studio Note
+4. Connected Layers / Studio Signal
+5. Values / What Guides the Work
+6. Compact CTA
+7. Shared Footer
+
+Keep the page elegant and not too long.
+
+---
+
+## About Hero
+
+Small label:
+About Lux Studio
+
+Headline:
+Where creative direction meets technical execution.
+
+Supporting paragraph:
+Lux Studio is built to connect strategy, content, design, development, systems, and launch into one complete digital experience — shaped with care, clarity, and a premium eye for detail.
+
+Proof line:
+Creative Technology Studio · Design · Systems · Launch
+
+Visual direction:
+- dark galaxy background
+- side stars
+- subtle blue/violet glow
+- optional abstract glass profile/signature card on the right
+- if a profile image exists in the Figma design, use it
+- if no profile image exists, use an abstract premium avatar / glass identity card instead
+
+Right-side card label:
+Founder / UI/UX & Frontend Direction
+
+Do not make it look like a normal CV profile section.
+
+---
+
+## Studio Philosophy
+
+Use the Figma direction inspired by the glowing arc / universe style.
+
+Small label:
+Our Philosophy
+
+Headline:
+We do not separate beauty from function.
+
+Supporting paragraph:
+Every screen, interaction, system, and piece of content is designed to feel premium, work clearly, and support the business behind it.
+
+Visual:
+- large glowing blue/violet arc from the bottom
+- subtle vertical grid lines
+- tiny stars
+- premium space atmosphere
+- no heavy card box unless the Figma design uses it
+
+This section should feel premium and cinematic, not like a plain text block.
+
+---
+
+## Studio Note
+
+Use a large premium glass card section.
+
+Small label:
+A Studio Note
+
+Headline:
+Built for clients who need more than a beautiful website.
+
+Body:
+Lux Studio was created for clients who want more than polished visuals. They need someone who can understand the business, shape the content, design the experience, build the interface, connect the system, and care about the final launch.
+
+Second paragraph:
+That is why our work brings strategy, design, development, motion, systems, and launch thinking into one connected process — so the final result feels premium, clear, and ready to perform in the real world.
+
+Visual:
+- large rounded glass panel
+- subtle blue/violet glow
+- small Lux Studio signal dot on the side
+- premium spacing
+- do not make it too bright
+
+---
+
+## Connected Layers / Studio Signal
+
+This section should communicate that the same care connects every layer of the project.
+
+Small label:
+Studio Signal
+
+Headline:
+The same care connects every layer.
+
+Supporting paragraph:
+From the first idea to the final launch, every layer is shaped to support the next — so the experience feels consistent, intentional, and ready to grow.
+
+Background words can float subtly around the section:
+
+Strategy
+Content
+Structure
+Design
+Frontend
+Backend
+CMS
+Dashboards
+SEO
+Performance
+Motion
+Systems
+Launch
+
+Visual direction:
+- dark background
+- central glass panel or central signal element
+- floating muted words around it
+- soft blue glow
+- subtle stars
+
+Do not put this in a boring rectangle unless the Figma design uses that exact design.
+
+---
+
+## Values / What Guides the Work
+
+Create a compact section with 5 values.
+
+Small label:
+What Guides Us
+
+Headline:
+Built around clarity, craft, and performance.
+
+Values:
+
+01 Creativity
+We shape digital experiences with strong visual direction and memorable details.
+
+02 Innovation
+We use modern tools, motion, and systems to create work that feels current and scalable.
+
+03 Excellence
+We care about spacing, structure, responsiveness, performance, and final polish.
+
+04 Partnership
+We work with clients through clear stages, feedback, approvals, and collaboration.
+
+05 Performance
+We build with speed, SEO, accessibility basics, and real user experience in mind.
+
+Visual:
+- glass cards or editorial rows
+- not too large
+- not too many effects
+
+---
+
+## About CTA
+
+Headline:
+Have an idea that needs creative and technical direction?
+
+Supporting text:
+Tell us what you want to build, and we’ll help shape the strategy, design, and system behind it.
+
+Buttons:
+Start a Project →
+View Work
+
+Start a Project should link to /contact.
+View Work should link to /work.
+
+---
+
+# Shared Footer
+
+Use the existing shared Lux Studio footer on both pages.
+
+Footer style:
+- deep dark blue panel
+- background #06152D
+- rounded top corners only
+- full width
+- subtle stars inside it
+- large faint LUX STUDIO word
+
+Do not create a different footer.
+
+---
+
+# Motion Requirements
+
+Use smooth, premium motion.
+
+Process page:
+- hero fades up
+- route nodes reveal softly
+- timeline stages reveal on scroll
+- approval cards reveal one by one
+- checklists fade up
+
+About page:
+- hero text fades up
+- right-side identity card floats subtly
+- philosophy arc glows subtly
+- studio note reveals softly
+- floating layer words drift subtly
+- values reveal on scroll
+
+Do not overanimate.
+
+Do not use heavy pinned sections unless the Figma design specifically requires them.
+
+No aggressive meteors here.
+
+Keep the pages calmer than the homepage.
+
+---
+
+# Reduced Motion
+
+Respect prefers-reduced-motion.
+
+If reduced motion is enabled:
+- disable continuous star movement
+- disable floating words
+- disable glow movement
+- disable complex scroll animations
+- show all content statically and clearly
+
+---
+
+# Responsive Requirements
+
+Desktop:
+- match the Figma layout closely
+- large cinematic spacing
+- two-column hero where applicable
+- premium cards and timelines
+
+Tablet:
+- reduce headline sizes
+- maintain spacing
+- avoid cramped text
+
+Mobile:
+- stack sections vertically
+- no horizontal overflow
+- nav remains usable
+- glass cards fit screen width
+- timelines become single-column
+- floating words become subtle or hidden
+- all text remains readable
+
+---
+
+# Performance Requirements
+
+Avoid:
+- heavy WebGL
+- huge canvas effects
+- video backgrounds
+- too many particles
+- excessive blur layers
+
+Use optimized CSS, Framer Motion, and reusable components.
+
+---
+
+# Final Test Checklist
+
+After building, test:
+
+1. /process opens correctly.
+2. /about opens correctly.
+3. Navbar Process opens /process.
+4. Navbar About opens /about.
+5. Active nav state works on both pages.
+6. Existing pages still work.
+7. The pages match the Figma share link visually.
+8. Footer appears correctly on both pages.
+9. Mobile layout does not break.
+10. No horizontal overflow.
+11. Stars and glow remain subtle and premium.
+12. No existing homepage sections were changed.
+
+Only create and connect the Process and About pages.
+```
+
+After it finishes, test:
+
+```text
+/process
+/about
+```
+
+And also click **Process** and **About** from the navbar.
