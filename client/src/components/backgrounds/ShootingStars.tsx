@@ -11,13 +11,26 @@ const shooters = [
 
 interface ShootingStarsProps {
   className?: string;
+  // Defaults to the site's one existing look (white streak on dark). A
+  // plain white streak would nearly vanish against a pale sky, so light
+  // mode uses a deeper, more saturated blue instead — same idea as every
+  // other star layer's dark/light recolor, just applied here too.
+  variant?: "dark" | "light";
 }
 
-export const ShootingStars = ({ className = "" }: ShootingStarsProps) => {
+export const ShootingStars = ({ className = "", variant = "dark" }: ShootingStarsProps) => {
   const reduced = useReducedMotion();
   if (reduced) return null;
 
+  const isLight = variant === "light";
   const shotPct = DURATION_FRACTION * 100;
+  const dotColor = isLight ? "#0284c7" : "white";
+  const dotGlow = isLight
+    ? "0 0 4px 1.5px rgba(2,132,199,0.55), 0 0 12px 3px rgba(56,189,248,0.32)"
+    : "0 0 4px 1.5px rgba(255, 255, 255, 0.9), 0 0 10px 3px rgba(112, 215, 255, 0.35)";
+  const trailGradient = isLight
+    ? "linear-gradient(90deg, rgba(2,132,199,0.55) 0%, rgba(56,189,248,0.22) 55%, transparent 100%)"
+    : "linear-gradient(90deg, rgba(255, 255, 255, 0.75) 0%, rgba(112, 215, 255, 0.2) 55%, transparent 100%)";
 
   return (
     <>
@@ -53,10 +66,8 @@ export const ShootingStars = ({ className = "" }: ShootingStarsProps) => {
           width: 2.5px;
           height: 2.5px;
           border-radius: 50%;
-          background: white;
-          box-shadow:
-            0 0 4px 1.5px rgba(255, 255, 255, 0.9),
-            0 0 10px 3px rgba(112, 215, 255, 0.35);
+          background: ${dotColor};
+          box-shadow: ${dotGlow};
           animation: lux-shoot ${CYCLE}s linear infinite;
           will-change: transform, opacity;
         }
@@ -69,12 +80,7 @@ export const ShootingStars = ({ className = "" }: ShootingStarsProps) => {
           transform: translateY(-50%);
           width: 130px;
           height: 1px;
-          background: linear-gradient(
-            90deg,
-            rgba(255, 255, 255, 0.75) 0%,
-            rgba(112, 215, 255, 0.2) 55%,
-            transparent 100%
-          );
+          background: ${trailGradient};
           border-radius: 0 1px 1px 0;
         }
       `}</style>

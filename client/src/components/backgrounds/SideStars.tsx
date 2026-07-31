@@ -36,17 +36,52 @@ function buildStars(count: number, seedOffset: number): StarDot[] {
 interface SideStarsProps {
   className?: string;
   starsPerSide?: number;
+  // Defaults to the site's one existing look (white/cyan on dark) — every
+  // current call site keeps that exact appearance unless it opts in to
+  // "light" explicitly, which is what the light-mode hero does.
+  // "light-accent" is a second light-mode option: both tiers render in
+  // blue/cyan instead of "light"'s dark-slate tier — for placements like the
+  // hero, where stars sit over a bright sky photo rather than a plain pale
+  // page background, and a dark-slate dot reads as near-black instead of
+  // "subtle."
+  variant?: "dark" | "light" | "light-accent";
 }
 
-export const SideStars = ({ className = "", starsPerSide = 18 }: SideStarsProps) => {
+export const SideStars = ({ className = "", starsPerSide = 18, variant = "dark" }: SideStarsProps) => {
+  const isLight = variant === "light" || variant === "light-accent";
+  const isLightAccent = variant === "light-accent";
   const reduced = useReducedMotion();
   const leftStars = useMemo(() => buildStars(starsPerSide, 0), [starsPerSide]);
   const rightStars = useMemo(() => buildStars(starsPerSide, 100), [starsPerSide]);
 
   const renderStars = (stars: StarDot[]) =>
     stars.map((s) => {
-      const color = s.cyan ? "#70d7ff" : "#ffffff";
-      const glowColor = s.cyan ? "rgba(112,215,255,0.5)" : "rgba(255,255,255,0.35)";
+      // Same re-tuning as StarsBackground: the "white" tier becomes a soft
+      // dark slate against a pale sky, and opacity is scaled down overall
+      // so light mode stays calm rather than noisy. "light-accent" skips the
+      // slate tier entirely — both tiers stay blue/cyan, just two shades.
+      const color = isLightAccent
+        ? s.cyan ? "#0284c7" : "#38bdf8"
+        : isLight
+          ? (s.cyan ? "#3b82f6" : "#475569")
+          : s.cyan ? "#70d7ff" : "#ffffff";
+      const glowColor = isLightAccent
+        ? s.cyan ? "rgba(2,132,199,0.38)" : "rgba(56,189,248,0.34)"
+        : isLight
+          ? s.cyan
+            ? "rgba(59,130,246,0.32)"
+            : "rgba(71,85,105,0.22)"
+          : s.cyan
+            ? "rgba(112,215,255,0.5)"
+            : "rgba(255,255,255,0.35)";
+      // "light-accent" was still falling into the same 0.65 dampening as
+      // plain "light" here — the color swap to blue/cyan alone couldn't fix
+      // visibility while opacity was still being cut by a third on top of
+      // it. "light-accent" now keeps full opacity, same as dark mode: the
+      // whole point of this variant is to stay clearly visible against the
+      // photo, not to be calm/muted like the plain "light" variant is
+      // elsewhere on the page.
+      const opacity = isLightAccent ? s.opacity : isLight ? s.opacity * 0.65 : s.opacity;
       return (
         <div
           key={s.id}
@@ -59,8 +94,8 @@ export const SideStars = ({ className = "", starsPerSide = 18 }: SideStarsProps)
             borderRadius: "50%",
             backgroundColor: color,
             boxShadow: s.size > 1.8 ? `0 0 ${s.size * 2.5}px ${s.size}px ${glowColor}` : undefined,
-            ["--s-op" as string]: s.opacity,
-            opacity: s.opacity,
+            ["--s-op" as string]: opacity,
+            opacity,
             animation: reduced
               ? undefined
               : `lux-side-drift ${s.duration}s ${s.delay}s linear infinite`,

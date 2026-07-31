@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef } from "react";
-import { useReducedMotion, motion, useScroll, useTransform } from "framer-motion";
-import { Navbar } from "@/components/Navbar";
+import { AnimatePresence, useReducedMotion, motion } from "framer-motion";
 import { SiteFooterSection } from "./sections/SiteFooterSection";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
+import { StarsBackground } from "@/components/backgrounds/StarsBackground";
+import { useProjectModal } from "@/contexts/ProjectModalContext";
+import servicesHeroBackground from "../../../attached_assets/herosectionofServicespage.jpg";
 
 const processSteps = [
   "Strategy",
@@ -150,23 +152,6 @@ const engagements = [
   },
 ];
 
-const SideStars = () => (
-  <>
-    <img
-      className="pointer-events-none absolute left-0 top-0 h-full w-auto max-w-[220px] object-cover opacity-50 select-none"
-      src="/figmaAssets/backgroundstars-3.svg"
-      alt=""
-      aria-hidden="true"
-    />
-    <img
-      className="pointer-events-none absolute right-0 top-0 h-full w-auto max-w-[220px] object-cover opacity-50 select-none"
-      src="/figmaAssets/backgroundstars-4.svg"
-      alt=""
-      aria-hidden="true"
-    />
-  </>
-);
-
 const SequentialGlow = ({ reduced }: { reduced: boolean }) => {
   const [active, setActive] = useState(0);
 
@@ -218,21 +203,23 @@ const SequentialGlow = ({ reduced }: { reduced: boolean }) => {
 
 const ServiceConstellationSection = ({ reduced }: { reduced: boolean }) => {
   const [activeIdx, setActiveIdx] = useState(0);
-  const sectionRef = useRef<HTMLDivElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end end"],
-  });
-
-  const rawActive = useTransform(scrollYProgress, [0, 1], [0, services.length - 1]);
+  const [isAutoPaused, setIsAutoPaused] = useState(false);
+  const [cycleRestart, setCycleRestart] = useState(0);
 
   useEffect(() => {
-    if (reduced) return;
-    const unsubscribe = rawActive.on("change", (v) => {
-      setActiveIdx(Math.round(Math.max(0, Math.min(v, services.length - 1))));
-    });
-    return unsubscribe;
-  }, [rawActive, reduced]);
+    if (reduced || isAutoPaused) return;
+
+    const timer = window.setInterval(() => {
+      setActiveIdx((current) => (current + 1) % services.length);
+    }, 3000);
+
+    return () => window.clearInterval(timer);
+  }, [reduced, isAutoPaused, cycleRestart]);
+
+  const selectService = (index: number) => {
+    setActiveIdx(index);
+    setCycleRestart((current) => current + 1);
+  };
 
   if (reduced) {
     return (
@@ -260,20 +247,20 @@ const ServiceConstellationSection = ({ reduced }: { reduced: boolean }) => {
     );
   }
 
+  const activeService = services[activeIdx]!;
+
   return (
     <section
-      ref={sectionRef}
-      className="relative hidden lg:block"
-      style={{ height: `${services.length * 100}vh` }}
+      className="relative hidden px-12 py-12 lg:block xl:px-20"
       aria-label="Services constellation"
     >
-      <div className="sticky top-0 h-screen overflow-hidden">
+      <div className="relative min-h-[620px] overflow-hidden">
         <div className="pointer-events-none absolute inset-0">
           <div className="absolute left-0 top-1/2 h-[500px] w-[400px] -translate-y-1/2 rounded-full bg-[#38bdf808] blur-[120px]" />
           <div className="absolute right-0 top-1/3 h-[400px] w-[350px] rounded-full bg-[#7c3aed06] blur-[100px]" />
         </div>
 
-        <div className="relative z-10 flex h-full items-center px-12 xl:px-20">
+        <div className="relative z-10 flex min-h-[620px] items-center">
           <div className="mx-auto grid w-full max-w-[1300px] grid-cols-[280px_1fr] gap-12 xl:gap-20">
             {/* Left: service index */}
             <div className="flex flex-col justify-center gap-3">
@@ -282,7 +269,7 @@ const ServiceConstellationSection = ({ reduced }: { reduced: boolean }) => {
                   key={s.id}
                   type="button"
                   data-testid={`service-nav-${s.id}`}
-                  onClick={() => setActiveIdx(i)}
+                  onClick={() => selectService(i)}
                   className="flex items-center gap-3 text-left transition-all duration-300"
                 >
                   <span
@@ -305,48 +292,76 @@ const ServiceConstellationSection = ({ reduced }: { reduced: boolean }) => {
             </div>
 
             {/* Right: active service panel */}
-            <div className="relative flex items-center">
-              {services.map((s, i) => (
+            <div
+              className="relative flex min-h-[540px] items-center overflow-hidden"
+              onMouseEnter={() => setIsAutoPaused(true)}
+              onMouseLeave={() => setIsAutoPaused(false)}
+            >
+              <AnimatePresence initial={false} mode="wait">
                 <motion.div
-                  key={s.id}
-                  data-testid={`service-panel-${s.id}`}
-                  initial={{ opacity: 0, x: 40 }}
-                  animate={{
-                    opacity: activeIdx === i ? 1 : 0,
-                    x: activeIdx === i ? 0 : 40,
-                    pointerEvents: activeIdx === i ? "auto" : "none",
-                  }}
-                  transition={{ duration: 0.55, ease: [0.22, 1, 0.36, 1] }}
+                  key={activeService.id}
+                  data-testid={`service-panel-${activeService.id}`}
+                  initial={{ opacity: 0, x: 72 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -36 }}
+                  transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
                   className="absolute inset-0 flex items-center"
+                  style={{
+                    willChange: "transform, opacity",
+                    backfaceVisibility: "hidden",
+                  }}
                 >
                   <div
-                    className="w-full rounded-3xl border p-10 xl:p-12 shadow-[0px_0px_60px_#00000040]"
+                    tabIndex={0}
+                    className="group relative w-full overflow-hidden rounded-3xl border border-[#38bdf825] p-10 shadow-[0_0_0_1px_#38bdf815,0_0_40px_#38bdf808] outline-none [transition:border-color_600ms_cubic-bezier(0.22,1,0.36,1),box-shadow_600ms_cubic-bezier(0.22,1,0.36,1),transform_600ms_cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-1 hover:scale-[1.015] hover:border-[rgba(56,189,248,0.45)] hover:shadow-[0_0_24px_rgba(56,189,248,0.18),0_0_70px_rgba(56,189,248,0.08),0_0_0_1px_#38bdf815,0_0_40px_#38bdf808] focus-visible:-translate-y-1 focus-visible:scale-[1.015] focus-visible:border-[rgba(56,189,248,0.45)] focus-visible:shadow-[0_0_24px_rgba(56,189,248,0.18),0_0_70px_rgba(56,189,248,0.08),0_0_0_1px_#38bdf815,0_0_40px_#38bdf808] motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100 motion-reduce:focus-visible:translate-y-0 motion-reduce:focus-visible:scale-100 xl:p-12"
                     style={{
-                      borderColor: activeIdx === i ? "#38bdf825" : "#ffffff0a",
                       background: "linear-gradient(135deg, #070f1c 0%, #03050a 100%)",
-                      boxShadow: activeIdx === i
-                        ? "0 0 0 1px #38bdf815, 0 0 40px #38bdf808"
-                        : undefined,
                     }}
                   >
-                    <div className="flex flex-col gap-6">
+                    {/* Gradient overlay — Stripe-style blended color, hidden until hover/focus (same as About value cards) */}
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 z-0 opacity-0 [transition:opacity_600ms_cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 group-focus-visible:opacity-100"
+                      style={{
+                        background:
+                          "radial-gradient(circle at 20% 20%, rgba(56,189,248,0.18), transparent 35%), radial-gradient(circle at 80% 70%, rgba(124,58,237,0.18), transparent 40%), linear-gradient(135deg, rgba(56,189,248,0.08), rgba(124,58,237,0.08))",
+                      }}
+                    />
+
+                    {/* Decorative mini bar chart — same effect as About value cards */}
+                    <div aria-hidden="true" className="pointer-events-none absolute bottom-6 right-8 z-0 flex items-end gap-[3px]">
+                      {[18, 34, 26, 52, 40, 72, 46, 60, 28].map((h, bi) => (
+                        <div
+                          key={bi}
+                          className={`w-[3px] origin-bottom rounded-t-sm opacity-0 ${reduced ? "" : "scale-y-0"} [transition:opacity_500ms_ease,transform_700ms_cubic-bezier(0.22,1,0.36,1)] group-hover:opacity-100 group-focus-visible:opacity-100 ${reduced ? "" : "group-hover:scale-y-100 group-focus-visible:scale-y-100"}`}
+                          style={{
+                            height: `${h}px`,
+                            backgroundColor: "rgba(56,189,248,0.65)",
+                            boxShadow: "0 0 12px rgba(56,189,248,0.35)",
+                            transitionDelay: reduced ? "0ms" : `${bi * 60}ms`,
+                          }}
+                        />
+                      ))}
+                    </div>
+
+                    <div className="relative z-10 flex flex-col gap-6">
                       <div>
                         <p className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal tracking-[1.5px] text-sky-400 uppercase mb-3">
-                          {s.id}
+                          {activeService.id}
                         </p>
                         <h3 className="[font-family:'Bricolage_Grotesque',Helvetica] text-[40px] font-semibold leading-[1.05] tracking-[-1.2px] text-[#f5f7fa] xl:text-[48px]">
-                          {s.title}
+                          {activeService.title}
                         </h3>
                       </div>
                       <p className="max-w-[560px] [font-family:'Inter',Helvetica] text-[16px] font-normal leading-[28px] tracking-[0] text-[#f5f7faa6]">
-                        {s.description}
+                        {activeService.description}
                       </p>
                       <div>
                         <p className="mb-3 [font-family:'JetBrains_Mono',Helvetica] text-[10px] font-normal tracking-[1.2px] text-[#f5f7fa40] uppercase">
                           What we handle
                         </p>
                         <div className="flex flex-wrap gap-2">
-                          {s.handles.map((h) => (
+                          {activeService.handles.map((h) => (
                             <span
                               key={h}
                               className="rounded-full border border-[#38bdf818] bg-[#38bdf808] px-3.5 py-1.5 [font-family:'Inter',Helvetica] text-[12.5px] font-normal text-[#f5f7faa0]"
@@ -361,13 +376,13 @@ const ServiceConstellationSection = ({ reduced }: { reduced: boolean }) => {
                           Best for
                         </p>
                         <p className="[font-family:'Inter',Helvetica] text-[14px] font-normal leading-[22px] tracking-[0] text-[#f5f7fa60] italic">
-                          {s.bestFor}
+                          {activeService.bestFor}
                         </p>
                       </div>
                     </div>
                   </div>
                 </motion.div>
-              ))}
+              </AnimatePresence>
             </div>
           </div>
         </div>
@@ -499,26 +514,25 @@ const fadeUp = {
 
 export const ServicesPage = () => {
   const reduced = useReducedMotion() ?? false;
+  const { openProjectModal } = useProjectModal();
 
   return (
-    <main className="w-full overflow-x-hidden bg-[#03050a]" data-testid="page-services">
-      <Navbar />
+    <main className="w-full overflow-x-hidden" data-testid="page-services">
 
       {/* Hero */}
       <section
         className="relative min-h-[600px] w-full overflow-hidden pt-[80px]"
         aria-label="Services hero"
       >
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,5,10,0.7)_0%,rgba(3,5,10,0.2)_40%,rgba(3,5,10,0.7)_80%,rgba(3,5,10,1)_100%)]" />
         <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: "url('/figmaAssets/imagewithfallback.png')" }}
+          className="absolute inset-0 bg-cover bg-center bg-no-repeat"
+          style={{ backgroundImage: `url(${servicesHeroBackground})` }}
         />
-        <div className="absolute inset-0 bg-[#03050ab0]" />
-        <SideStars />
+        <div className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(3,5,10,0.52)_0%,rgba(3,5,10,0.40)_42%,rgba(3,5,10,0.58)_80%,rgba(3,5,10,1)_100%)]" />
+        <StarsBackground count={84} tabletCount={58} mobileCount={36} motion="drift" className="z-[2]" />
 
         {/* Aurora */}
-        <div className="pointer-events-none absolute inset-0">
+        <div className="pointer-events-none absolute inset-0 z-[3]">
           <div className="absolute left-1/2 top-[25%] h-[360px] w-[700px] -translate-x-1/2 rounded-full bg-[#1d4ed814] blur-[150px]" />
           <div className="absolute left-[30%] top-[10%] h-[200px] w-[300px] rounded-full bg-[#7c3aed0c] blur-[100px]" />
         </div>
@@ -601,7 +615,7 @@ export const ServicesPage = () => {
           viewport={{ once: true, margin: "-60px" }}
           className="mx-auto max-w-[860px]"
         >
-          <div className="animate-glow-border relative overflow-hidden rounded-3xl border border-[#38bdf820] bg-[#060e1c] p-10 text-center shadow-[0px_0px_60px_#00000050] sm:p-14">
+          <div className="work-cta-orbit-border relative overflow-hidden rounded-3xl border border-[#38bdf820] bg-[#060e1c] p-10 text-center shadow-[0px_0px_60px_#00000050] sm:p-14">
             <div className="pointer-events-none absolute inset-0">
               <div className="absolute left-1/2 top-0 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-[#38bdf80a] blur-[100px]" />
               {!reduced &&
@@ -632,6 +646,7 @@ export const ServicesPage = () => {
               <div className="flex flex-wrap items-center justify-center gap-3">
                 <Button
                   type="button"
+                  onClick={openProjectModal}
                   data-testid="button-services-cta-start"
                   className="h-auto rounded-full bg-[#f5f7fa] px-8 py-[14px] shadow-[0px_4px_20px_#00000052] hover:bg-[#f5f7fa]"
                 >

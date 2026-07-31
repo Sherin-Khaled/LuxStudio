@@ -1,10 +1,7 @@
-import { useRef, useState, useEffect, useLayoutEffect } from "react";
-import { useReducedMotion } from "framer-motion";
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { useEffect, useRef, useState } from "react";
+import { motion, useReducedMotion } from "framer-motion";
 import { SideStars } from "@/components/backgrounds/SideStars";
-
-gsap.registerPlugin(ScrollTrigger);
+import { useTheme } from "@/contexts/ThemeContext";
 
 const steps = [
   {
@@ -51,115 +48,70 @@ const steps = [
   },
 ];
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
+  visible: (delay = 0) => ({
+    opacity: 1,
+    y: 0,
+    filter: "blur(0px)",
+    transition: { duration: 0.8, ease: [0.22, 1, 0.36, 1], delay },
+  }),
+};
+
+/* Same center-band technique already used by the Process page's own
+   "DetailedStagesTimeline" — a single IntersectionObserver watches each
+   step's marker dot; whichever one sits in a thin band around the vertical
+   center becomes "active" as the user scrolls normally past it. No pin, no
+   scrubbed timeline — scrolling is just scrolling, this only decides which
+   step currently gets the bright/glowing treatment. */
+const STEP_TRIGGER_ROOT_MARGIN = "-45% 0px -45% 0px";
+const STEP_STATE_TRANSITION =
+  "opacity 700ms cubic-bezier(0.22,1,0.36,1), background-color 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms cubic-bezier(0.22,1,0.36,1), color 700ms cubic-bezier(0.22,1,0.36,1)";
+
 export const ProcessJourneySection = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
+  const { theme } = useTheme();
+  const isLight = theme === "light";
 
-  const [isMobile, setIsMobile] = useState(
-    () => typeof window !== "undefined" && window.innerWidth < 768
-  );
+  const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
+    check();
     window.addEventListener("resize", check);
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  const animOff = reduced || isMobile;
+  const [activeIndex, setActiveIndex] = useState(-1);
+  const markerRefs = useRef<(HTMLDivElement | null)[]>([]);
 
-  const sectionRef = useRef<HTMLElement>(null);
-  const listRef    = useRef<HTMLOListElement>(null);
-  const pointRefs  = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
-  const dotRefs    = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
-  const lineRefs   = useRef<(HTMLDivElement | null)[]>([null, null, null, null, null, null]);
-  // Store the timeline so cleanup kills it without ctx.revert() DOM conflicts
-  const tlRef      = useRef<gsap.core.Timeline | null>(null);
+  // Light-mode-only: hovering a step should visually reuse the exact same
+  // active-state styling the auto-scroll/IntersectionObserver logic already
+  // produces, not a separate hover treatment. `hoveredIndex` never touches
+  // `activeIndex` itself (the automatic current-step tracking below is
+  // completely untouched) — it only feeds into what each step renders as.
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  useLayoutEffect(() => {
-    // useLayoutEffect: cleanup runs synchronously before React's DOM mutations,
-    // ensuring GSAP's pin-spacer is removed before React reconciles the tree.
-    if (tlRef.current) {
-      try { tlRef.current.scrollTrigger?.kill(); tlRef.current.kill(); } catch (_) {}
-      tlRef.current = null;
-    }
-
-    if (animOff) return;
-
-    const points = pointRefs.current.filter(Boolean) as HTMLDivElement[];
-    const dots   = dotRefs.current.filter(Boolean)   as HTMLDivElement[];
-    const lines  = lineRefs.current.filter(Boolean)  as HTMLDivElement[];
-    const list   = listRef.current;
-    if (!points.length || !sectionRef.current) return;
-
-    // ── Initial hidden states — GSAP owns these exclusively ──
-    gsap.set(points, { autoAlpha: 0, y: 50, filter: "blur(8px)" });
-    gsap.set(dots,   { backgroundColor: "rgba(56,189,248,0.25)", boxShadow: "none" });
-    gsap.set(lines,  { scaleY: 0, transformOrigin: "top center" });
-    if (list) gsap.set(list, { y: 0 });
-
-    const tl = gsap.timeline({
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: "top top",
-        end: "+=500%",
-        scrub: 1,
-        pin: true,
-        pinSpacing: true,
-        anticipatePin: 1,
-        invalidateOnRefresh: true,
+  useEffect(() => {
+    if (reduced) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const idx = markerRefs.current.indexOf(entry.target as HTMLDivElement);
+            if (idx !== -1) setActiveIndex(idx);
+          }
+        });
       },
+      { root: null, rootMargin: STEP_TRIGGER_ROOT_MARGIN, threshold: 0 },
+    );
+    markerRefs.current.forEach((el) => {
+      if (el) observer.observe(el);
     });
-
-    points.forEach((point, i) => {
-      const dot  = dots[i];
-      const line = lines[i];
-      const isLast = i === points.length - 1;
-
-      // Reveal point — active / bright state
-      tl.fromTo(
-        point,
-        { autoAlpha: 0, y: 50, filter: "blur(8px)" },
-        { autoAlpha: 1, y: 0, filter: "blur(0px)", duration: 0.8, ease: "none" }
-      );
-      tl.to(dot,  { backgroundColor: "#38bdf8", boxShadow: "0 0 12px rgba(56,189,248,0.28)", duration: 0.35, ease: "none" }, "<0.15");
-      tl.to(line, { scaleY: 1, duration: 0.45, ease: "none" }, "<");
-
-      if (!isLast) {
-        // Brief hold at full brightness so user clearly sees the active state
-        tl.to({}, { duration: 0.3 });
-        // Dim to "previous / revealed" — 50% opacity for clear contrast with active
-        tl.to(point, { opacity: 0.50, duration: 0.4, ease: "none" });
-        tl.to(dot,   { backgroundColor: "rgba(56,189,248,0.45)", boxShadow: "none", opacity: 0.55, duration: 0.4, ease: "none" }, "<");
-        tl.to(line,  { opacity: 0.30, duration: 0.4, ease: "none" }, "<");
-
-        // After point 03 dims, start scrolling list upward so 04/05/06 stay visible
-        if (i === 2 && list) {
-          tl.to(list, { y: -65, duration: 0.6, ease: "none" });
-        }
-        // After point 04 dims, scroll list up further so 05 and 06 are fully unclipped
-        if (i === 3 && list) {
-          tl.to(list, { y: -140, duration: 0.7, ease: "none" });
-        }
-      }
-    });
-
-    // Brief hold so the user sees the completed timeline before unpin
-    tl.to({}, { duration: 0.8 });
-
-    tlRef.current = tl;
-
-    return () => {
-      // Kill ScrollTrigger and timeline without reverting DOM to avoid React conflicts
-      tl.scrollTrigger?.kill();
-      tl.kill();
-      tlRef.current = null;
-    };
-  }, [animOff]);
+    return () => observer.disconnect();
+  }, [reduced]);
 
   return (
-    <section
-      ref={sectionRef}
-      className="relative w-full bg-[#03050a]"
-      aria-labelledby="journey-heading"
-    >
+    <section className={`relative w-full transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"}`} aria-labelledby="journey-heading">
       {/* ── Background stars ── */}
       <img
         className="pointer-events-none absolute inset-0 h-full w-full object-cover"
@@ -167,104 +119,182 @@ export const ProcessJourneySection = (): JSX.Element => {
         aria-hidden="true"
         src="/figmaAssets/backgroundstars-4.svg"
       />
+      {isLight && (
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(248,251,255,0.85)_0%,rgba(248,251,255,0.55)_45%,rgba(248,251,255,0.85)_100%)]"
+        />
+      )}
 
       {/* ── Atmospheric glows ── */}
       <div
         aria-hidden="true"
         className="pointer-events-none absolute right-[-10%] top-[15%] h-[560px] w-[560px] rounded-full blur-[130px]"
-        style={{ backgroundColor: "rgba(29, 78, 216, 0.18)" }}
+        style={{ backgroundColor: isLight ? "rgba(29, 78, 216, 0.10)" : "rgba(29, 78, 216, 0.18)" }}
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute right-[10%] top-[-4%] h-[280px] w-[280px] rounded-full blur-[90px]"
-        style={{ backgroundColor: "rgba(56, 189, 248, 0.09)" }}
+        style={{ backgroundColor: isLight ? "rgba(2, 132, 199, 0.08)" : "rgba(56, 189, 248, 0.09)" }}
       />
       <div
         aria-hidden="true"
         className="pointer-events-none absolute bottom-[-8%] left-[2%] h-[300px] w-[300px] rounded-full blur-[100px]"
-        style={{ backgroundColor: "rgba(124, 58, 237, 0.09)" }}
+        style={{ backgroundColor: isLight ? "rgba(124, 58, 237, 0.07)" : "rgba(124, 58, 237, 0.09)" }}
       />
 
       {/* ── Edge stars ── */}
-      <SideStars starsPerSide={isMobile ? 6 : 14} className="z-[1]" />
+      <SideStars starsPerSide={isMobile ? 6 : 14} className="z-[1]" variant={isLight ? "light" : "dark"} />
 
       {/* ── Main content ── */}
-      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1360px] flex-col gap-8 px-6 pt-12 pb-8 sm:px-8 md:flex-row md:items-start lg:px-11 lg:pt-14">
+      <div className="relative z-10 mx-auto flex w-full max-w-[1360px] flex-col gap-10 px-6 py-20 sm:px-8 md:flex-row md:items-start lg:px-11 lg:py-28">
 
         {/* ── Left: editorial heading ── */}
-        <header className="flex w-full shrink-0 flex-col items-start md:w-[360px] lg:w-[400px] xl:w-[440px] md:pt-2">
-          <p className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] text-[#f5f7fa61]">
+        <motion.header
+          variants={fadeUp}
+          custom={0}
+          initial={reduced ? "visible" : "hidden"}
+          whileInView="visible"
+          viewport={{ once: true, margin: "-80px" }}
+          className="flex w-full shrink-0 flex-col items-start md:w-[360px] lg:w-[400px] xl:w-[440px] md:pt-2"
+        >
+          <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"}`}>
             03 / 06
           </p>
           <h2
             id="journey-heading"
-            className="pt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[38px] font-semibold leading-[0.97] tracking-[-1.4px] text-[#f5f7fa] sm:text-[48px] lg:text-[60px] lg:tracking-[-1.8px]"
+            className={`pt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[38px] font-semibold leading-[0.97] tracking-[-1.4px] sm:text-[48px] lg:text-[60px] lg:tracking-[-1.8px] ${
+              isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
+            }`}
           >
             From idea
             <br />
             to launch.
           </h2>
-          <p className="pt-4 max-w-[380px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] tracking-[0] text-[#f5f7faa6] sm:text-[14px] sm:leading-[24px]">
+          <p className={`pt-4 max-w-[380px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] tracking-[0] sm:text-[14px] sm:leading-[24px] ${isLight ? "text-[rgba(15,23,42,0.65)]" : "text-[#f5f7faa6]"}`}>
             A clear, collaborative process that turns strategy, content, design,
             development, and systems into a complete digital experience.
           </p>
-          <p className="pt-3 max-w-[320px] [font-family:'Inter',Helvetica] text-[11px] font-normal leading-[17px] tracking-[0] text-[#f5f7fa61]">
+          <p className={`pt-3 max-w-[320px] [font-family:'Inter',Helvetica] text-[11px] font-normal leading-[17px] tracking-[0] ${isLight ? "text-[rgba(15,23,42,0.50)]" : "text-[#f5f7fa61]"}`}>
             Every stage is reviewed, refined, and approved before moving forward.
           </p>
-        </header>
+        </motion.header>
 
-        {/* ── Right: process timeline ──
-            overflow-visible so GSAP's upward list translation doesn't get clipped. ── */}
-        <div className="flex min-w-0 flex-1 flex-col overflow-visible pt-2 md:pt-8 lg:pt-10">
-          <ol
-            ref={listRef}
-            className="flex flex-col gap-[9px] lg:gap-[11px]"
-            aria-label="Project process steps"
-          >
-            {steps.map((step, i) => (
-              <li
-                key={step.id}
-                ref={(el) => { pointRefs.current[i] = el; }}
-                className="flex items-start gap-[18px] lg:gap-5"
-              >
-                {/* Per-point marker: dot + short line (no continuous vertical bar) */}
-                <div className="flex shrink-0 flex-col items-center pt-[3px]">
-                  {/* Dot — GSAP controls bg/shadow/opacity only */}
-                  <div
-                    ref={(el) => { dotRefs.current[i] = el; }}
-                    className="rounded-full"
-                    style={{ width: "8px", height: "8px", flexShrink: 0 }}
-                  />
-                  {/* Short per-point line — GSAP controls scaleY/opacity only */}
-                  <div
-                    ref={(el) => { lineRefs.current[i] = el; }}
-                    style={{
-                      width: "1px",
-                      height: "52px",
-                      marginTop: "4px",
-                      background: "rgba(56,189,248,0.55)",
-                      flexShrink: 0,
-                    }}
-                  />
-                </div>
+        {/* ── Right: process timeline — normal document flow, each step
+            reveals as it scrolls into view, and whichever one is nearest
+            the viewport's center gets the bright/glowing "active" look. ── */}
+        <div className="flex min-w-0 flex-1 flex-col pt-2 md:pt-8 lg:pt-10">
+          <ol className="flex flex-col gap-12 lg:gap-14" aria-label="Project process steps">
+            {steps.map((step, i) => {
+              const isActive = reduced
+                ? i === 0
+                : i === activeIndex || (activeIndex === -1 && i === 0);
+              // Manual hover overrides the automatic active step (same idea
+              // as the Studio Universe badges' auto-cycle/hover relationship):
+              // while any step is hovered, only that step shows the "active"
+              // look; leaving reverts to whatever the scroll position says is
+              // current. Dark mode is untouched — `isVisuallyActive` just
+              // equals `isActive` there, so hovering does nothing new.
+              const isHoveringAnyStep = hoveredIndex !== null;
+              const isVisuallyActive = isLight
+                ? i === hoveredIndex || (!isHoveringAnyStep && isActive)
+                : isActive;
 
-                {/* Step text */}
-                <article className="flex min-w-0 flex-1 flex-col items-start">
-                  <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-medium leading-[12px] tracking-[1.2px] text-sky-400">
-                    {step.id}
-                  </p>
-                  <h3 className="pt-[4px] [font-family:'Bricolage_Grotesque',Helvetica] text-[18px] font-semibold leading-[23px] tracking-[-0.45px] text-[#f5f7fa] lg:text-[20px] lg:leading-[25px]">
-                    {step.title}
-                  </h3>
-                  <p className="pt-[4px] max-w-[540px] [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[19px] tracking-[0] text-[#f5f7faa6]">
-                    {step.description}
-                  </p>
-                  <p className="pt-[4px] [font-family:'Inter',Helvetica] text-[10px] font-normal leading-[14px] tracking-[0.38px] text-[#f5f7fa61]">
-                    {step.tags}
-                  </p>
-                </article>
-              </li>
-            ))}
+              return (
+                <motion.li
+                  key={step.id}
+                  variants={fadeUp}
+                  custom={Math.min(i * 0.06, 0.3)}
+                  initial={reduced ? "visible" : "hidden"}
+                  whileInView="visible"
+                  viewport={{ once: true, margin: "-100px" }}
+                  onMouseEnter={() => setHoveredIndex(i)}
+                  onMouseLeave={() => setHoveredIndex((prev) => (prev === i ? null : prev))}
+                  className="flex items-start gap-[18px] lg:gap-5"
+                >
+                  {/* Per-point marker: dot + short line */}
+                  <div className="flex shrink-0 flex-col items-center pt-[3px]">
+                    <div
+                      ref={(el) => { markerRefs.current[i] = el; }}
+                      className="rounded-full"
+                      style={{
+                        width: "8px",
+                        height: "8px",
+                        flexShrink: 0,
+                        backgroundColor: isVisuallyActive
+                          ? isLight ? "#0284c7" : "#38bdf8"
+                          : isLight ? "rgba(100,116,139,0.35)" : "rgba(56,189,248,0.35)",
+                        boxShadow: isVisuallyActive
+                          ? isLight ? "0 0 12px rgba(2,132,199,0.35)" : "0 0 12px rgba(56,189,248,0.35)"
+                          : "none",
+                        transition: STEP_STATE_TRANSITION,
+                      }}
+                    />
+                    <div
+                      style={{
+                        width: "1px",
+                        height: "64px",
+                        marginTop: "4px",
+                        background: isLight ? "rgba(2,132,199,0.45)" : "rgba(56,189,248,0.55)",
+                        flexShrink: 0,
+                        opacity: isVisuallyActive ? 1 : 0.3,
+                        transition: STEP_STATE_TRANSITION,
+                      }}
+                    />
+                  </div>
+
+                  {/* Step text */}
+                  <article
+                    className="flex min-w-0 flex-1 flex-col items-start"
+                    style={{ opacity: isVisuallyActive ? 1 : 0.55, transition: STEP_STATE_TRANSITION }}
+                  >
+                    <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[12px] font-medium leading-[15px] tracking-[1.2px] lg:text-[13px] lg:leading-[16px] ${isLight ? "text-[#0284c7]" : "text-sky-400"}`}>
+                      {step.id}
+                    </p>
+                    <h3
+                      className="pt-[4px] [font-family:'Bricolage_Grotesque',Helvetica] text-[21px] font-semibold leading-[26px] tracking-[-0.5px] lg:text-[27px] lg:leading-[33px] lg:tracking-[-0.6px]"
+                      style={{
+                        color: isLight
+                          ? isVisuallyActive ? "#0f172a" : "rgba(15,23,42,0.72)"
+                          : isVisuallyActive ? "#f5f7fa" : "#f5f7fac2",
+                        transition: STEP_STATE_TRANSITION,
+                      }}
+                    >
+                      {step.title}
+                    </h3>
+                    {/* Root cause of Issue 3: these two colors were static —
+                        no active/inactive branch at all, unlike the title
+                        above. The article's overall opacity already reaches
+                        1 when active, but 1 × a permanently-faded 0.65/0.50
+                        alpha color still reads as faded. Active now gets its
+                        own clearer color; inactive keeps the original dim
+                        value. */}
+                    <p
+                      className="pt-[5px] max-w-[560px] [font-family:'Inter',Helvetica] text-[14px] font-normal leading-[22px] tracking-[0] lg:text-[17px] lg:leading-[27px]"
+                      style={{
+                        color: isLight
+                          ? isVisuallyActive ? "rgba(51,65,85,0.88)" : "rgba(15,23,42,0.65)"
+                          : "#f5f7faa6",
+                        transition: STEP_STATE_TRANSITION,
+                      }}
+                    >
+                      {step.description}
+                    </p>
+                    <p
+                      className="pt-[5px] [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[17px] tracking-[0.38px] lg:text-[14px] lg:leading-[20px]"
+                      style={{
+                        color: isLight
+                          ? isVisuallyActive ? "rgba(71,85,105,0.78)" : "rgba(15,23,42,0.50)"
+                          : "#f5f7fa61",
+                        transition: STEP_STATE_TRANSITION,
+                      }}
+                    >
+                      {step.tags}
+                    </p>
+                  </article>
+                </motion.li>
+              );
+            })}
           </ol>
         </div>
       </div>

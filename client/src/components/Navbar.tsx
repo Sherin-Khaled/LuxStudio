@@ -1,96 +1,202 @@
+import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Button } from "@/components/ui/button";
+import { Menu, Moon, Sun, Volume2, VolumeX, X } from "lucide-react";
+import { useProjectModal } from "@/contexts/ProjectModalContext";
+import { useAudioController } from "@/hooks/use-audio-controller";
+import { useTheme } from "@/contexts/ThemeContext";
 
 const navLinks = [
   { label: "Work", href: "/work" },
   { label: "Services", href: "/services" },
   { label: "Process", href: "/process" },
   { label: "About", href: "/about" },
-  { label: "Contact", href: null },
+  { label: "Contact", href: "/contact" },
 ];
 
-interface NavbarProps {
-  variant?: "fixed" | "absolute";
-}
-
-export const Navbar = ({ variant = "fixed" }: NavbarProps) => {
+export const Navbar = () => {
   const [location] = useLocation();
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { openProjectModal } = useProjectModal();
+  const { isPlaying: isSoundOn, toggle: toggleSound } = useAudioController();
+  const { theme, toggleTheme } = useTheme();
+  const isLight = theme === "light";
+
+  useEffect(() => {
+    setIsMenuOpen(false);
+  }, [location]);
 
   return (
     <header
       data-testid="navbar"
-      className={`${variant === "fixed" ? "fixed" : "absolute"} inset-x-0 top-0 z-50 px-4 pt-5 sm:px-6 lg:px-14`}
+      className="fixed left-1/2 top-5 z-[9999] w-[calc(100%-2rem)] max-w-[1407px] -translate-x-1/2 sm:top-6 sm:w-[calc(100%-3rem)] lg:w-[calc(100%-7rem)]"
     >
       <nav
-        className="mx-auto flex w-full max-w-[1407px] items-center justify-between rounded-2xl border border-[#ffffff1f] bg-[#03050a70] px-4 py-3 shadow-[0px_4px_28px_#00000059] backdrop-blur-sm sm:px-7"
+        className={`overflow-hidden rounded-2xl border px-4 py-3 transition-colors sm:px-7 ${
+          isLight
+            ? "border-[rgba(15,23,42,0.10)] bg-[rgba(255,255,255,0.68)] shadow-[0px_4px_24px_rgba(15,23,42,0.10)] backdrop-blur-[18px]"
+            : "border-[#ffffff1f] bg-[#03050a70] shadow-[0px_4px_28px_#00000059] backdrop-blur-md"
+        }`}
         aria-label="Main navigation"
       >
-        <Link
-          href="/"
-          data-testid="link-home"
-          className="relative w-fit mt-[-1.00px] [font-family:'Bricolage_Grotesque',Helvetica] text-[17px] font-semibold leading-[25.5px] tracking-[-0.43px] text-[#f5f7fa] whitespace-nowrap hover:opacity-90 transition-opacity"
-        >
-          Lux Studio
-        </Link>
+        <div className="flex items-center justify-between gap-3">
+          <Link
+            href="/"
+            data-testid="link-home"
+            aria-label="Lux Studio home"
+            className={`shrink-0 [font-family:'Bricolage_Grotesque',Helvetica] text-[17px] font-semibold leading-[25.5px] tracking-[-0.43px] transition-opacity hover:opacity-90 ${
+              isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
+            }`}
+          >
+            Lux Studio
+          </Link>
 
-        <ul className="hidden items-center gap-8 md:flex" role="list">
-          {navLinks.map((item) => {
-            const isActive = item.href !== null && location === item.href;
-            return (
-              <li key={item.label}>
-                {item.href ? (
+          <ul className="hidden items-center gap-6 lg:flex xl:gap-8" role="list">
+            {navLinks.map((item) => {
+              const isActive = location === item.href;
+              return (
+                <li key={item.label}>
                   <Link
                     href={item.href}
                     data-testid={`link-${item.label.toLowerCase()}`}
-                    className={`relative [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0.13px] whitespace-nowrap transition-colors ${
-                      isActive
-                        ? "text-[#f5f7fa]"
-                        : "text-[#f5f7faad] hover:text-[#f5f7fa]"
+                    aria-current={isActive ? "page" : undefined}
+                    className={`relative whitespace-nowrap [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0.13px] transition-colors ${
+                      isLight
+                        ? isActive
+                          ? "text-[#0f172a]"
+                          : "text-[rgba(15,23,42,0.55)] hover:text-[#0f172a]"
+                        : isActive
+                          ? "text-[#f5f7fa]"
+                          : "text-[#f5f7faad] hover:text-[#f5f7fa]"
                     }`}
                   >
                     {item.label}
                     {isActive && (
-                      <span className="absolute -bottom-1.5 left-0 right-0 h-px rounded-full bg-sky-400/50" />
+                      <span className="absolute -bottom-1.5 inset-x-0 h-px rounded-full bg-sky-400/60" aria-hidden="true" />
                     )}
                   </Link>
-                ) : (
-                  <span className="[font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0.13px] text-[#f5f7fa38] cursor-default select-none whitespace-nowrap">
-                    {item.label}
-                  </span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                </li>
+              );
+            })}
+          </ul>
 
-        <div className="flex items-center gap-2.5">
-          <button
-            type="button"
-            data-testid="button-sound"
-            className="inline-flex items-center gap-1.5 rounded-[26843500px] border border-[#ffffff1f] bg-[#ffffff0e] px-3 py-1.5"
-          >
-            <img className="h-[11px] w-[11px]" alt="Sound icon" src="/figmaAssets/icon.svg" />
-            <span className="relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-center text-[11.5px] font-medium leading-[17.2px] tracking-[0.29px] text-[#f5f7fa59] whitespace-nowrap">
-              Sound Off
-            </span>
-          </button>
-          <button
-            type="button"
-            aria-label="Open menu"
-            data-testid="button-menu"
-            className="shrink-0"
-          >
-            <img className="h-8 w-8" alt="Menu icon button" src="/figmaAssets/iconbutton.svg" />
-          </button>
-          <Button
-            type="button"
-            data-testid="button-start-project-nav"
-            className="h-auto rounded-full bg-[#f5f7fa] px-5 py-[7px] shadow-[0px_3px_12px_#00000047,0px_0px_20px_#f5f7fa1a] hover:bg-[#f5f7fa] hidden sm:inline-flex"
-          >
-            <span className="relative w-fit [font-family:'Inter',Helvetica] text-center text-[13px] font-medium leading-[19.5px] tracking-[0.13px] text-[#080b12] whitespace-nowrap">
+          <div className="flex shrink-0 items-center gap-2 sm:gap-2.5">
+            <button
+              type="button"
+              onClick={toggleSound}
+              data-testid="button-sound"
+              className={`inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 transition-colors sm:px-3 ${
+                isLight
+                  ? "border-[rgba(15,23,42,0.10)] bg-[rgba(15,23,42,0.05)] text-[rgba(15,23,42,0.55)]"
+                  : "border-[#ffffff1f] bg-[#ffffff0e] text-[#f5f7fa59]"
+              }`}
+              aria-label={isSoundOn ? "Sound on" : "Sound off"}
+              title={isSoundOn ? "Sound on" : "Sound off"}
+            >
+              {isSoundOn ? (
+                <Volume2 className="h-3 w-3" aria-hidden="true" />
+              ) : (
+                <VolumeX className="h-3 w-3" aria-hidden="true" />
+              )}
+              <span className="hidden [font-family:'Inter',Helvetica] text-[11.5px] font-medium leading-[17.2px] tracking-[0.29px] sm:inline">
+                {isSoundOn ? "Sound On" : "Sound Off"}
+              </span>
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleTheme}
+              data-testid="button-theme"
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors ${
+                isLight
+                  ? "border-[rgba(15,23,42,0.10)] bg-[rgba(15,23,42,0.05)] text-[rgba(15,23,42,0.55)] hover:bg-[rgba(15,23,42,0.08)] hover:text-[#0f172a]"
+                  : "border-[#ffffff1f] bg-[#ffffff0e] text-[#f5f7faad] hover:bg-[#ffffff18] hover:text-[#f5f7fa]"
+              }`}
+              aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
+              title={isLight ? "Switch to dark mode" : "Switch to light mode"}
+            >
+              {isLight ? (
+                <Moon className="h-3.5 w-3.5" aria-hidden="true" />
+              ) : (
+                <Sun className="h-3.5 w-3.5" aria-hidden="true" />
+              )}
+            </button>
+
+            <button
+              type="button"
+              onClick={openProjectModal}
+              data-testid="button-start-project-nav"
+              className={`hidden h-8 items-center rounded-full px-5 [font-family:'Inter',Helvetica] text-[13px] font-medium leading-[19.5px] tracking-[0.13px] transition-colors lg:inline-flex ${
+                isLight
+                  ? "bg-[#0b0f1a] text-[#f5f7fa] shadow-[0px_3px_14px_rgba(2,6,23,0.28),0px_0px_20px_rgba(2,6,23,0.10)] hover:bg-[#141a2b]"
+                  : "bg-[#f5f7fa] text-[#080b12] shadow-[0px_3px_12px_#00000047,0px_0px_20px_#f5f7fa1a] hover:bg-white"
+              }`}
+            >
               Start a Project
-            </span>
-          </Button>
+            </button>
+
+            <button
+              type="button"
+              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-expanded={isMenuOpen}
+              aria-controls="mobile-navigation"
+              data-testid="button-menu"
+              onClick={() => setIsMenuOpen((open) => !open)}
+              className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition-colors lg:hidden ${
+                isLight
+                  ? "border-[rgba(15,23,42,0.10)] bg-[rgba(15,23,42,0.05)] text-[rgba(15,23,42,0.55)] hover:bg-[rgba(15,23,42,0.08)] hover:text-[#0f172a]"
+                  : "border-[#ffffff1f] bg-[#ffffff0e] text-[#f5f7faad] hover:bg-[#ffffff18] hover:text-[#f5f7fa]"
+              }`}
+            >
+              {isMenuOpen ? <X className="h-4 w-4" aria-hidden="true" /> : <Menu className="h-4 w-4" aria-hidden="true" />}
+            </button>
+          </div>
+        </div>
+
+        <div
+          id="mobile-navigation"
+          className={`${isMenuOpen ? "grid" : "hidden"} mt-3 border-t pt-3 lg:hidden ${
+            isLight ? "border-[rgba(15,23,42,0.10)]" : "border-[#ffffff14]"
+          }`}
+        >
+          <ul className="grid gap-1" role="list">
+            {navLinks.map((item) => {
+              const isActive = location === item.href;
+              return (
+                <li key={item.label}>
+                  <Link
+                    href={item.href}
+                    aria-current={isActive ? "page" : undefined}
+                    className={`block rounded-xl px-3 py-2.5 [font-family:'Inter',Helvetica] text-[13px] transition-colors ${
+                      isLight
+                        ? isActive
+                          ? "bg-[rgba(15,23,42,0.06)] text-[#0f172a]"
+                          : "text-[rgba(15,23,42,0.55)] hover:bg-[rgba(15,23,42,0.05)] hover:text-[#0f172a]"
+                        : isActive
+                          ? "bg-white/[0.08] text-[#f5f7fa]"
+                          : "text-[#f5f7faad] hover:bg-white/[0.05] hover:text-[#f5f7fa]"
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              );
+            })}
+          </ul>
+          <button
+            type="button"
+            data-testid="button-start-project-nav-mobile"
+            onClick={() => {
+              setIsMenuOpen(false);
+              openProjectModal();
+            }}
+            className={`mt-3 flex h-10 items-center justify-center rounded-full px-5 [font-family:'Inter',Helvetica] text-[13px] font-medium transition-colors ${
+              isLight
+                ? "bg-[#0b0f1a] text-[#f5f7fa] shadow-[0px_3px_14px_rgba(2,6,23,0.28)]"
+                : "bg-[#f5f7fa] text-[#080b12] shadow-[0px_3px_12px_#00000047]"
+            }`}
+          >
+            Start a Project
+          </button>
         </div>
       </nav>
     </header>

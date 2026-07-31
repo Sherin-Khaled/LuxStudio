@@ -233,7 +233,338 @@
   animation: glow-border-travel 3s ease-in-out infinite;
 }
 
+@property --work-cta-border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes work-cta-border-orbit {
+  to {
+    --work-cta-border-angle: 360deg;
+  }
+}
+
+.work-cta-orbit-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--work-cta-border-angle),
+    transparent 0deg,
+    transparent 245deg,
+    rgba(56, 189, 248, 0) 270deg,
+    rgba(56, 189, 248, 0.62) 302deg,
+    rgba(38, 100, 255, 0.48) 326deg,
+    transparent 352deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 5px rgba(56, 189, 248, 0.2));
+  pointer-events: none;
+  animation: work-cta-border-orbit 7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .work-cta-orbit-border::before {
+    --work-cta-border-angle: 25deg;
+    animation: none;
+  }
+}
+
+/* Studio Note card — hover-only glow border + particle field (About page) */
+@property --studio-note-border-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+@keyframes studio-note-border-orbit {
+  to {
+    --studio-note-border-angle: 360deg;
+  }
+}
+
+.studio-note-glow-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(
+    from var(--studio-note-border-angle),
+    transparent 0deg,
+    transparent 245deg,
+    rgba(56, 189, 248, 0) 270deg,
+    rgba(56, 189, 248, 0.62) 302deg,
+    rgba(124, 58, 237, 0.45) 326deg,
+    transparent 352deg,
+    transparent 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  filter: drop-shadow(0 0 6px rgba(56, 189, 248, 0.25));
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.studio-note-glow-border:hover::before {
+  opacity: 1;
+  animation: studio-note-border-orbit 7s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .studio-note-glow-border:hover::before {
+    animation: none;
+    --studio-note-border-angle: 300deg;
+  }
+}
+
+.studio-note-glow-border .studio-note-gradient-wash {
+  opacity: 0;
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.studio-note-glow-border:hover .studio-note-gradient-wash {
+  opacity: 1;
+}
+
+.studio-note-particle {
+  opacity: 0;
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.studio-note-glow-border:hover .studio-note-particle {
+  opacity: var(--particle-target-opacity, 0.4);
+}
+
+/* Mouse-reactive parallax depth layers — --mouse-x/--mouse-y are set on
+   .studio-note-glow-border itself (via ref, on mousemove) and inherit down
+   to these children, so no React re-render is needed to move them. */
+.studio-note-particle-layer {
+  transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.studio-note-particle-layer-far {
+  transform: translate3d(calc(var(--mouse-x, 0) * 4px), calc(var(--mouse-y, 0) * 3px), 0);
+}
+.studio-note-particle-layer-mid {
+  transform: translate3d(calc(var(--mouse-x, 0) * 8px), calc(var(--mouse-y, 0) * 5px), 0);
+}
+.studio-note-particle-layer-near {
+  transform: translate3d(calc(var(--mouse-x, 0) * 14px), calc(var(--mouse-y, 0) * 9px), 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .studio-note-particle-layer {
+    transition: none;
+    transform: none !important;
+  }
+}
+
+.studio-note-glow-border .studio-note-scrim {
+  opacity: 0;
+  transition: opacity 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.studio-note-glow-border:hover .studio-note-scrim {
+  opacity: 1;
+}
+
+@keyframes lux-particle-drift-a {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(6px, -16px, 0); }
+}
+@keyframes lux-particle-drift-b {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(-8px, -12px, 0); }
+}
+@keyframes lux-particle-drift-c {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(4px, -20px, 0); }
+}
+
+/* About page — PhilosophyArc "We do not separate beauty from function" section.
+   Layered motion inside the arc: two color-drift layers, staggered brightness
+   breathing across several rim layers, and a continuous slow-rotating soft
+   highlight patch along the rim (no appear/disappear — always faintly on, so
+   there's no "sudden" moment; a long soft segment, not a thin fast line, so
+   its rotation never reads as sharp even though it never stops moving). */
+@keyframes lux-philosophy-arc-breathe {
+  0%, 100% { opacity: 0.42; }
+  50% { opacity: 1; }
+}
+@keyframes lux-philosophy-atmosphere-breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+@keyframes lux-philosophy-rim-breathe {
+  0%, 100% { opacity: 0.35; }
+  50% { opacity: 1; }
+}
+@keyframes lux-philosophy-aurora-drift {
+  0%, 100% { transform: translate3d(-38px, -18px, 0) scale(1); }
+  50% { transform: translate3d(42px, 20px, 0) scale(1.1); }
+}
+@keyframes lux-philosophy-drift-b {
+  0%, 100% { transform: translate3d(28px, 16px, 0); }
+  50% { transform: translate3d(-30px, -12px, 0); }
+}
+@keyframes lux-philosophy-rim-highlight-rotate {
+  0% { stroke-dashoffset: 0; }
+  100% { stroke-dashoffset: -2180; }
+}
+
 /* Allow GSAP pin-spacer to show overflow so decorative glows are not hard-cropped */
 .pin-spacer {
   overflow: visible !important;
+}
+
+/* Client-notes marquee — slow, seamless infinite scroll of a duplicated track.
+   The track holds two identical sets; -50% is exactly one set-width, so the
+   loop restart is invisible. Paused via animation-play-state on hover. */
+@keyframes marquee-x {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
+.animate-marquee-x {
+  animation: marquee-x 48s linear infinite;
+  will-change: transform;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-x {
+    animation: none;
+  }
+}
+
+/* Footer particle dots — slow upward float with slight drift and a soft
+   opacity swell. Opacity is 0 at both loop ends so the wrap-around jump from
+   -130px back to +90px is invisible. Per-dot duration/delay/drift/peak come
+   from CSS variables set inline. With reduced motion the animation stops and
+   each dot keeps its static inline opacity (the original SVG look). */
+@keyframes footer-dot-rise {
+  0%   { transform: translate3d(0, 90px, 0); opacity: 0; }
+  18%  { opacity: var(--dot-peak, 0.22); }
+  72%  { opacity: calc(var(--dot-peak, 0.22) * 0.7); }
+  100% { transform: translate3d(var(--dot-drift, 0px), -130px, 0); opacity: 0; }
+}
+.animate-footer-dot {
+  animation: footer-dot-rise var(--dot-duration, 26s) linear infinite;
+  animation-delay: var(--dot-delay, 0s);
+  will-change: transform, opacity;
+}
+@media (prefers-reduced-motion: reduce) {
+  .animate-footer-dot {
+    animation: none;
+  }
+}
+
+/* Start-a-Project modal — ambient gradient glow behind the form. The star
+   field itself now lives in ModalParticleField.tsx (a canvas, since each
+   particle reacts individually to cursor distance — a CSS transform can only
+   move a whole layer as one rigid block). This glow div nudges toward the
+   pointer via --mouse-x/--mouse-y custom properties, written from a ref in JS
+   (not React state) so movement never waits on a re-render. */
+.project-modal-glow {
+  transform: translate3d(calc(var(--mouse-x, 0) * 30px), calc(var(--mouse-y, 0) * 30px), 0);
+  transition: transform 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+@media (prefers-reduced-motion: reduce) {
+  .project-modal-glow {
+    transform: none !important;
+    transition: none !important;
+  }
+}
+
+/* Start-a-Project modal — custom scrollbar for the internal scroll body only
+   (the page behind the modal is locked, so this is the one scrollbar users
+   see while the modal is open). Thin, rounded, cyan-to-violet gradient thumb
+   matching the site's accent palette instead of the default browser chrome. */
+.modal-scroll-body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(56, 189, 248, 0.65) rgba(255, 255, 255, 0.04);
+}
+.modal-scroll-body::-webkit-scrollbar {
+  width: 7px;
+}
+.modal-scroll-body::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 999px;
+}
+.modal-scroll-body::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    180deg,
+    rgba(56, 189, 248, 0.75),
+    rgba(37, 99, 235, 0.55),
+    rgba(124, 58, 237, 0.45)
+  );
+  border-radius: 999px;
+  box-shadow: 0 0 14px rgba(56, 189, 248, 0.22);
+}
+.modal-scroll-body::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(
+    180deg,
+    rgba(125, 211, 252, 0.95),
+    rgba(56, 189, 248, 0.75),
+    rgba(124, 58, 237, 0.65)
+  );
+}
+
+/* Global cosmic mouse-reveal background (CosmicRevealBackground.tsx). The
+   "scratch" reveal itself — a persistent, decaying trail that follows the
+   cursor — is composited entirely in canvas pixels every frame (scene +
+   mask via destination-in), not via a CSS mask; this file only handles the
+   fade-in-on-first-interaction opacity, and the mobile/reduced-motion
+   static fallback below. */
+.cosmic-reveal-layer {
+  transition: opacity 900ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+/* Mobile (no real pointer) and reduced-motion both fall back to one static,
+   center-anchored ambient glow instead of a cursor-tracked one. */
+.cosmic-reveal-fallback {
+  opacity: 0.4;
+  mask-image: radial-gradient(
+    ellipse 70% 55% at 50% 38%,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.45) 40%,
+    rgba(255, 255, 255, 0) 78%
+  );
+  -webkit-mask-image: radial-gradient(
+    ellipse 70% 55% at 50% 38%,
+    rgba(255, 255, 255, 0.85) 0%,
+    rgba(255, 255, 255, 0.45) 40%,
+    rgba(255, 255, 255, 0) 78%
+  );
+  animation: cosmic-fallback-drift 42s ease-in-out infinite;
+}
+@keyframes cosmic-fallback-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(1.5%, -2%, 0) scale(1.04); }
+}
+
+/* A gentle whole-canvas drift transform (cheap, GPU-composited, no redraw)
+   so the visible canvas still feels alive on its own. In interactive mode
+   this composites independently of the per-frame scratch-reveal redraw
+   happening inside the canvas's own pixels; in fallback mode it's the only
+   motion on an otherwise static star field. */
+.cosmic-reveal-canvas {
+  animation: cosmic-canvas-drift 50s ease-in-out infinite;
+}
+@keyframes cosmic-canvas-drift {
+  0%, 100% { transform: translate3d(-1%, -0.6%, 0) scale(1.03); }
+  50% { transform: translate3d(1%, 0.8%, 0) scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .cosmic-reveal-fallback,
+  .cosmic-reveal-canvas {
+    animation: none !important;
+  }
 }
