@@ -1,4 +1,6 @@
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { logoMarqueeDict } from "@/lib/i18n/home/logoMarquee";
 
 const logoNames = ["Houd El Nile", "X Dental", "Al Nours", "Al Baraka Olives"];
 const repeatedLogoNames = Array.from({ length: 6 }, () => logoNames).flat();
@@ -6,19 +8,29 @@ const repeatedLogoNames = Array.from({ length: 6 }, () => logoNames).flat();
 export const ClientLogoMarqueeSection = (): JSX.Element => {
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(logoMarqueeDict);
 
   return (
     <section
-      aria-label="Client logos marquee"
+      aria-label={t.ariaLabel}
       className={`relative w-full overflow-hidden border-y transition-colors ${
         // Same treatment as the first stripe: light mode drops the solid
         // fill entirely and keeps only the stroke, so the stripe reads as a
         // rule between sections rather than a heavy gray block.
-        isLight ? "border-[rgba(15,23,42,0.12)] bg-transparent" : "border-[#ffffff21] bg-[#03050a]"
+        isLight ? "border-[rgba(15,23,42,0.12)] bg-transparent" : "border-[#ffffff21] bg-transparent"
       }`}
     >
       {!isLight && <div className="pointer-events-none absolute inset-0 bg-[#ffffff04]" />}
-      <div className="relative flex h-[124px] items-center overflow-hidden">
+      {/* dir="ltr" pins the two marquee tracks to the same physical
+          left-to-right adjacency and shift math as English, regardless of
+          page language. The two tracks are identical duplicates that must
+          sit flush against each other with zero gap for the "-100% - gap"
+          keyframe to loop seamlessly — under the page's real RTL direction,
+          this flex row would otherwise swap which track sits on which side
+          (still adjacent, but now anchored from the opposite edge), which is
+          an unnecessary variable to introduce into an already-working,
+          content-neutral (brand names are never translated) infinite loop. */}
+      <div dir="ltr" className="relative flex h-[124px] items-center overflow-hidden">
         <div
           className="flex min-w-max shrink-0 items-center pl-[49.1px] [--duration:28s] [--gap:49.1px] animate-marquee"
           aria-hidden="true"

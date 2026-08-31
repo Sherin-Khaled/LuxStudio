@@ -4,58 +4,22 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SideStars } from "@/components/backgrounds/SideStars";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { offeringsDict } from "@/lib/i18n/home/offerings";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const services = [
-  {
-    id: "A.01",
-    title: "Digital Product Design",
-    description:
-      "UX strategy, UI design, design systems, wireframes, and prototypes shaped around clarity, usability, and scalable structure.",
-    dir: -1, // slides from left
-  },
-  {
-    id: "A.02",
-    title: "High-Performance Websites",
-    description:
-      "Responsive websites built with modern frontend architecture, strong performance, and a premium experience across every screen.",
-    dir: 1, // slides from right
-  },
-  {
-    id: "A.03",
-    title: "Motion & Scroll Experiences",
-    description:
-      "Purposeful animation, cinematic interaction, and smooth scrolling that strengthen storytelling without becoming distracting.",
-    dir: -1,
-  },
-  {
-    id: "A.04",
-    title: "Business Systems & Integrations",
-    description:
-      "Dashboards, CMS platforms, admin panels, APIs, and connected systems that help businesses operate and scale.",
-    dir: 1,
-  },
-  {
-    id: "A.05",
-    title: "Brand & Content Experiences",
-    description:
-      "Brand direction, visual content, marketing assets, video editing, and creative experiences designed for consistent communication.",
-    dir: -1,
-  },
-  {
-    id: "A.06",
-    title: "SEO & Performance",
-    description:
-      "Technical SEO, accessibility, Core Web Vitals, and frontend optimization designed to improve visibility and speed.",
-    dir: 1,
-  },
-];
+// Per-card GSAP slide-in direction (-1 = from left, 1 = from right),
+// alternating per spec. This is animation data, not copy, so it stays a
+// plain array here — kept in sync by index with offeringsDict's services.
+const slideDirections = [-1, 1, -1, 1, -1, 1];
 
 export const OfferingsOverviewSection = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(offeringsDict);
+  const services = t.services;
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -94,7 +58,7 @@ export const OfferingsOverviewSection = (): JSX.Element => {
       cards.forEach((card, i) => {
         gsap.set(card, {
           autoAlpha: 0,
-          x: services[i].dir * 96,
+          x: slideDirections[i] * 96,
           filter: "blur(8px)",
         });
       });
@@ -123,7 +87,6 @@ export const OfferingsOverviewSection = (): JSX.Element => {
         });
       });
 
-      // Brief hold so user sees completed grid before section unpins
       tl.to({}, { duration: 0.8 });
     }, sectionRef);
 
@@ -133,7 +96,7 @@ export const OfferingsOverviewSection = (): JSX.Element => {
   return (
     <section
       ref={sectionRef}
-      className={`relative w-full transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"}`}
+      className={`relative w-full transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-transparent"}`}
       aria-labelledby="what-we-create-heading"
     >
       {/* ── Background stars image ── */}
@@ -189,7 +152,20 @@ export const OfferingsOverviewSection = (): JSX.Element => {
       <SideStars starsPerSide={isMobile ? 8 : 15} className="z-[1]" variant={isLight ? "light" : "dark"} />
 
       {/* ── Main content ── */}
-      <div className="relative z-10 mx-auto flex h-screen w-full max-w-[1400px] flex-col justify-center px-6 py-14 sm:px-8 lg:px-11">
+      {/* h-screen (a fixed, single-viewport-tall box) is only meaningful on
+          desktop, where GSAP pins this section for exactly one viewport
+          while it scrubs each card's opacity — the 2-column grid was tuned
+          to fit that box. On mobile the grid collapses to 1 column (6
+          stacked cards) and the pin is already disabled (animOff, above),
+          but the box itself stayed a fixed h-screen with justify-center:
+          since the stacked content is taller than one screen, centering it
+          inside a height-capped box made it overflow equally above *and*
+          below the box's own edges — bleeding up into the previous section
+          and silently eating clicks meant for its CTA. min-h-screen keeps
+          the exact same centered-in-one-screen look whenever content fits,
+          but lets the box grow to natural content height instead of
+          clipping/overlapping when it doesn't. */}
+      <div className={`relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-center px-6 py-14 sm:px-8 lg:px-11 ${isMobile ? "min-h-screen" : "h-screen"}`}>
 
         {/* Section header */}
         <header className="flex flex-col items-start pb-10">
@@ -202,10 +178,10 @@ export const OfferingsOverviewSection = (): JSX.Element => {
               isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
             }`}
           >
-            What We Create
+            {t.heading}
           </h2>
           <p className={`pt-3 [font-family:'Inter',Helvetica] text-[14px] font-normal leading-[22px] tracking-[0.08px] sm:text-[15px] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa66]"}`}>
-            Six core capabilities that combine design, technology, content, and growth.
+            {t.subheading}
           </p>
         </header>
 

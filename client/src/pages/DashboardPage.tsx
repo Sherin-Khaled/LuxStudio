@@ -1,4 +1,6 @@
 import { useEffect, useState, type FormEvent } from "react";
+import { useSEO } from "@/lib/seo/useSEO";
+import { pageMeta } from "@/lib/seo/pageMeta";
 
 type SubmissionStatus = "new" | "reviewed" | "replied" | "archived";
 
@@ -276,6 +278,7 @@ const DashboardContent = ({ onLoggedOut }: { onLoggedOut: () => void }) => {
 };
 
 export const DashboardPage = (): JSX.Element => {
+  useSEO(pageMeta.dashboard);
   const [checked, setChecked] = useState(false);
   const [authenticated, setAuthenticated] = useState(false);
 

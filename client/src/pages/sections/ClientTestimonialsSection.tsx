@@ -2,73 +2,45 @@ import { useReducedMotion } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { testimonialsDict } from "@/lib/i18n/home/testimonials";
 
-const testimonials = [
-  {
-    id: 1,
-    offset: "pt-6",
-    quoteColor: "text-[#38bdf89e]",
-    text: "The new website finally feels aligned with the company's farms, products, and export identity.",
-    author: "Houd El Nile",
-    category: "Agriculture Export Website",
-    tag: "Review",
-  },
-  {
-    id: 2,
-    offset: "pt-10",
-    quoteColor: "text-[#f5f7fa5c]",
-    text: "The priority was to turn an outdated website into a multilingual export experience that felt credible from the first screen.",
-    author: "Project Note",
-    category: "Export Website",
-    tag: "Brief",
-  },
-  {
-    id: 3,
-    offset: "pt-1.5",
-    quoteColor: "text-[#f5f7fa5c]",
-    text: "The store needed clean product visuals, clear browsing, and a professional buying journey for dental clinics.",
-    author: "X Dental",
-    category: "E-commerce Platform",
-    tag: "Client Need",
-  },
-  {
-    id: 4,
-    offset: "pt-9",
-    quoteColor: "text-[#f5f7fa5c]",
-    text: "The buying experience needed to feel simple, trusted, and ready for customers to order online.",
-    author: "Al Nours",
-    category: "E-commerce Website",
-    tag: "Client Need",
-  },
-  {
-    id: 5,
-    offset: "pt-6",
-    quoteColor: "text-[#f5f7fa5c]",
-    text: "The brand needed a cleaner structure, stronger visuals, and subtle motion to make its export identity feel more credible.",
-    author: "Al Baraka Olives",
-    category: "Export Brand Website",
-    tag: "Project Note",
-  },
-  {
-    id: 6,
-    offset: "pt-2",
-    quoteColor: "text-[#f5f7fa5c]",
-    text: "Speed, SEO, responsiveness, and launch readiness were treated as part of the build, not as final extras.",
-    author: "Launch Process",
-    category: "Optimization & Deployment",
-    tag: "Process Note",
-  },
+/* Per-card visual styling only (offset/quoteColor) — the actual quote/
+   author/category/tag text comes from testimonialsDict, zipped in by index
+   inside the component so it can be localized. */
+const testimonialStyles = [
+  { offset: "pt-6", quoteColor: "text-[#38bdf89e]" },
+  { offset: "pt-10", quoteColor: "text-[#f5f7fa5c]" },
+  { offset: "pt-1.5", quoteColor: "text-[#f5f7fa5c]" },
+  { offset: "pt-9", quoteColor: "text-[#f5f7fa5c]" },
+  { offset: "pt-6", quoteColor: "text-[#f5f7fa5c]" },
+  { offset: "pt-2", quoteColor: "text-[#f5f7fa5c]" },
 ];
 
 export const ClientTestimonialsSection = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const { dir } = useLanguage();
+  const isRtl = dir === "rtl";
+  const t = useDict(testimonialsDict);
+  const testimonials = t.items.map((item, i) => ({
+    id: i + 1,
+    ...testimonialStyles[i],
+    ...item,
+  }));
+  // The marquee track below is pinned to dir="ltr" so the page's overall RTL
+  // direction can never auto-reverse its flex children (which would silently
+  // undo/compound whatever ordering we choose here — "double reversal").
+  // With that pin in place, the ONLY way the logical first card ends up
+  // nearest the right edge in Arabic is this one explicit, single reversal.
+  const orderedTestimonials = isRtl ? [...testimonials].reverse() : testimonials;
 
   return (
     <section
       className={`relative w-full overflow-hidden bg-[url(/figmaAssets/backgroundstars-1.svg)] bg-[100%_100%] transition-colors ${
-        isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"
+        isLight ? "bg-[#F8FBFF]" : "bg-transparent"
       }`}
       aria-labelledby="client-testimonials-heading"
     >
@@ -87,7 +59,7 @@ export const ClientTestimonialsSection = (): JSX.Element => {
       <div className="relative mx-auto flex min-h-[994px] w-full max-w-[1519px] flex-col px-4 pb-16 pt-28 sm:px-6 lg:px-[68px]">
         <header className="max-w-[1244px]">
           <p className={`text-[13px] leading-[19.5px] tracking-[1.56px] [font-family:'JetBrains_Mono',Helvetica] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa66]"}`}>
-            Client Notes
+            {t.kicker}
           </p>
           <div className="pt-[18px]">
             <h2
@@ -96,13 +68,12 @@ export const ClientTestimonialsSection = (): JSX.Element => {
                 isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
               }`}
             >
-              What clients notice.
+              {t.heading}
             </h2>
           </div>
           <div className="pt-[22px]">
             <p className={`max-w-[560px] [font-family:'Inter',Helvetica] text-[17px] font-normal leading-[27.5px] ${isLight ? "text-[rgba(15,23,42,0.68)]" : "text-[#f5f7faa1]"}`}>
-              Client feedback, project needs, and the details people value when
-              we shape, design, build, and launch digital experiences.
+              {t.description}
             </p>
           </div>
         </header>
@@ -113,8 +84,18 @@ export const ClientTestimonialsSection = (): JSX.Element => {
           Reduced motion: a single static set in a swipeable horizontal row.
         */}
         <div className="group relative mt-[54px]">
-          <div className={reduced ? "w-full overflow-x-auto" : "w-full overflow-hidden"}>
+          {/* dir="ltr" here (not just on the track inside) is the fix: this
+              div is a plain block box, wider-than-container child (the
+              track) overflows toward its "end" side, which is physically
+              LEFT in RTL — so without pinning THIS element's own direction,
+              the track was overflowing leftward off a right-anchored start
+              position instead of sitting flush at x=0, throwing off every
+              translateX in the keyframe (computed as % of the track's own
+              width, but relative to a start position that was never at the
+              viewport's left edge to begin with). */}
+          <div dir="ltr" className={reduced ? "w-full overflow-x-auto" : "w-full overflow-hidden"}>
             <div
+              dir="ltr"
               className={`flex w-max items-start pb-8 ${
                 reduced ? "" : "animate-marquee-x group-hover:[animation-play-state:paused]"
               }`}
@@ -126,14 +107,15 @@ export const ClientTestimonialsSection = (): JSX.Element => {
                   className="flex shrink-0 items-start gap-[26px] pr-[26px]"
                   aria-hidden={copy === 1}
                 >
-              {testimonials.map((item) => (
+              {orderedTestimonials.map((item) => (
                 <article
                   key={`${copy}-${item.id}`}
+                  dir={dir}
                   className={`flex ${item.offset} shrink-0`}
                 >
                   <Card
                     tabIndex={0}
-                    className={`group/testimonial relative h-[430px] w-[328px] overflow-hidden rounded-[32px] border-[0.8px] backdrop-blur-0 outline-none [transition:transform_600ms_cubic-bezier(0.22,1,0.36,1),border-color_600ms_cubic-bezier(0.22,1,0.36,1),box-shadow_600ms_cubic-bezier(0.22,1,0.36,1)] [will-change:transform,box-shadow] hover:-translate-y-1.5 hover:scale-[1.015] focus-visible:-translate-y-1.5 focus-visible:scale-[1.015] motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100 motion-reduce:focus-visible:translate-y-0 motion-reduce:focus-visible:scale-100 ${
+                    className={`group/testimonial relative min-h-[430px] w-[328px] overflow-hidden rounded-[32px] border-[0.8px] backdrop-blur-0 outline-none [transition:transform_600ms_cubic-bezier(0.22,1,0.36,1),border-color_600ms_cubic-bezier(0.22,1,0.36,1),box-shadow_600ms_cubic-bezier(0.22,1,0.36,1)] [will-change:transform,box-shadow] hover:-translate-y-1.5 hover:scale-[1.015] focus-visible:-translate-y-1.5 focus-visible:scale-[1.015] motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100 motion-reduce:focus-visible:translate-y-0 motion-reduce:focus-visible:scale-100 ${
                       isLight
                         ? "border-[rgba(15,23,42,0.10)] bg-white/70 shadow-[0px_18px_50px_rgba(15,23,42,0.08)] hover:border-[rgba(2,132,199,0.40)] hover:shadow-[0_0_18px_rgba(2,132,199,0.16),0_0_50px_rgba(2,132,199,0.08),0px_18px_50px_rgba(15,23,42,0.08)] focus-visible:border-[rgba(2,132,199,0.40)] focus-visible:shadow-[0_0_18px_rgba(2,132,199,0.16),0_0_50px_rgba(2,132,199,0.08),0px_18px_50px_rgba(15,23,42,0.08)]"
                         : "border-[#ffffff25] bg-[#ffffff12] shadow-[0px_24px_80px_#0000005c] hover:border-[rgba(56,189,248,0.45)] hover:shadow-[0_0_22px_rgba(56,189,248,0.20),0_0_70px_rgba(56,189,248,0.10),0px_24px_80px_#0000005c] focus-visible:border-[rgba(56,189,248,0.45)] focus-visible:shadow-[0_0_22px_rgba(56,189,248,0.20),0_0_70px_rgba(56,189,248,0.10),0px_24px_80px_#0000005c]"

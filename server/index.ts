@@ -7,6 +7,14 @@ import { createServer } from "http";
 const app = express();
 const httpServer = createServer(app)
 
+// Hostinger terminates HTTPS at its reverse proxy before forwarding requests
+// to this Express process. Trust exactly that first proxy in production so
+// secure dashboard session cookies honor X-Forwarded-Proto and req.ip reflects
+// the visitor address used by the existing rate limiters.
+if (process.env.NODE_ENV === "production") {
+  app.set("trust proxy", 1);
+}
+
 declare module "http" {
   interface IncomingMessage {
     rawBody: unknown;
@@ -22,6 +30,19 @@ app.use(
 );
 
 app.use(express.urlencoded({ extended: false }));
+
+// One consistent canonical form per page: no trailing slash (root "/" is
+// the only exception, since it can't be stripped further). Without this,
+// "/services" and "/services/" both resolve as separate-looking URLs with
+// the same content — competing canonical versions of the same page.
+app.use((req, res, next) => {
+  if (req.path.length > 1 && req.path.endsWith("/")) {
+    const query = req.url.slice(req.path.length);
+    res.redirect(301, req.path.slice(0, -1) + query);
+    return;
+  }
+  next();
+});
 
 export function log(message: string, source = "express") {
   const formattedTime = new Date().toLocaleTimeString("en-US", {
@@ -49,7 +70,9 @@ app.use((req, res, next) => {
     const duration = Date.now() - start;
     if (path.startsWith("/api")) {
       let logLine = `${req.method} ${path} ${res.statusCode} in ${duration}ms`;
-      if (capturedJsonResponse) {
+      // API responses can contain contact details from the authenticated
+      // dashboard. Never copy response bodies into production hosting logs.
+      if (capturedJsonResponse && process.env.NODE_ENV !== "production") {
         logLine += ` :: ${JSON.stringify(capturedJsonResponse)}`;
       }
 

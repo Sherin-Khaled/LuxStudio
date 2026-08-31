@@ -2,51 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { SideStars } from "@/components/backgrounds/SideStars";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const steps = [
-  {
-    id: "01",
-    title: "Discover",
-    description:
-      "We understand the business, audience, goals, challenges, existing digital presence, and what the project needs to achieve.",
-    tags: "Research · Goals · Audience",
-  },
-  {
-    id: "02",
-    title: "Define",
-    description:
-      "We shape the strategy, project scope, content direction, sitemap, features, user journey, and approval milestones.",
-    tags: "Strategy · Structure · Scope",
-  },
-  {
-    id: "03",
-    title: "Create",
-    description:
-      "We produce and refine the creative assets the project needs, including graphic design, image editing, photography, video editing, and visual content direction.",
-    tags: "Graphics · Photography · Video · Content",
-  },
-  {
-    id: "04",
-    title: "Design",
-    description:
-      "We create wireframes, visual direction, UI systems, responsive layouts, and interactive prototypes ready for development.",
-    tags: "UX · UI · Design System",
-  },
-  {
-    id: "05",
-    title: "Build & Connect",
-    description:
-      "We develop the frontend, connect backend systems, integrate dashboards, CMS platforms, APIs, databases, and business tools when needed.",
-    tags: "Frontend · Backend · CMS · Dashboards",
-  },
-  {
-    id: "06",
-    title: "Optimize, Launch & Support",
-    description:
-      "We test responsiveness, performance, accessibility, SEO, and launch readiness, then support future updates and improvements after launch.",
-    tags: "SEO · Performance · Testing · Support",
-  },
-];
+import { useDict } from "@/lib/i18n/useDict";
+import { processJourneyDict } from "@/lib/i18n/home/processJourney";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 40, filter: "blur(8px)" },
@@ -64,7 +21,6 @@ const fadeUp = {
    center becomes "active" as the user scrolls normally past it. No pin, no
    scrubbed timeline — scrolling is just scrolling, this only decides which
    step currently gets the bright/glowing treatment. */
-const STEP_TRIGGER_ROOT_MARGIN = "-45% 0px -45% 0px";
 const STEP_STATE_TRANSITION =
   "opacity 700ms cubic-bezier(0.22,1,0.36,1), background-color 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms cubic-bezier(0.22,1,0.36,1), color 700ms cubic-bezier(0.22,1,0.36,1)";
 
@@ -72,6 +28,8 @@ export const ProcessJourneySection = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(processJourneyDict);
+  const steps = t.steps;
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -102,7 +60,7 @@ export const ProcessJourneySection = (): JSX.Element => {
           }
         });
       },
-      { root: null, rootMargin: STEP_TRIGGER_ROOT_MARGIN, threshold: 0 },
+      { root: null, rootMargin: "-45% 0px -45% 0px", threshold: 0 },
     );
     markerRefs.current.forEach((el) => {
       if (el) observer.observe(el);
@@ -111,7 +69,7 @@ export const ProcessJourneySection = (): JSX.Element => {
   }, [reduced]);
 
   return (
-    <section className={`relative w-full transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"}`} aria-labelledby="journey-heading">
+    <section className={`relative w-full transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-transparent"}`} aria-labelledby="journey-heading">
       {/* ── Background stars ── */}
       <img
         className="pointer-events-none absolute inset-0 h-full w-full object-cover"
@@ -158,8 +116,8 @@ export const ProcessJourneySection = (): JSX.Element => {
           viewport={{ once: true, margin: "-80px" }}
           className="flex w-full shrink-0 flex-col items-start md:w-[360px] lg:w-[400px] xl:w-[440px] md:pt-2"
         >
-          <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"}`}>
-            03 / 06
+          <p dir="ltr" className={`[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"}`}>
+            {t.progress}
           </p>
           <h2
             id="journey-heading"
@@ -167,16 +125,15 @@ export const ProcessJourneySection = (): JSX.Element => {
               isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
             }`}
           >
-            From idea
+            {t.headingLine1}
             <br />
-            to launch.
+            {t.headingLine2}
           </h2>
           <p className={`pt-4 max-w-[380px] [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] tracking-[0] sm:text-[14px] sm:leading-[24px] ${isLight ? "text-[rgba(15,23,42,0.65)]" : "text-[#f5f7faa6]"}`}>
-            A clear, collaborative process that turns strategy, content, design,
-            development, and systems into a complete digital experience.
+            {t.description}
           </p>
           <p className={`pt-3 max-w-[320px] [font-family:'Inter',Helvetica] text-[11px] font-normal leading-[17px] tracking-[0] ${isLight ? "text-[rgba(15,23,42,0.50)]" : "text-[#f5f7fa61]"}`}>
-            Every stage is reviewed, refined, and approved before moving forward.
+            {t.note}
           </p>
         </motion.header>
 
@@ -184,8 +141,15 @@ export const ProcessJourneySection = (): JSX.Element => {
             reveals as it scrolls into view, and whichever one is nearest
             the viewport's center gets the bright/glowing "active" look. ── */}
         <div className="flex min-w-0 flex-1 flex-col pt-2 md:pt-8 lg:pt-10">
-          <ol className="flex flex-col gap-12 lg:gap-14" aria-label="Project process steps">
+          {/* gap-* used to live on the <ol> itself; it's now reproduced as
+              bottom padding on each step's own content column instead (see
+              isLast below), so the marker column is free to stretch its
+              connecting line through that same vertical space — otherwise
+              the rail visibly stopped in the ol's own inter-item gap, which
+              no per-row line could ever reach across. */}
+          <ol className="flex flex-col" aria-label={t.ariaStepsLabel}>
             {steps.map((step, i) => {
+              const isLast = i === steps.length - 1;
               const isActive = reduced
                 ? i === 0
                 : i === activeIndex || (activeIndex === -1 && i === 0);
@@ -210,9 +174,15 @@ export const ProcessJourneySection = (): JSX.Element => {
                   viewport={{ once: true, margin: "-100px" }}
                   onMouseEnter={() => setHoveredIndex(i)}
                   onMouseLeave={() => setHoveredIndex((prev) => (prev === i ? null : prev))}
-                  className="flex items-start gap-[18px] lg:gap-5"
+                  className="flex items-stretch gap-[18px] lg:gap-5"
                 >
-                  {/* Per-point marker: dot + short line */}
+                  {/* Per-point marker: dot + connecting line. items-stretch
+                      above makes this column as tall as the content column
+                      beside it; the line below grows (flex-1) to fill that
+                      full height for every row but the last, so it reaches
+                      the next row's dot with no gap — the last row keeps its
+                      original short trailing cap since there's no next dot
+                      to reach. */}
                   <div className="flex shrink-0 flex-col items-center pt-[3px]">
                     <div
                       ref={(el) => { markerRefs.current[i] = el; }}
@@ -233,7 +203,9 @@ export const ProcessJourneySection = (): JSX.Element => {
                     <div
                       style={{
                         width: "1px",
-                        height: "64px",
+                        height: isLast ? "64px" : undefined,
+                        flexGrow: isLast ? 0 : 1,
+                        flexBasis: isLast ? undefined : "64px",
                         marginTop: "4px",
                         background: isLight ? "rgba(2,132,199,0.45)" : "rgba(56,189,248,0.55)",
                         flexShrink: 0,
@@ -243,9 +215,11 @@ export const ProcessJourneySection = (): JSX.Element => {
                     />
                   </div>
 
-                  {/* Step text */}
+                  {/* Step text — bottom padding reproduces the ol's old
+                      inter-item gap-12/gap-14 (last row keeps none, matching
+                      how a flex gap never applies after the final item). */}
                   <article
-                    className="flex min-w-0 flex-1 flex-col items-start"
+                    className={`flex min-w-0 flex-1 flex-col items-start ${isLast ? "" : "pb-12 lg:pb-14"}`}
                     style={{ opacity: isVisuallyActive ? 1 : 0.55, transition: STEP_STATE_TRANSITION }}
                   >
                     <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[12px] font-medium leading-[15px] tracking-[1.2px] lg:text-[13px] lg:leading-[16px] ${isLight ? "text-[#0284c7]" : "text-sky-400"}`}>

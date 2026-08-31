@@ -1,43 +1,9 @@
 import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
-
-/* Six layers of one connected system — replaces the old vertical numbered
-   list (which repeated the same left-text/right-list shape as the Process
-   and Mission sections above it) with a staggered glass-card stack read as
-   "architecture," not "timeline." Same underlying meaning, new visual frame. */
-const layers = [
-  {
-    num: "01",
-    title: "Brand Direction",
-    description: "Visual identity, positioning, and communication direction.",
-  },
-  {
-    num: "02",
-    title: "Content & Visuals",
-    description: "Copy, imagery, graphics, photography, and edited assets.",
-  },
-  {
-    num: "03",
-    title: "UX/UI System",
-    description: "Page structure, interface design, responsive layouts, and design systems.",
-  },
-  {
-    num: "04",
-    title: "Frontend Experience",
-    description: "Fast, responsive, animated interfaces built for real users.",
-  },
-  {
-    num: "05",
-    title: "Backend & Dashboards",
-    description: "CMS, admin panels, APIs, databases, and business tools.",
-  },
-  {
-    num: "06",
-    title: "SEO, Launch & Support",
-    description: "Performance, accessibility, SEO, deployment, and future updates.",
-  },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { studioValueDict } from "@/lib/i18n/home/studioValue";
 
 /* Fade-up-and-unblur reveal, once per element as it enters the viewport.
    Normal scroll only — no pin, no scroll-takeover. This section is a calm
@@ -118,6 +84,9 @@ export const StudioValueSection = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const { dir } = useLanguage();
+  const t = useDict(studioValueDict);
+  const layers = t.layers;
 
   // Automatic sequence: -1 (nothing auto-glowing) under reduced motion, else
   // starts on card 1 immediately and advances every 2s. Runs continuously —
@@ -141,7 +110,7 @@ export const StudioValueSection = (): JSX.Element => {
   return (
     <section
       className={`relative w-full overflow-hidden bg-[url(/figmaAssets/backgroundstars-3.svg)] bg-cover bg-center py-24 transition-colors lg:py-32 ${
-        isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"
+        isLight ? "bg-[#F8FBFF]" : "bg-transparent"
       }`}
       aria-labelledby="studio-value-heading"
     >
@@ -270,9 +239,14 @@ export const StudioValueSection = (): JSX.Element => {
           viewport={{ once: true, margin: "-80px" }}
           className="relative flex w-full shrink-0 flex-col items-start md:w-[360px] md:pt-2 lg:w-[420px] xl:w-[460px]"
         >
-          <div className="absolute bottom-0 left-0 top-0 hidden w-px -translate-x-7 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(56,189,248,0.5)_30%,rgba(56,189,248,0.5)_70%,rgba(0,0,0,0)_100%)] lg:block" />
-          <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"}`}>
-            06 / 06
+          {/* Spine accent — sits on the header's own "start" (outer) edge,
+              away from the card stack: left in LTR, right in RTL. start-0
+              (logical) tracks that automatically; the translate sign still
+              has to flip explicitly since transforms are physical, not
+              logical. */}
+          <div className="absolute bottom-0 start-0 top-0 hidden w-px -translate-x-7 rtl:translate-x-7 bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(56,189,248,0.5)_30%,rgba(56,189,248,0.5)_70%,rgba(0,0,0,0)_100%)] lg:block" />
+          <p dir="ltr" className={`[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal leading-[18px] tracking-[1.56px] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"}`}>
+            {t.progress}
           </p>
           <h2
             id="studio-value-heading"
@@ -280,13 +254,10 @@ export const StudioValueSection = (): JSX.Element => {
               isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
             }`}
           >
-            One studio for the brand, the website, and the system behind it.
+            {t.heading}
           </h2>
           <p className={`max-w-[420px] pt-4 [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] tracking-[0] sm:text-[14px] sm:leading-[24px] ${isLight ? "text-[rgba(15,23,42,0.65)]" : "text-[#f5f7faa6]"}`}>
-            We combine creative direction, content, UI/UX, frontend, backend,
-            dashboards, SEO, and launch support into one connected process — so
-            every part of the digital experience feels consistent, fast, and
-            ready to grow.
+            {t.description}
           </p>
           <a
             href="#"
@@ -295,7 +266,7 @@ export const StudioValueSection = (): JSX.Element => {
             }`}
             data-testid="link-start-project"
           >
-            Start a project with us →
+            {t.ctaLabel} <span className={dir === "rtl" ? "inline-block rotate-180" : ""}>→</span>
           </a>
         </motion.header>
 
@@ -340,7 +311,7 @@ export const StudioValueSection = (): JSX.Element => {
                     shrinking it unevenly on either axis. */}
                 <span
                   aria-hidden="true"
-                  className={`lux-layer-dot absolute -left-[5px] top-1/2 hidden -translate-y-1/2 rounded-full transition-all duration-500 ease-out lg:block ${
+                  className={`lux-layer-dot absolute -start-[5px] top-1/2 hidden -translate-y-1/2 rounded-full transition-all duration-500 ease-out lg:block ${
                     isLight ? "bg-[rgba(2,132,199,0.45)]" : "bg-[rgba(56,189,248,0.4)]"
                   }`}
                   style={{

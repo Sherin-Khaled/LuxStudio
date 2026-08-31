@@ -5,18 +5,11 @@ import { ArrowRight, X } from "lucide-react";
 import { useProjectModal } from "@/contexts/ProjectModalContext";
 import { ModalParticleField } from "@/components/ModalParticleField";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { projectModalDict, projectTypeValues, budgetValues, timelineValues } from "@/lib/i18n/projectModal";
 
-/* ─── Field data (mirrors ContactPage's project-request fields exactly) ─── */
-const projectTypeOptions = [
-  "Website",
-  "E-commerce",
-  "Dashboard / CMS",
-  "Brand + Website",
-  "Website Redesign",
-  "Not sure yet",
-];
-const budgetOptions = ["Small project", "Medium project", "Large / custom system", "Not sure yet"];
-const timelineOptions = ["As soon as possible", "This month", "1–3 months", "Flexible"];
+type SelectOption = { value: string; label: string };
 
 type FormState = {
   name: string;
@@ -90,7 +83,7 @@ const FormSelectField = ({
   required?: boolean;
   value: string;
   onChange: (value: string) => void;
-  options: string[];
+  options: SelectOption[];
   placeholder: string;
 }) => (
   <div className="flex flex-col gap-2">
@@ -102,7 +95,7 @@ const FormSelectField = ({
       <SelectTrigger
         id={id}
         data-testid={`select-${id}`}
-        className={`${fieldControl} h-auto justify-between gap-2 focus:ring-0 focus:ring-offset-0 data-[placeholder]:text-[#f5f7fa40] [&_svg]:text-[#f5f7fa60] [&_svg]:opacity-100`}
+        className={`${fieldControl} h-auto justify-between gap-2 text-start focus:ring-0 focus:ring-offset-0 data-[placeholder]:text-[#f5f7fa40] [&_svg]:text-[#f5f7fa60] [&_svg]:opacity-100`}
       >
         <SelectValue placeholder={placeholder} />
       </SelectTrigger>
@@ -113,11 +106,11 @@ const FormSelectField = ({
       >
         {options.map((opt) => (
           <SelectItem
-            key={opt}
-            value={opt}
-            className="cursor-pointer rounded-lg py-2.5 pl-8 pr-3 [font-family:'Inter',Helvetica] text-[14px] text-[#f5f7fac7] focus:bg-[#38bdf81a] focus:text-[#38bdf8] data-[state=checked]:text-[#38bdf8]"
+            key={opt.value}
+            value={opt.value}
+            className="cursor-pointer rounded-lg py-2.5 ps-8 pe-3 text-start [font-family:'Inter',Helvetica] text-[14px] text-[#f5f7fac7] focus:bg-[#38bdf81a] focus:text-[#38bdf8] data-[state=checked]:text-[#38bdf8]"
           >
-            {opt}
+            {opt.label}
           </SelectItem>
         ))}
       </SelectContent>
@@ -125,13 +118,16 @@ const FormSelectField = ({
   </div>
 );
 
-/* ─── Mouse-reactive parallax: writes --mouse-x/--mouse-y directly onto the
-   given element via a ref, throttled with requestAnimationFrame, so movement
-   is smooth and never blocked on a React re-render. Disabled entirely (no
-   listener attached at all) when reduced motion is requested. ─── */
+/* ─── Mouse-reactive glow position: writes --mouse-x/--mouse-y (percentages
+   within the card) directly onto the given element via a ref, eased toward
+   the real cursor position over a continuous requestAnimationFrame loop so
+   the glow trails smoothly instead of snapping frame-to-frame — never blocks
+   on a React re-render. Disabled entirely (no listener, no loop) when reduced
+   motion is requested, leaving the glow parked at its centered default. ─── */
 function useMouseParallax(ref: React.RefObject<HTMLElement>, enabled: boolean) {
   const frame = useRef<number | null>(null);
-  const target = useRef({ x: 0, y: 0 });
+  const target = useRef({ x: 50, y: 50 });
+  const current = useRef({ x: 50, y: 50 });
 
   useEffect(() => {
     const el = ref.current;
@@ -139,20 +135,21 @@ function useMouseParallax(ref: React.RefObject<HTMLElement>, enabled: boolean) {
 
     const handleMove = (e: MouseEvent) => {
       const rect = el.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
-      const y = ((e.clientY - rect.top) / rect.height) * 2 - 1;
-      target.current = { x: Math.max(-1, Math.min(1, x)), y: Math.max(-1, Math.min(1, y)) };
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+      target.current = { x: Math.max(0, Math.min(100, x)), y: Math.max(0, Math.min(100, y)) };
+    };
 
-      if (frame.current == null) {
-        frame.current = requestAnimationFrame(() => {
-          el.style.setProperty("--mouse-x", target.current.x.toFixed(3));
-          el.style.setProperty("--mouse-y", target.current.y.toFixed(3));
-          frame.current = null;
-        });
-      }
+    const tick = () => {
+      current.current.x += (target.current.x - current.current.x) * 0.12;
+      current.current.y += (target.current.y - current.current.y) * 0.12;
+      el.style.setProperty("--mouse-x", `${current.current.x.toFixed(2)}%`);
+      el.style.setProperty("--mouse-y", `${current.current.y.toFixed(2)}%`);
+      frame.current = requestAnimationFrame(tick);
     };
 
     el.addEventListener("mousemove", handleMove);
+    frame.current = requestAnimationFrame(tick);
     return () => {
       el.removeEventListener("mousemove", handleMove);
       if (frame.current != null) cancelAnimationFrame(frame.current);
@@ -165,6 +162,20 @@ export const ProjectRequestModal = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
   const cardRef = useRef<HTMLDivElement>(null);
   useMouseParallax(cardRef, isOpen && !reduced);
+  const { dir } = useLanguage();
+  const t = useDict(projectModalDict);
+  const projectTypeOptions: SelectOption[] = projectTypeValues.map((value) => ({
+    value,
+    label: t.optionLabels.projectType[value],
+  }));
+  const budgetOptions: SelectOption[] = budgetValues.map((value) => ({
+    value,
+    label: t.optionLabels.budget[value],
+  }));
+  const timelineOptions: SelectOption[] = timelineValues.map((value) => ({
+    value,
+    label: t.optionLabels.timeline[value],
+  }));
 
   const [form, setForm] = useState<FormState>(initialForm);
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
@@ -182,7 +193,7 @@ export const ProjectRequestModal = (): JSX.Element => {
       form.name.trim() && form.contact.trim() && form.projectType && form.message.trim(),
     );
     if (!isValid) {
-      setErrorMessage("Please check the required fields and try again.");
+      setErrorMessage(t.errorRequired);
       setStatus("error");
       return;
     }
@@ -197,7 +208,7 @@ export const ProjectRequestModal = (): JSX.Element => {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setErrorMessage(data.message || "Please check the required fields and try again.");
+        setErrorMessage(data.message || t.errorRequired);
         setStatus("error");
         return;
       }
@@ -206,7 +217,7 @@ export const ProjectRequestModal = (): JSX.Element => {
       setForm(initialForm);
       setWebsite("");
     } catch {
-      setErrorMessage("Please check the required fields and try again.");
+      setErrorMessage(t.errorRequired);
       setStatus("error");
     }
   };
@@ -242,7 +253,7 @@ export const ProjectRequestModal = (): JSX.Element => {
               >
                 <motion.div
                   ref={cardRef}
-                  style={{ "--mouse-x": 0, "--mouse-y": 0 } as React.CSSProperties}
+                  style={{ "--mouse-x": "50%", "--mouse-y": "50%" } as React.CSSProperties}
                   initial={{ opacity: 0, y: reduced ? 0 : 24 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: reduced ? 0 : 16 }}
@@ -253,10 +264,10 @@ export const ProjectRequestModal = (): JSX.Element => {
                   <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
                     <ModalParticleField containerRef={cardRef} />
                     <div
-                      className="project-modal-glow absolute -inset-1/4"
+                      className="absolute inset-0"
                       style={{
                         background:
-                          "radial-gradient(circle at 28% 22%, rgba(56,189,248,0.16), transparent 55%), radial-gradient(circle at 76% 82%, rgba(124,58,237,0.14), transparent 55%)",
+                          "radial-gradient(circle at var(--mouse-x) var(--mouse-y), rgba(56,189,248,0.09) 0%, rgba(99,102,241,0.05) 22%, transparent 58%)",
                       }}
                     />
                     {/* Subtle scrim so star/glow layers never fight with field text for readability */}
@@ -266,9 +277,9 @@ export const ProjectRequestModal = (): JSX.Element => {
                   <Dialog.Close asChild>
                     <button
                       type="button"
-                      aria-label="Close"
+                      aria-label={t.close}
                       data-testid="button-close-project-modal"
-                      className="absolute right-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#f5f7faa6] transition-colors hover:border-white/20 hover:bg-white/10 hover:text-[#f5f7fa]"
+                      className="absolute end-5 top-5 z-20 flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-white/5 text-[#f5f7faa6] transition-colors hover:border-white/20 hover:bg-white/10 hover:text-[#f5f7fa]"
                     >
                       <X className="h-4 w-4" />
                     </button>
@@ -276,12 +287,11 @@ export const ProjectRequestModal = (): JSX.Element => {
 
                   {/* Header — stays visible, never scrolls away */}
                   <div className="relative z-10 flex-shrink-0 px-6 pb-6 pt-6 sm:px-10 sm:pt-10 lg:px-14 lg:pt-14">
-                    <Dialog.Title className="max-w-[560px] pr-10 [font-family:'Bricolage_Grotesque',Helvetica] text-[26px] font-medium leading-tight text-[#f5f7fa] sm:text-[32px]">
-                      Start your project signal.
+                    <Dialog.Title className="max-w-[560px] pe-10 text-start [font-family:'Bricolage_Grotesque',Helvetica] text-[26px] font-medium leading-tight text-[#f5f7fa] sm:text-[32px]">
+                      {t.title}
                     </Dialog.Title>
-                    <Dialog.Description className="mt-3 max-w-[560px] [font-family:'Inter',Helvetica] text-[14.5px] leading-[24px] text-[#f5f7faa6] sm:text-[15px]">
-                      Tell us what you want to build, improve, or launch — and we'll help
-                      shape the right strategy, design, and technical direction.
+                    <Dialog.Description className="mt-3 max-w-[560px] text-start [font-family:'Inter',Helvetica] text-[14.5px] leading-[24px] text-[#f5f7faa6] sm:text-[15px]">
+                      {t.description}
                     </Dialog.Description>
                   </div>
 
@@ -296,62 +306,62 @@ export const ProjectRequestModal = (): JSX.Element => {
                         <div className="grid gap-5 sm:grid-cols-2">
                           <FormField
                             id="project-modal-name"
-                            label="Name"
+                            label={t.fields.name.label}
                             required
                             value={form.name}
                             onChange={(v) => updateField("name", v)}
-                            placeholder="Your full name"
+                            placeholder={t.fields.name.placeholder}
                           />
                           <FormField
                             id="project-modal-contact"
-                            label="Email or WhatsApp"
+                            label={t.fields.contact.label}
                             required
                             value={form.contact}
                             onChange={(v) => updateField("contact", v)}
-                            placeholder="you@email.com or WhatsApp number"
+                            placeholder={t.fields.contact.placeholder}
                           />
                         </div>
 
                         <FormField
                           id="project-modal-company"
-                          label="Company / Brand"
+                          label={t.fields.company.label}
                           value={form.company}
                           onChange={(v) => updateField("company", v)}
-                          placeholder="Business or brand name"
+                          placeholder={t.fields.company.placeholder}
                         />
 
                         <div className="grid gap-5 sm:grid-cols-2">
                           <FormSelectField
                             id="project-modal-type"
-                            label="Project type"
+                            label={t.fields.projectType.label}
                             required
                             value={form.projectType}
                             onChange={(v) => updateField("projectType", v)}
                             options={projectTypeOptions}
-                            placeholder="Select a project type"
+                            placeholder={t.fields.projectType.placeholder}
                           />
                           <FormSelectField
                             id="project-modal-budget"
-                            label="Budget range"
+                            label={t.fields.budget.label}
                             value={form.budget}
                             onChange={(v) => updateField("budget", v)}
                             options={budgetOptions}
-                            placeholder="Select a budget range"
+                            placeholder={t.fields.budget.placeholder}
                           />
                         </div>
 
                         <FormSelectField
                           id="project-modal-timeline"
-                          label="Timeline"
+                          label={t.fields.timeline.label}
                           value={form.timeline}
                           onChange={(v) => updateField("timeline", v)}
                           options={timelineOptions}
-                          placeholder="Select a timeline"
+                          placeholder={t.fields.timeline.placeholder}
                         />
 
                         <div className="flex flex-col gap-2">
                           <label htmlFor="project-modal-message" className={fieldLabel}>
-                            Message<span className="text-[#38bdf8]"> *</span>
+                            {t.fields.message.label}<span className="text-[#38bdf8]"> *</span>
                           </label>
                           <textarea
                             id="project-modal-message"
@@ -360,14 +370,14 @@ export const ProjectRequestModal = (): JSX.Element => {
                             rows={5}
                             value={form.message}
                             onChange={(e) => updateField("message", e.target.value)}
-                            placeholder="Tell us about your business, project goals, current website, required features, references, or anything you want us to know."
+                            placeholder={t.fields.message.placeholder}
                             className={`${fieldControl} min-h-[140px] resize-none`}
                           />
                         </div>
 
                         {/* Honeypot — off-screen, not display:none, so bots that ignore CSS still fill it in */}
-                        <div aria-hidden="true" className="absolute left-[-9999px] top-auto h-0 w-0 overflow-hidden">
-                          <label htmlFor="project-modal-website">Leave this field empty</label>
+                        <div aria-hidden="true" className="absolute start-[-9999px] top-auto h-0 w-0 overflow-hidden">
+                          <label htmlFor="project-modal-website">{t.honeypotLabel}</label>
                           <input
                             id="project-modal-website"
                             name="website"
@@ -389,7 +399,7 @@ export const ProjectRequestModal = (): JSX.Element => {
                           data-testid="text-project-modal-error"
                           className="mb-4 rounded-xl border border-[#f8717140] bg-[#f8717112] px-4 py-3 [font-family:'Inter',Helvetica] text-[13.5px] text-[#fca5a5]"
                         >
-                          {errorMessage || "Please check the required fields and try again."}
+                          {errorMessage || t.errorRequired}
                         </p>
                       )}
                       {status === "success" && (
@@ -398,12 +408,12 @@ export const ProjectRequestModal = (): JSX.Element => {
                           data-testid="text-project-modal-success"
                           className="mb-4 rounded-xl border border-[#38bdf840] bg-[#38bdf812] px-4 py-3 [font-family:'Inter',Helvetica] text-[13.5px] text-[#7dd3fc]"
                         >
-                          Project signal received. We'll review your message and respond soon.
+                          {t.success}
                         </p>
                       )}
                       <div className="flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <p className="[font-family:'Inter',Helvetica] text-[12.5px] leading-[18px] text-[#f5f7fa75]">
-                          Project signal will be saved to dashboard and sent to email when configured.
+                          {t.savedNote}
                         </p>
                         <button
                           type="submit"
@@ -411,8 +421,8 @@ export const ProjectRequestModal = (): JSX.Element => {
                           disabled={status === "loading"}
                           className="flex shrink-0 items-center justify-center gap-2 rounded-full bg-[#f5f7fa] px-7 py-3.5 [font-family:'Inter',Helvetica] text-[14px] font-medium text-[#080b12] transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                         >
-                          {status === "loading" ? "Sending…" : "Send Project Signal"}
-                          {status !== "loading" && <ArrowRight className="h-4 w-4" />}
+                          {status === "loading" ? t.sending : t.submit}
+                          {status !== "loading" && <ArrowRight className={`h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`} />}
                         </button>
                       </div>
                     </div>

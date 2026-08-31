@@ -42,36 +42,85 @@ function drawCosmicScene(canvas: HTMLCanvasElement, width: number, height: numbe
   // Count scales with screen area so bigger screens get a proportionally
   // rich field instead of a fixed handful of dots.
   const starCount = Math.min(2200, Math.round((width * height) / 650));
-  const glowCount = Math.round(starCount * 0.08);
-  const crispCount = starCount - glowCount;
 
-  // Crisp majority — white, no blur. A real star is a sharp point of
-  // light, not a soft circle; blurring every one is what previously made
-  // the field look like blobs instead of stars.
-  for (let i = 0; i < crispCount; i++) {
+  // Preserve the established density while giving the field natural depth:
+  // 55% distant stars, 30% mid-depth, and 15% foreground feature points.
+  for (let i = 0; i < starCount; i++) {
     const x = rand() * width;
     const y = rand() * height;
-    const size = 0.55 + rand() * 1.05; // 0.55–1.6px, a sharp pinprick
-    const alpha = 0.55 + rand() * 0.4;
-    ctx.fillStyle = `rgba(255,255,255,${alpha})`;
-    ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
-    ctx.fill();
-  }
+    const tierRoll = rand();
+    const isMedium = tierRoll >= 0.55 && tierRoll < 0.85;
+    const isBright = tierRoll >= 0.85;
+    const sizeRoll = rand();
+    const coreRadius = isBright
+      ? 0.75 + sizeRoll * 0.3 + (sizeRoll > 0.94 ? 0.1 : 0)
+      : isMedium
+        ? 0.55 + sizeRoll * 0.2
+        : 0.35 + sizeRoll * 0.15;
+    const coreAlpha = isBright
+      ? 0.9 + rand() * 0.1
+      : isMedium
+        ? 0.72 + rand() * 0.18
+        : 0.5 + rand() * 0.22;
+    const colorRoll = rand();
+    const coreColor = colorRoll < 0.5
+      ? "244,248,255"
+      : colorRoll < 0.8
+        ? "191,223,255"
+        : colorRoll < 0.95
+          ? PRIMARY_BLUE
+          : "168,156,255";
 
-  // Glowing minority — primary blue, with a real, clearly visible halo.
-  for (let i = 0; i < glowCount; i++) {
-    const x = rand() * width;
-    const y = rand() * height;
-    const size = 1.2 + rand() * 1.2;
-    ctx.shadowBlur = size * 3;
-    ctx.shadowColor = `rgba(${PRIMARY_BLUE},0.75)`;
-    ctx.fillStyle = `rgba(${PRIMARY_BLUE},1)`;
+    const haloRadius = coreRadius * (isBright ? 8 : isMedium ? 7.5 : 4);
+    const halo = ctx.createRadialGradient(x, y, 0, x, y, haloRadius);
+    const haloAlpha = isBright ? 0.3 : isMedium ? 0.18 : 0.05;
+    halo.addColorStop(0, `rgba(${coreColor},${haloAlpha})`);
+    halo.addColorStop(0.28, `rgba(${coreColor},${haloAlpha * 0.48})`);
+    halo.addColorStop(0.68, `rgba(${coreColor},${haloAlpha * 0.12})`);
+    halo.addColorStop(1, `rgba(${coreColor},0)`);
+    ctx.fillStyle = halo;
     ctx.beginPath();
-    ctx.arc(x, y, size, 0, Math.PI * 2);
+    ctx.arc(x, y, haloRadius, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.fillStyle = `rgba(${coreColor},${coreAlpha})`;
+    ctx.beginPath();
+    ctx.arc(x, y, coreRadius, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = `rgba(255,255,255,${Math.min(1, coreAlpha + 0.12)})`;
+    ctx.beginPath();
+    ctx.arc(x, y, Math.max(0.16, coreRadius * 0.42), 0, Math.PI * 2);
+    ctx.fill();
+
+    if (isBright && rand() < 0.45) {
+      const horizontalRadius = coreRadius * 4.6;
+      const verticalRadius = coreRadius * 5.8;
+      const horizontalFlare = ctx.createLinearGradient(x - horizontalRadius, y, x + horizontalRadius, y);
+      const verticalFlare = ctx.createLinearGradient(x, y - verticalRadius, x, y + verticalRadius);
+      const flareAlpha = coreAlpha * 0.34;
+      horizontalFlare.addColorStop(0, `rgba(${coreColor},0)`);
+      horizontalFlare.addColorStop(0.5, `rgba(${coreColor},${flareAlpha})`);
+      horizontalFlare.addColorStop(1, `rgba(${coreColor},0)`);
+      verticalFlare.addColorStop(0, `rgba(${coreColor},0)`);
+      verticalFlare.addColorStop(0.5, `rgba(${coreColor},${flareAlpha})`);
+      verticalFlare.addColorStop(1, `rgba(${coreColor},0)`);
+      ctx.save();
+      ctx.strokeStyle = horizontalFlare;
+      ctx.lineWidth = 0.4;
+      ctx.lineCap = "round";
+      ctx.beginPath();
+      ctx.moveTo(x - horizontalRadius, y);
+      ctx.lineTo(x + horizontalRadius, y);
+      ctx.stroke();
+      ctx.strokeStyle = verticalFlare;
+      ctx.beginPath();
+      ctx.moveTo(x, y - verticalRadius);
+      ctx.lineTo(x, y + verticalRadius);
+      ctx.stroke();
+      ctx.restore();
+    }
   }
-  ctx.shadowBlur = 0;
 }
 
 function sizeCanvas(canvas: HTMLCanvasElement, width: number, height: number, dpr: number) {
@@ -312,7 +361,7 @@ export const CosmicRevealBackground = (): JSX.Element | null => {
       <div
         ref={layerRef}
         className={`cosmic-reveal-layer absolute inset-0 ${!interactive ? "cosmic-reveal-fallback" : ""}`}
-        style={interactive ? { opacity: 0 } : undefined}
+        style={interactive ? { opacity: 0.18 } : undefined}
       >
         <canvas ref={canvasRef} className="cosmic-reveal-canvas absolute inset-0 h-full w-full" />
       </div>

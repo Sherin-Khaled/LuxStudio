@@ -4,8 +4,9 @@ import { Link } from "wouter";
 import { ArrowRight } from "lucide-react";
 import { DottedSphere } from "@/components/backgrounds/DottedSphere";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const LAYERS = ["Strategy", "Design", "Content", "Motion", "Systems", "Performance"];
+import { useDict } from "@/lib/i18n/useDict";
+import { universeDict } from "@/lib/i18n/home/universe";
+import { SERVICES_DESKTOP_PANEL_ID } from "@/lib/scrollToHash";
 
 const fadeUp = {
   hidden: { opacity: 0, y: 32 },
@@ -168,6 +169,8 @@ export const StudioUniverseSection = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(universeDict);
+  const LAYERS = t.layers;
   const orbitPositions = useOrbitPositions(LAYERS.length);
 
   // Auto-highlight sequence: one badge "active" at a time, advancing every
@@ -195,7 +198,7 @@ export const StudioUniverseSection = (): JSX.Element => {
 
   return (
     <section
-      className={`relative w-full py-24 transition-colors lg:py-32 ${isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"}`}
+      className={`relative w-full py-24 transition-colors lg:py-32 ${isLight ? "bg-[#F8FBFF]" : "bg-transparent"}`}
       aria-labelledby="studio-universe-heading"
     >
       {/* Scoped keyframes + hover/opacity wiring for the badge constellations.
@@ -300,7 +303,7 @@ export const StudioUniverseSection = (): JSX.Element => {
           className="flex max-w-[720px] flex-col items-center text-center"
         >
           <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal tracking-[1.8px] opacity-90 uppercase ${isLight ? "text-[#0284c7]" : "text-[#38bdf8]"}`}>
-            Studio Universe
+            {t.eyebrow}
           </p>
           <h2
             id="studio-universe-heading"
@@ -308,14 +311,12 @@ export const StudioUniverseSection = (): JSX.Element => {
               isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
             }`}
           >
-            Every layer works inside one system.
+            {t.heading}
           </h2>
           <p className={`max-w-[560px] pt-5 [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[26px] sm:text-[16px] sm:leading-[27px] ${isLight ? "text-[rgba(15,23,42,0.65)]" : "text-[#f5f7faa6]"}`}>
-            Strategy, content, design, development, motion, systems,
-            performance, and launch all connect to create digital experiences
-            that feel intentional and ready to grow.
+            {t.description}
           </p>
-          <Link href="/services">
+          <Link href={`/services#${SERVICES_DESKTOP_PANEL_ID}`}>
             <button
               type="button"
               data-testid="button-studio-universe-explore"
@@ -325,8 +326,8 @@ export const StudioUniverseSection = (): JSX.Element => {
                   : "border-[#ffffff1a] bg-[#ffffff08] text-[#f5f7fa] hover:border-[#38bdf84a] hover:bg-[#38bdf80f]"
               }`}
             >
-              Explore the layers
-              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-300 group-hover:translate-x-0.5" />
+              {t.exploreLayers}
+              <ArrowRight className="h-3.5 w-3.5 rtl:rotate-180 transition-transform duration-300 group-hover:translate-x-0.5 rtl:group-hover:-translate-x-0.5" />
             </button>
           </Link>
         </motion.div>

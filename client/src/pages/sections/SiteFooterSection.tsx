@@ -1,9 +1,44 @@
 import { useState, type FormEvent } from "react";
+import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { ArrowRight } from "lucide-react";
 import { useProjectModal } from "@/contexts/ProjectModalContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { footerDict } from "@/lib/i18n/footer";
+import { scrollToHashTarget } from "@/lib/scrollToHash";
+
+// Non-translatable navigation targets, keyed by the item.key values already
+// in footerDict — kept separate from the dictionary since routes/URLs are
+// not translated content. Exactly one of these three maps (plus "start",
+// handled on its own) matches any given item.
+const FOOTER_PAGE_ROUTES: Record<string, string> = {
+  home: "/",
+  work: "/work",
+  services: "/services",
+  process: "/process",
+  about: "/about",
+  contact: "/contact",
+};
+
+// Services page anchor slugs — matches SERVICE_ANCHOR_IDS in ServicesPage.tsx.
+const FOOTER_CAPABILITY_SLUGS: Record<string, string> = {
+  uiux: "ui-ux-design",
+  webdev: "web-development",
+  dashboards: "backend-cms-dashboards",
+  brand: "brand-content",
+  seo: "seo-performance",
+};
+
+const FOOTER_SOCIAL_URLS: Record<string, string> = {
+  youtube: "https://youtube.com/@sherinkhaled-sk_graphicdesign?si=M6hTol5ypMGXwHPo",
+  behance: "https://www.behance.net/SK-sherinkhaled",
+  linkedin: "https://www.linkedin.com/in/sherin-khaled-20530b268?utm_source=share&utm_campaign=share_via&utm_content=profile&utm_medium=ios_app",
+  github: "https://github.com/Sherin-Khaled",
+  instagram: "https://www.instagram.com/sk__graphicdesign?igsh=MXh2d3ZrbzVzc3Jidg%3D%3D&utm_source=qr",
+};
 
 /*
   Particle dots extracted from the original static background SVG
@@ -37,37 +72,18 @@ const FOOTER_DOTS = [
   { l: 97.38, t: 92.48, s: 6.6, o: 0.13 },
 ];
 
-const footerColumns = [
-  {
-    title: "PAGES",
-    items: ["Home", "Work", "Services", "About", "Contact"],
-  },
-  {
-    title: "CAPABILITIES",
-    items: [
-      "UI/UX Design",
-      "Web Development",
-      "Dashboards & CMS",
-      "Brand & Content",
-      "SEO & Performance",
-    ],
-  },
-  {
-    title: "CONTACT",
-    items: ["Start a Project", "Email", "Behance", "LinkedIn", "Instagram"],
-  },
-];
-
 const NewsletterForm = (): JSX.Element => {
   const [email, setEmail] = useState("");
   const [website, setWebsite] = useState(""); // honeypot
   const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [errorMessage, setErrorMessage] = useState("");
+  const { dir } = useLanguage();
+  const t = useDict(footerDict).newsletter;
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!email.trim()) {
-      setErrorMessage("Please enter your email address.");
+      setErrorMessage(t.errorEmpty);
       setStatus("error");
       return;
     }
@@ -82,7 +98,7 @@ const NewsletterForm = (): JSX.Element => {
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setErrorMessage(data.message || "Please check your email and try again.");
+        setErrorMessage(data.message || t.errorGeneric);
         setStatus("error");
         return;
       }
@@ -91,7 +107,7 @@ const NewsletterForm = (): JSX.Element => {
       setEmail("");
       setWebsite("");
     } catch {
-      setErrorMessage("Something went wrong. Please try again.");
+      setErrorMessage(t.errorNetwork);
       setStatus("error");
     }
   };
@@ -99,27 +115,28 @@ const NewsletterForm = (): JSX.Element => {
   return (
     <form onSubmit={handleSubmit} noValidate className="mt-6 flex w-full max-w-[420px] flex-col gap-2.5">
       <p className="[font-family:'JetBrains_Mono',Helvetica] text-xs font-normal leading-[18px] tracking-[1.20px] text-[#f5f7fa6b]">
-        STAY UPDATED
+        {t.eyebrow}
       </p>
       <div className="flex flex-col gap-2.5 sm:flex-row">
         <label htmlFor="footer-newsletter-email" className="sr-only">
-          Email address
+          {t.emailLabel}
         </label>
         <input
           id="footer-newsletter-email"
           type="email"
+          dir="ltr"
           required
           value={email}
           onChange={(e) => {
             setEmail(e.target.value);
             if (status === "error") setStatus("idle");
           }}
-          placeholder="you@email.com"
-          className="w-full flex-1 rounded-full border border-white/[0.12] bg-white/[0.03] px-4 py-2.5 [font-family:'Inter',Helvetica] text-[14px] text-[#f5f7fa] outline-none transition-colors placeholder:text-[#f5f7fa40] focus:border-[#38bdf870] focus:bg-white/[0.05]"
+          placeholder={t.emailPlaceholder}
+          className="w-full flex-1 rounded-full border border-white/[0.12] bg-white/[0.03] px-4 py-2.5 text-start [font-family:'Inter',Helvetica] text-[14px] text-[#f5f7fa] outline-none transition-colors placeholder:text-[#f5f7fa40] focus:border-[#38bdf870] focus:bg-white/[0.05]"
         />
         {/* Honeypot */}
         <div aria-hidden="true" className="absolute left-[-9999px] h-0 w-0 overflow-hidden">
-          <label htmlFor="footer-newsletter-website">Leave this field empty</label>
+          <label htmlFor="footer-newsletter-website">{t.honeypotLabel}</label>
           <input
             id="footer-newsletter-website"
             type="text"
@@ -135,9 +152,9 @@ const NewsletterForm = (): JSX.Element => {
           disabled={status === "loading"}
           className="h-auto shrink-0 rounded-full border-[0.8px] border-[#38bdf852] bg-transparent px-5 py-2.5 [font-family:'Inter',Helvetica] text-[14px] font-medium text-sky-400 hover:bg-[#38bdf80d] hover:text-sky-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {status === "loading" ? "Sending…" : (
+          {status === "loading" ? t.sending : (
             <span className="flex items-center gap-1.5">
-              Subscribe <ArrowRight className="h-3.5 w-3.5" />
+              {t.subscribe} <ArrowRight className={`h-3.5 w-3.5 ${dir === "rtl" ? "rotate-180" : ""}`} />
             </span>
           )}
         </Button>
@@ -149,7 +166,7 @@ const NewsletterForm = (): JSX.Element => {
       )}
       {status === "success" && (
         <p role="status" className="[font-family:'Inter',Helvetica] text-[13px] text-[#7dd3fc]">
-          You're subscribed. We'll be in touch with updates.
+          {t.success}
         </p>
       )}
     </form>
@@ -160,6 +177,25 @@ export const SiteFooterSection = (): JSX.Element => {
   const { openProjectModal } = useProjectModal();
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(footerDict);
+  const [location, setLocation] = useLocation();
+
+  // Capabilities column: services page uses one crossfading panel (desktop)
+  // driven by React state, not separately-scrollable sections, so a same-page
+  // click can't just be a plain hash link — it has to also tell that panel
+  // which service to show. Cross-page, the hash rides along in the URL and
+  // ServicesPage's own mount effect (+ ServiceConstellationSection's own
+  // hash check) picks it up on the fresh mount; same-page, pushState alone
+  // wouldn't fire anything (no route/hash-change event), so a custom event
+  // does the same job instantly instead.
+  const handleCapabilityClick = (slug: string) => {
+    if (location === "/services") {
+      window.dispatchEvent(new CustomEvent("lux:select-service", { detail: slug }));
+      scrollToHashTarget(slug);
+    } else {
+      setLocation(`/services#${slug}`);
+    }
+  };
 
   return (
     <footer className={`w-full self-stretch transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"}`}>
@@ -211,55 +247,97 @@ export const SiteFooterSection = (): JSX.Element => {
           ))}
         </div>
         <div className="relative mx-auto flex w-full max-w-[1516px] flex-col px-6 pb-11 pt-[104px] sm:px-8 lg:px-[68px]">
-          <div className="flex flex-col gap-6 border-b-[0.8px] border-[#ffffff14] pb-14 md:flex-row md:items-center md:justify-between">
-            <h2 className="mt-[-1.00px] [font-family:'Bricolage_Grotesque',Helvetica] text-2xl font-medium leading-9 tracking-[-0.60px] text-[#f5f7fa] sm:text-3xl">
-              Ready to build something memorable?
-            </h2>
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={openProjectModal}
-              data-testid="button-footer-cta-start"
-              className="h-auto rounded-[999px] border-[0.8px] border-[#38bdf852] bg-transparent px-6 py-3 [font-family:'Inter',Helvetica] text-[15px] font-medium leading-[22.5px] tracking-[-0.08px] text-sky-400 hover:bg-[#38bdf80d] hover:text-sky-300"
-            >
-              Start a Project →
-            </Button>
-          </div>
-          <div className="grid w-full gap-14 pb-0 pt-[72px] lg:grid-cols-[minmax(320px,447.84px)_1fr] lg:gap-[76.72px]">
+          <div className="grid w-full gap-14 pb-0 lg:grid-cols-[minmax(320px,447.84px)_1fr] lg:gap-[76.72px]">
             <div className="flex flex-col items-start">
-              <h3 className="mt-[-1.00px] [font-family:'Bricolage_Grotesque',Helvetica] text-[38px] font-semibold leading-[57px] tracking-[-0.95px] text-[#f5f7fa]">
+              <h3 dir="ltr" className="mt-[-1.00px] text-start [font-family:'Bricolage_Grotesque',Helvetica] text-[38px] font-semibold leading-[57px] tracking-[-0.95px] text-[#f5f7fa]">
                 Lux Studio
               </h3>
               <p className="pt-2 [font-family:'Inter',Helvetica] text-base font-normal leading-6 tracking-[-0.08px] text-[#f5f7fac7]">
-                Design. Build. Scale.
+                {t.tagline}
               </p>
               <p className="max-w-[420px] pt-5 [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[24.3px] tracking-[0] text-[#f5f7faa1]">
-                A creative technology studio shaping premium websites, digital
-                systems, and brand experiences from strategy to launch.
+                {t.description}
               </p>
               <NewsletterForm />
             </div>
-            <nav aria-label="Footer navigation" className="w-full">
+            <nav aria-label={t.navAriaLabel} className="w-full">
               <div className="grid w-full gap-10 sm:grid-cols-2 lg:grid-cols-3 lg:gap-8">
-                {footerColumns.map((column) => (
+                {t.columns.map((column) => (
                   <div key={column.title} className="flex flex-col items-start">
                     <h4 className="mt-[-1.00px] [font-family:'JetBrains_Mono',Helvetica] text-xs font-normal leading-[18px] tracking-[1.20px] text-[#f5f7fa6b]">
                       {column.title}
                     </h4>
                     <ul className="flex flex-col items-start pt-[18px]">
-                      {column.items.map((item) => (
-                        <li key={item}>
-                          <Button
-                            type="button"
-                            variant="link"
-                            onClick={item === "Start a Project" ? openProjectModal : undefined}
-                            data-testid={item === "Start a Project" ? "button-footer-list-start" : undefined}
-                            className="h-auto p-0 text-left [font-family:'Inter',Helvetica] text-[15.5px] font-normal leading-[28.7px] tracking-[0] text-[#f5f7fac7] hover:text-[#f5f7fa] hover:no-underline"
-                          >
-                            {item}
-                          </Button>
-                        </li>
-                      ))}
+                      {column.items.map((item) => {
+                        const linkClassName =
+                          "h-auto p-0 text-start [font-family:'Inter',Helvetica] text-[15.5px] font-normal leading-[28.7px] tracking-[0] text-[#f5f7fac7] hover:text-[#f5f7fa] hover:no-underline";
+
+                        if (item.key === "start") {
+                          return (
+                            <li key={item.key}>
+                              <Button
+                                type="button"
+                                variant="link"
+                                onClick={openProjectModal}
+                                data-testid="button-footer-list-start"
+                                className={linkClassName}
+                              >
+                                {item.label}
+                              </Button>
+                            </li>
+                          );
+                        }
+
+                        const pageRoute = FOOTER_PAGE_ROUTES[item.key];
+                        if (pageRoute) {
+                          return (
+                            <li key={item.key}>
+                              <Button asChild variant="link" className={linkClassName}>
+                                <Link href={pageRoute} data-testid={`link-footer-${item.key}`}>
+                                  {item.label}
+                                </Link>
+                              </Button>
+                            </li>
+                          );
+                        }
+
+                        const capabilitySlug = FOOTER_CAPABILITY_SLUGS[item.key];
+                        if (capabilitySlug) {
+                          return (
+                            <li key={item.key}>
+                              <Button
+                                type="button"
+                                variant="link"
+                                onClick={() => handleCapabilityClick(capabilitySlug)}
+                                data-testid={`button-footer-${item.key}`}
+                                className={linkClassName}
+                              >
+                                {item.label}
+                              </Button>
+                            </li>
+                          );
+                        }
+
+                        const socialUrl = FOOTER_SOCIAL_URLS[item.key];
+                        if (socialUrl) {
+                          return (
+                            <li key={item.key}>
+                              <Button asChild variant="link" className={linkClassName}>
+                                <a
+                                  href={socialUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  data-testid={`link-footer-${item.key}`}
+                                >
+                                  {item.label}
+                                </a>
+                              </Button>
+                            </li>
+                          );
+                        }
+
+                        return null;
+                      })}
                     </ul>
                   </div>
                 ))}
@@ -268,17 +346,17 @@ export const SiteFooterSection = (): JSX.Element => {
           </div>
           <div className="flex w-full flex-col items-start px-0 pb-0 pt-16 sm:pt-20 lg:pt-24">
             <div className="w-full overflow-hidden">
-              <div className="[font-family:'Bricolage_Grotesque',Helvetica] text-[56px] font-bold leading-none tracking-[-2px] text-[#ffffff0d] sm:text-[88px] lg:text-[153.4px] lg:tracking-[-6.14px] lg:leading-[153.4px]">
+              <div dir="ltr" className="text-start [font-family:'Bricolage_Grotesque',Helvetica] text-[56px] font-bold leading-none tracking-[-2px] text-[#ffffff0d] sm:text-[88px] lg:text-[153.4px] lg:tracking-[-6.14px] lg:leading-[153.4px]">
                 LUX STUDIO
               </div>
             </div>
             <Separator className="mt-4 bg-[#ffffff0f]" />
             <div className="flex w-full flex-col gap-3 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="[font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0] text-[#f5f7fa6b]">
-                © 2026 Lux Studio. All rights reserved.
+                {t.copyright}
               </p>
               <p className="[font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0] text-[#f5f7fa6b]">
-                Designed and built by Lux Studio.
+                {t.craftedBy}
               </p>
             </div>
           </div>

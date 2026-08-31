@@ -1,6 +1,6 @@
 import { build as esbuild } from "esbuild";
 import { build as viteBuild } from "vite";
-import { rm, readFile } from "fs/promises";
+import { rm, readFile, copyFile } from "fs/promises";
 
 // server deps to bundle to reduce openat(2) syscalls
 // which helps cold start times
@@ -37,6 +37,14 @@ async function buildAll() {
 
   console.log("building client...");
   await viteBuild();
+
+  // Preserve the generic, un-prerendered Vite output as the SPA fallback
+  // shell BEFORE `npm run prerender` (a separate, later step — see
+  // script/prerender.ts) overwrites dist/public/index.html with Home's
+  // prerendered snapshot. Lives outside dist/public so it's never
+  // web-reachable by URL guess; server/static.ts reads it directly for
+  // /dashboard and 404s, the two known routes that never get prerendered.
+  await copyFile("dist/public/index.html", "dist/spa-shell.html");
 
   console.log("building server...");
   const pkg = JSON.parse(await readFile("package.json", "utf-8"));

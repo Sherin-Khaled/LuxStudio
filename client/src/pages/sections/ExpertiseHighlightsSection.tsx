@@ -1,35 +1,27 @@
 import { motion, useReducedMotion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const expertiseItems = [
-  "Strategy",
-  "UI/UX Design",
-  "Frontend Development",
-  "Backend & Integrations",
-  "Dashboards & CMS",
-  "Brand & Content",
-  "SEO & Performance",
-];
-
-const repeatedExpertiseItems = Array.from(
-  { length: 4 },
-  () => expertiseItems,
-).flat();
+import { useDict } from "@/lib/i18n/useDict";
+import { expertiseDict } from "@/lib/i18n/home/expertise";
 
 export const ExpertiseHighlightsSection = (): JSX.Element => {
   const reduced = useReducedMotion();
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(expertiseDict);
+  const repeatedExpertiseItems = Array.from(
+    { length: 4 },
+    () => t.items,
+  ).flat();
 
   return (
     <motion.section
-      aria-label="Expertise highlights"
+      aria-label={t.sectionLabel}
       className={`relative w-full overflow-hidden border-y transition-colors ${
         // Light mode: no solid fill — a heavy translucent-white block read as
         // a gray slab against the page. Just the stroke, so the stripe feels
         // like a subtle rule between sections, not a panel of its own.
-        isLight ? "border-[rgba(15,23,42,0.12)] bg-transparent" : "border-[#ffffff24] bg-[#03050a]"
+        isLight ? "border-[rgba(15,23,42,0.12)] bg-transparent" : "border-[#ffffff24] bg-transparent"
       }`}
       initial={reduced ? false : { opacity: 0, y: 64 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -66,7 +58,13 @@ export const ExpertiseHighlightsSection = (): JSX.Element => {
                 : "bg-[linear-gradient(270deg,rgba(3,5,10,1)_0%,rgba(3,5,10,0.8)_40%,rgba(0,0,0,0)_100%)]"
             }`}
           />
-          <div className="overflow-hidden">
+          {/* dir="ltr" pins this single marquee track's own repeated items to
+              a fixed left-to-right order regardless of page language — the
+              same fix applied to the company-logo marquee (RTL would
+              otherwise reverse which item renders first, which the
+              asymmetric pl-[49.1px]/pr-0 leading padding and the "-100% -
+              gap" loop math both assume stays on a fixed physical side). */}
+          <div dir="ltr" className="overflow-hidden">
             <div
               className="flex min-w-max animate-marquee items-center gap-[49.1px] py-[48px] pl-[49.1px] pr-0"
               style={

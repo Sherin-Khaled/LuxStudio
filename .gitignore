@@ -6,5 +6,23 @@ vite.config.ts.*
 *.tar.gz
 
 # Local environment variables — never commit real SMTP/DB/session secrets
-.env
-.env.local
+.env*
+!.env.example
+
+# Local agent/editor state
+.claude/
+.codex/
+.agents/
+.local/
+
+# Local debugging and visual-verification artifacts
+debug*
+verify-*.png
+*-screenshot.png
+screenshots/
+playwright-report/
+test-results/
+*.log
+refresh_output*.txt
+footer_overlap_out.txt
+package-lock.replit-backup.json

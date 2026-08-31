@@ -1,17 +1,24 @@
-import { useRef, useState, useEffect } from "react";
-import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { useState, useEffect, type MutableRefObject } from "react";
 import { Button } from "@/components/ui/button";
-import { StarsBackground } from "@/components/backgrounds/StarsBackground";
+import { GalaxyStarCanvas } from "@/components/backgrounds/GalaxyStarCanvas";
 import { ShootingStars } from "@/components/backgrounds/ShootingStars";
-import { SideStars } from "@/components/backgrounds/SideStars";
 import { useProjectModal } from "@/contexts/ProjectModalContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { commonDict } from "@/lib/i18n/common";
+import { heroDict } from "@/lib/i18n/home/hero";
 
-export const HeroBannerSection = (): JSX.Element => {
-  const reduced = useReducedMotion() ?? false;
+interface HeroBannerSectionProps {
+  cinematic?: boolean;
+  scrollProgressRef: MutableRefObject<number>;
+}
+
+export const HeroBannerSection = ({ scrollProgressRef }: HeroBannerSectionProps): JSX.Element => {
   const { openProjectModal } = useProjectModal();
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(heroDict);
+  const common = useDict(commonDict);
 
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -21,29 +28,10 @@ export const HeroBannerSection = (): JSX.Element => {
     return () => window.removeEventListener("resize", check);
   }, []);
 
-  // ── Scroll parallax (no extra height, no sticky, no gap) ──────────────────
-  // useScroll tracks as this section naturally scrolls past the viewport top.
-  // progress: 0 = section top at viewport top → 1 = section bottom at viewport top.
-  const sectionRef = useRef<HTMLElement>(null);
-  const { scrollYProgress } = useScroll({
-    target: sectionRef,
-    offset: ["start start", "end start"],
-  });
-
-  // All transforms are applied to the natural scroll — zero extra height, zero gap.
-  const bgScale   = useTransform(scrollYProgress, [0, 1], [1,    1.07]);
-  const bgY       = useTransform(scrollYProgress, [0, 1], [0,   -60]);
-  const contentY  = useTransform(scrollYProgress, [0, 1], [0,   -110]);
-  const contentOp = useTransform(scrollYProgress, [0, 0.75], [1, 0.55]);
-  const indicatorOp = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
-
-  const animOff = reduced || isMobile;
-
   return (
     <section
-      ref={sectionRef}
-      className={`relative w-full overflow-hidden transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"}`}
-      aria-label="Hero banner"
+      className="relative w-full overflow-hidden bg-transparent"
+      aria-label={t.sectionLabel}
     >
       {/* ── Inner frame: natural height, NOT sticky ───────────────────────── */}
       <div className="relative min-h-[730px] w-full md:min-h-screen">
@@ -60,13 +48,12 @@ export const HeroBannerSection = (): JSX.Element => {
               already ends at), but light mode's fade ends in a pale blue
               that isn't a perfect match for the frame's own fallback color,
               so the gap read as a visible seam. Dark mode is untouched. ── */}
-        <motion.div
+        <div
+          data-home-hero-background
           className={`absolute inset-x-0 top-0 bg-cover bg-center bg-no-repeat ${isLight ? "" : "inset-y-0"}`}
           style={{
-            backgroundImage: "url('/figmaAssets/imagewithfallback.png')",
+            backgroundImage: "url('/figmaAssets/imagewithfallback.webp')",
             bottom: isLight ? "-90px" : undefined,
-            scale: animOff ? 1 : bgScale,
-            y:     animOff ? 0 : bgY,
             transformOrigin: "center center",
             // Washes the same photo out toward a pale, high-key sky instead
             // of swapping images — brightness/saturation only, never invert
@@ -79,7 +66,7 @@ export const HeroBannerSection = (): JSX.Element => {
           }}
         >
           {/* Dark gradient overlays (inside bg div so they scale with it) */}
-          {isLight ? (
+          {false ? (
             // Root-cause fix: this used to carry a THIRD layer —
             // linear-gradient(0deg, rgba(255,255,255,0.36) 0%, ...0) 100%) —
             // stacked on top of the first gradient's own bottom stop, which
@@ -114,31 +101,15 @@ export const HeroBannerSection = (): JSX.Element => {
               gradient's first ~70% is ever visible at rest — the last
               stretch is a scroll-only safety margin, not something you
               normally see). */}
-          {isLight ? (
+          {false ? (
             <div className="absolute inset-x-0 bottom-0 h-[240px] bg-[linear-gradient(180deg,rgba(248,251,255,0)_0%,rgba(203,225,240,0.08)_50%,rgba(226,240,250,0.16)_78%,rgba(248,251,255,0.30)_100%)]" />
           ) : (
             <div className="absolute inset-x-0 bottom-0 h-[300px] bg-[linear-gradient(180deg,rgba(0,0,0,0)_0%,rgba(3,5,10,0.28)_30%,rgba(3,5,10,0.70)_60%,rgba(3,5,10,0.93)_82%,rgba(3,5,10,1)_100%)]" />
           )}
-        </motion.div>
+        </div>
 
-        {/* ── Layer 2 – Scattered stars (inset, above overlays) ───────────── */}
-        <StarsBackground
-          count={isMobile ? 35 : 65}
-          className="z-[2]"
-          variant={isLight ? "light" : "dark"}
-        />
-
-        {/* ── Layer 3 – Side-edge stars (left & right columns) ──────────────
-              "light-accent" here, not plain "light": these columns sit over
-              the bright sky photo, not a plain pale page background, so the
-              generic light-mode dark-slate dot read as near-black. Blue/cyan
-              stays visible against the photo while still feeling subtle. ── */}
-        <SideStars
-          starsPerSide={isMobile ? 10 : 18}
-          className="z-[3]"
-          variant={isLight ? "light-accent" : "dark"}
-        />
-
+        {/* Transparent Figma-derived depth field over the original photograph. */}
+        <GalaxyStarCanvas isDark={!isLight} progressRef={scrollProgressRef} />
         {/* ── Layer 4 – Shooting stars ── restored for light mode per explicit
               request: an earlier pass disabled this entirely in light mode
               (reasoning: "a bright white streak doesn't fit a calm pale-sky
@@ -166,7 +137,7 @@ export const HeroBannerSection = (): JSX.Element => {
               below carries a matching gradient of its own at its top edge —
               the two are designed to meet in the middle, not do the whole
               job from one side. */}
-        {isLight && (
+        {false && (
           <div
             aria-hidden="true"
             className="pointer-events-none absolute inset-x-0 bottom-0 z-[6] h-[220px] bg-[linear-gradient(180deg,rgba(248,251,255,0)_0%,rgba(219,234,254,0.10)_35%,rgba(203,225,240,0.18)_60%,rgba(219,234,254,0.26)_82%,rgba(240,248,255,0.34)_100%),radial-gradient(75%_100%_at_50%_100%,rgba(56,189,248,0.07)_0%,rgba(56,189,248,0)_65%)]"
@@ -174,12 +145,8 @@ export const HeroBannerSection = (): JSX.Element => {
         )}
 
         {/* ── Layer 5 – Hero text content (parallax upward + fade) ─────────── */}
-        <motion.div
-          className="relative z-10 flex min-h-[730px] flex-col items-center justify-center px-6 pb-[120px] pt-[140px] text-center sm:px-10 md:min-h-screen lg:px-16"
-          style={{
-            y:       animOff ? 0 : contentY,
-            opacity: animOff ? 1 : contentOp,
-          }}
+        <div
+          className="home-hero-content relative z-10 flex min-h-[730px] flex-col items-center justify-center px-6 pb-[120px] pt-[140px] text-center sm:px-10 md:min-h-screen lg:px-16"
         >
           <div className="flex max-w-[872px] flex-col items-center pb-7">
             <h1
@@ -187,7 +154,7 @@ export const HeroBannerSection = (): JSX.Element => {
                 isLight ? "text-[#020617]" : "text-[#f5f7fa]"
               }`}
             >
-              Design. Build. Scale.
+              {t.heading}
             </h1>
           </div>
           <div className="flex flex-col items-center pb-[22px]">
@@ -196,7 +163,7 @@ export const HeroBannerSection = (): JSX.Element => {
                 isLight ? "text-[rgba(15,23,42,0.68)]" : "text-[#f5f7faad]"
               }`}
             >
-              From strategy to launch, we create digital experiences people remember.
+              {t.description}
             </p>
           </div>
           <div className="flex items-center gap-1.5 pb-9">
@@ -205,17 +172,17 @@ export const HeroBannerSection = (): JSX.Element => {
                 isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"
               }`}
             >
-              We create
+              {t.weCreate}
             </span>
             <span
-              className={`relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-center text-[15px] font-medium leading-[22.5px] tracking-[0.38px] whitespace-nowrap transition-colors ${
-                isLight ? "text-[#0284c7]" : "text-[#70d7ff]"
-              }`}
+              className="relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-center text-[15px] font-medium leading-[22.5px] tracking-[0.38px] whitespace-nowrap transition-colors"
+              style={{ color: "var(--hero-eyebrow-text-fixed)", textShadow: "var(--hero-eyebrow-text-fixed-shadow)" }}
             >
-              Digital Experiences
+              {t.digitalExperiences}
             </span>
             <span
-              className={`h-[15.75px] w-[1.5px] rounded-[1px] transition-colors ${isLight ? "bg-[#0284c7]" : "bg-[#70d7ffd1]"}`}
+              className="h-[15.75px] w-[1.5px] rounded-[1px] transition-colors"
+              style={{ backgroundColor: "var(--hero-eyebrow-text-fixed)" }}
               aria-hidden="true"
             />
           </div>
@@ -235,7 +202,7 @@ export const HeroBannerSection = (): JSX.Element => {
                   isLight ? "text-[#f5f7fa]" : "text-[#080b12]"
                 }`}
               >
-                Start a Project
+                {common.actions.startAProject}
               </span>
             </Button>
             <Button
@@ -248,23 +215,23 @@ export const HeroBannerSection = (): JSX.Element => {
               }`}
             >
               <span className="relative w-fit [font-family:'Inter',Helvetica] text-center text-[15px] font-normal leading-[22.5px] tracking-[0.15px] whitespace-nowrap">
-                View Our Work
+                {common.actions.viewOurWork}
               </span>
             </Button>
           </div>
-        </motion.div>
+        </div>
 
         {/* ── Scroll indicator (fades as user begins scrolling) ────────────── */}
-        <motion.div
+        <div
+          data-home-scroll-hint
           className="absolute inset-x-0 bottom-8 z-10 flex flex-col items-center gap-1.5"
-          style={{ opacity: animOff ? 1 : indicatorOp }}
         >
           <p
             className={`relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-[10px] font-normal leading-[15px] tracking-[1.40px] whitespace-nowrap transition-colors ${
               isLight ? "text-[rgba(15,23,42,0.45)]" : "text-[#f5f7fa59]"
             }`}
           >
-            SCROLL TO EXPLORE
+            {t.scrollToExplore}
           </p>
           {/* Inline replacement for the old <img src="container-1.svg">: a
               plain <img> can't be recolored by CSS, and this needs a real
@@ -286,7 +253,7 @@ export const HeroBannerSection = (): JSX.Element => {
               </linearGradient>
             </defs>
           </svg>
-        </motion.div>
+        </div>
       </div>
     </section>
   );

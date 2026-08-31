@@ -1,12 +1,20 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { useReducedMotion, motion } from "framer-motion";
-import { Link } from "wouter";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { CheckCircle2 } from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { SiteFooterSection } from "./sections/SiteFooterSection";
+import { FinalCtaSection } from "@/components/FinalCtaSection";
+import { FooterRevealStage } from "@/components/FooterRevealStage";
 import { SideStars } from "@/components/backgrounds/SideStars";
-import { useProjectModal } from "@/contexts/ProjectModalContext";
+import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { processPageDict } from "@/lib/i18n/processPage";
+import { scrollToHashTarget } from "@/lib/scrollToHash";
+import { useSEO } from "@/lib/seo/useSEO";
+import { useJSONLD } from "@/lib/seo/useJSONLD";
+import { buildBreadcrumbSchema } from "@/lib/seo/schema";
+import { pageMeta, pageBreadcrumbs } from "@/lib/seo/pageMeta";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -20,106 +28,28 @@ const fadeUp = {
   }),
 };
 
-/* ─── Data ─── */
-const flightNodes = [
-  { num: "01", label: "Discover" },
-  { num: "02", label: "Define" },
-  { num: "03", label: "Create" },
-  { num: "04", label: "Design" },
-  { num: "05", label: "Build & Connect" },
-  { num: "06", label: "Optimize, Launch & Support" },
-];
-
-const stages = [
-  {
-    num: "01",
-    title: "Discover",
-    description:
-      "We start by understanding the business, audience, goals, services, products, competitors, and the digital problem the website or system needs to solve.",
-    happens: ["Business discovery", "Audience understanding", "Project goals", "Competitor review", "Website purpose", "Initial direction"],
-    client: "Client shares business details, current problems, goals, and available references.",
-  },
-  {
-    num: "02",
-    title: "Define",
-    description:
-      "We turn the discovery into structure: sitemap, user journey, page priorities, features, content needs, and the experience direction.",
-    happens: ["Sitemap", "User flows", "Page structure", "Feature planning", "Content outline", "Technical direction"],
-    client: "Client reviews and approves the structure before visual design begins.",
-  },
-  {
-    num: "03",
-    title: "Create",
-    description:
-      "We prepare the content and visual assets that support the website, including written content, product data, images, graphics, and media direction when needed.",
-    happens: ["Website copy", "Content shaping", "Product data", "Image direction", "Photo editing", "Video / graphic support"],
-    client: "Client provides business information, numbers, product details, and brand assets. We shape them into website-ready content.",
-  },
-  {
-    num: "04",
-    title: "Design",
-    description:
-      "We design the interface, visual system, responsiveness, interactions, and page experience with both users and development in mind.",
-    happens: ["Wireframes", "UI direction", "High-fidelity screens", "Responsive layouts", "Design system", "Motion direction"],
-    client: "Client reviews the design, gives feedback, and approves the visual direction before development.",
-  },
-  {
-    num: "05",
-    title: "Build & Connect",
-    description:
-      "We build the frontend, connect backend logic when needed, prepare dashboards, CMS systems, APIs, authentication, product flows, and real business functionality.",
-    happens: ["Frontend development", "Backend development", "CMS / dashboard", "APIs", "Authentication", "E-commerce logic", "Database structure"],
-    client: "Client tests key flows and confirms that the system behavior matches the business needs.",
-  },
-  {
-    num: "06",
-    title: "Optimize, Launch & Support",
-    description:
-      "We test responsiveness, speed, SEO, accessibility basics, content accuracy, deployment readiness, hosting, and post-launch updates.",
-    happens: ["Performance testing", "SEO setup", "Responsive QA", "Accessibility basics", "Hosting / deployment", "Future support"],
-    client: "Client gives final approval before launch and can continue with future improvements or maintenance.",
-  },
-];
-
-const approvalGates = [
-  { num: "01", title: "Structure Approval", desc: "Sitemap, pages, user flow, and feature direction are reviewed before design." },
-  { num: "02", title: "Design Approval", desc: "Visual direction, layouts, responsiveness, and interaction ideas are approved before development." },
-  { num: "03", title: "Build Review", desc: "Core flows, backend behavior, dashboards, CMS, and forms are tested before final polish." },
-  { num: "04", title: "Launch Approval", desc: "Speed, SEO, responsiveness, content, and deployment readiness are checked before going live." },
-];
-
-const clientInputs = [
-  "Business details",
-  "Services or product information",
-  "Brand assets or references",
-  "Photos, videos, or visual material",
-  "Target audience information",
-  "Website goals",
-  "Access to hosting, domain, or existing systems when needed",
-  "Feedback and approvals at key stages",
-];
-
-const launchChecklist = [
-  "Responsive behavior",
-  "Speed and performance",
-  "SEO structure",
-  "Content accuracy",
-  "Forms and contact flows",
-  "CMS / dashboard access",
-  "Image optimization",
-  "Hosting and deployment",
-  "Basic accessibility",
-  "Post-launch updates",
-];
-
 /* ─── Section wrapper ─── */
 const Section = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
   <section className={`relative w-full ${className}`}>{children}</section>
 );
 
 /* ─── Glass card ─── */
-const GlassCard = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
-  <div className={`rounded-[20px] border border-white/[0.11] bg-white/[0.04] backdrop-blur-sm ${className}`}>
+const GlassCard = ({
+  children,
+  className = "",
+  isLight = false,
+}: {
+  children: React.ReactNode;
+  className?: string;
+  isLight?: boolean;
+}) => (
+  <div
+    className={`rounded-[20px] border backdrop-blur-sm ${
+      isLight
+        ? "border-[rgba(15,23,42,0.10)] bg-[rgba(255,255,255,0.72)] shadow-[0_18px_50px_rgba(15,23,42,0.08)]"
+        : "border-white/[0.11] bg-white/[0.04]"
+    } ${className}`}
+  >
     {children}
   </div>
 );
@@ -144,6 +74,7 @@ const PROCESS_GRADIENT_FRAGMENT_SHADER = `
   precision highp float;
   uniform vec2 uResolution;
   uniform float uTime;
+  uniform float uIsLight;
   varying vec2 vUv;
 
   float hash(vec2 p) {
@@ -204,7 +135,15 @@ const PROCESS_GRADIENT_FRAGMENT_SHADER = `
     float fadeX = 1.0 - smoothstep(0.32, 0.5, edgeDist.x);
     float fadeY = 1.0 - smoothstep(0.28, 0.5, edgeDist.y);
     float vign = fadeX * fadeY;
-    color = mix(dark, color, vign);
+
+    // Dark mode: unchanged, mixes all the way down to near-black at the
+    // edges (vign reaches 0 in the corners). Light mode: the vignette is
+    // disabled entirely (vignMix pinned to 1.0) — the flowing color field
+    // renders at full strength edge to edge, no dark mixing anywhere.
+    // uIsLight blends between the two so dark mode's math is byte-identical
+    // to before.
+    float vignMix = mix(vign, 1.0, uIsLight);
+    color = mix(dark, color, vignMix);
 
     gl_FragColor = vec4(color, 1.0);
   }
@@ -222,9 +161,20 @@ function compileProcessGradientShader(gl: WebGLRenderingContext, type: number, s
   return shader;
 }
 
-const ProcessHeroGradient = ({ reduced }: { reduced: boolean }) => {
+const ProcessHeroGradient = ({ reduced, isLight }: { reduced: boolean; isLight: boolean }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const visibleRef = useRef(true);
+  const isLightRef = useRef(isLight);
+  const redrawRef = useRef<((elapsedSeconds: number) => void) | null>(null);
+
+  // Kept in a ref (not a rerun of the WebGL-setup effect below) so toggling
+  // theme doesn't tear down and recompile the whole GL program — the rAF
+  // loop just reads the latest value each frame. With reduced motion there's
+  // no loop to pick it up on its own, so force one redraw when it changes.
+  useEffect(() => {
+    isLightRef.current = isLight;
+    if (reduced) redrawRef.current?.(0);
+  }, [isLight, reduced]);
 
   // This shader recomputes a 5-octave fractal-noise field per pixel, every
   // frame — real GPU/CPU cost, not free decoration. Without gating, it kept
@@ -277,6 +227,7 @@ const ProcessHeroGradient = ({ reduced }: { reduced: boolean }) => {
 
     const resolutionLocation = gl.getUniformLocation(program, "uResolution");
     const timeLocation = gl.getUniformLocation(program, "uTime");
+    const isLightLocation = gl.getUniformLocation(program, "uIsLight");
 
     function resize() {
       if (!canvas) return;
@@ -300,8 +251,10 @@ const ProcessHeroGradient = ({ reduced }: { reduced: boolean }) => {
     function draw(elapsedSeconds: number) {
       gl!.uniform2f(resolutionLocation, canvas!.width, canvas!.height);
       gl!.uniform1f(timeLocation, elapsedSeconds);
+      gl!.uniform1f(isLightLocation, isLightRef.current ? 1.0 : 0.0);
       gl!.drawArrays(gl!.TRIANGLES, 0, 3);
     }
+    redrawRef.current = draw;
 
     function loop(now: number) {
       if (visibleRef.current) draw((now - startTime) / 1000);
@@ -315,6 +268,7 @@ const ProcessHeroGradient = ({ reduced }: { reduced: boolean }) => {
     }
 
     return () => {
+      redrawRef.current = null;
       if (rafId) cancelAnimationFrame(rafId);
       resizeObserver.disconnect();
       gl.deleteBuffer(positionBuffer);
@@ -351,7 +305,8 @@ function getFlightStageState(index: number, activeIndex: number): FlightStageSta
   return "upcoming";
 }
 
-const FlightPathTimeline = ({ reduced }: { reduced: boolean }) => {
+const FlightPathTimeline = ({ reduced, isLight }: { reduced: boolean; isLight: boolean }) => {
+  const flightNodes = useDict(processPageDict).flightPath.nodes;
   const [activeIndex, setActiveIndex] = useState(0);
 
   useEffect(() => {
@@ -377,13 +332,17 @@ const FlightPathTimeline = ({ reduced }: { reduced: boolean }) => {
       <div
         aria-hidden="true"
         className="absolute left-0 right-0 top-[28px] hidden h-px lg:block"
-        style={{ background: "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 8%, rgba(255,255,255,0.14) 92%, transparent 100%)" }}
+        style={{
+          background: isLight
+            ? "linear-gradient(90deg, transparent 0%, rgba(15,23,42,0.14) 8%, rgba(15,23,42,0.14) 92%, transparent 100%)"
+            : "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.14) 8%, rgba(255,255,255,0.14) 92%, transparent 100%)",
+        }}
       />
 
       {/* Animated glow progress line — grows to meet the active stage (desktop) */}
       <div
         aria-hidden="true"
-        className="absolute left-0 top-[28px] hidden h-px w-full origin-left lg:block"
+        className="absolute left-0 top-[28px] hidden h-px w-full origin-left rtl:origin-right lg:block"
         style={{
           transform: reduced ? `scaleX(${(0.5 / flightNodes.length)})` : `scaleX(${progressScale})`,
           transition: reduced ? undefined : "transform 750ms cubic-bezier(0.22,1,0.36,1)",
@@ -411,8 +370,16 @@ const FlightPathTimeline = ({ reduced }: { reduced: boolean }) => {
             <div
               className="relative flex h-14 w-14 items-center justify-center rounded-full border"
               style={{
-                borderColor: isActive ? "#38bdf8" : isCompleted ? "rgba(56,189,248,0.45)" : "rgba(255,255,255,0.16)",
-                backgroundColor: isActive ? "rgba(56,189,248,0.1)" : isCompleted ? "rgba(56,189,248,0.06)" : "rgba(255,255,255,0.02)",
+                borderColor: isActive
+                  ? "#38bdf8"
+                  : isCompleted
+                    ? "rgba(56,189,248,0.45)"
+                    : isLight ? "rgba(15,23,42,0.16)" : "rgba(255,255,255,0.16)",
+                backgroundColor: isActive
+                  ? (isLight ? "rgba(14,165,233,0.12)" : "rgba(56,189,248,0.1)")
+                  : isCompleted
+                    ? "rgba(56,189,248,0.06)"
+                    : isLight ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.02)",
                 boxShadow: isActive
                   ? "0 0 18px rgba(56,189,248,0.55), 0 0 42px rgba(56,189,248,0.22)"
                   : isCompleted
@@ -426,7 +393,11 @@ const FlightPathTimeline = ({ reduced }: { reduced: boolean }) => {
               <span
                 className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-medium tracking-[1px]"
                 style={{
-                  color: isActive ? "#ffffff" : isCompleted ? "rgba(56,189,248,0.85)" : "rgba(245,247,250,0.35)",
+                  color: isActive
+                    ? (isLight ? "#0284c7" : "#ffffff")
+                    : isCompleted
+                      ? "rgba(56,189,248,0.85)"
+                      : isLight ? "#94A3B8" : "rgba(245,247,250,0.35)",
                   transition: FLIGHT_STATE_TRANSITION,
                 }}
               >
@@ -436,7 +407,11 @@ const FlightPathTimeline = ({ reduced }: { reduced: boolean }) => {
             <p
               className="mt-3 text-center [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[19px]"
               style={{
-                color: isActive ? "#f5f7fa" : isCompleted ? "rgba(245,247,250,0.7)" : "rgba(245,247,250,0.35)",
+                color: isActive
+                  ? (isLight ? "#0F172A" : "#f5f7fa")
+                  : isCompleted
+                    ? (isLight ? "#475569" : "rgba(245,247,250,0.7)")
+                    : isLight ? "#94A3B8" : "rgba(245,247,250,0.35)",
                 transition: FLIGHT_STATE_TRANSITION,
               }}
             >
@@ -457,6 +432,11 @@ const FlightPathTimeline = ({ reduced }: { reduced: boolean }) => {
    transitioned — the circles never move or resize their own box. ─── */
 const STAGE_TRIGGER_ROOT_MARGIN = "-45% 0px -40% 0px";
 const STAGE_STATE_TRANSITION = "border-color 700ms cubic-bezier(0.22,1,0.36,1), background-color 700ms cubic-bezier(0.22,1,0.36,1), box-shadow 700ms cubic-bezier(0.22,1,0.36,1), transform 700ms cubic-bezier(0.22,1,0.36,1), color 700ms cubic-bezier(0.22,1,0.36,1)";
+// Faster, dedicated timing for the new hover-reactive elements (title,
+// description, cards) — kept separate from STAGE_STATE_TRANSITION above so
+// the circle/number's existing scroll-active pacing (700ms, tuned for how
+// slowly a stage scrolls into "active") isn't sped up as a side effect.
+const STAGE_HOVER_TRANSITION = "color 250ms ease-out, border-color 250ms ease-out, background-color 250ms ease-out";
 
 type DetailedStageState = "upcoming" | "active" | "completed";
 
@@ -467,8 +447,18 @@ function getDetailedStageState(index: number, activeIndex: number): DetailedStag
   return "upcoming";
 }
 
-const DetailedStagesTimeline = ({ reduced }: { reduced: boolean }) => {
+const DetailedStagesTimeline = ({ reduced, isLight }: { reduced: boolean; isLight: boolean }) => {
+  const t = useDict(processPageDict);
+  const stages = t.stages;
+  const { whatHappensLabel, clientInvolvementLabel } = t.stagesSection;
+  const { dir } = useLanguage();
   const [activeIndex, setActiveIndex] = useState(-1);
+  // Hover is a second, independent input into the same "highlighted" look
+  // the scroll-active stage already uses — it never touches activeIndex
+  // itself, so scroll position stays the sole owner of which stage is
+  // "really" active; hovering another stage just temporarily borrows the
+  // same visual treatment for that stage too.
+  const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const markerRefs = useRef<(HTMLDivElement | null)[]>([]);
 
   useEffect(() => {
@@ -502,15 +492,28 @@ const DetailedStagesTimeline = ({ reduced }: { reduced: boolean }) => {
         }
       `}</style>
 
-      {/* Base dim vertical line */}
-      <div aria-hidden="true" className="absolute left-7 top-0 bottom-0 w-px -translate-x-1/2 bg-gradient-to-b from-transparent via-white/[0.08] to-transparent" />
+      {/* Base dim vertical line — start-7 (logical) keeps it anchored under
+          the stage circle's center on whichever side the circle actually
+          renders on: the circle is the first child of a plain flex row
+          (`flex gap-8`), so it sits at the row's start edge automatically in
+          both directions (left in LTR, right in RTL) — this line just needs
+          to track that same "start" edge instead of a hardcoded left. The
+          translateX sign has to flip too: translate is a physical (not
+          logical) transform, so "shift toward the start" means -50% in LTR
+          but +50% in RTL. */}
+      <div
+        aria-hidden="true"
+        className={`absolute start-7 top-0 bottom-0 w-px -translate-x-1/2 rtl:translate-x-1/2 bg-gradient-to-b from-transparent to-transparent ${
+          isLight ? "via-[rgba(15,23,42,0.12)]" : "via-white/[0.08]"
+        }`}
+      />
 
       {/* Glowing progress line — grows down to meet the active/completed stages */}
       <div
         aria-hidden="true"
-        className="absolute left-7 top-0 h-full w-px origin-top"
+        className="absolute start-7 top-0 h-full w-px origin-top"
         style={{
-          transform: `translateX(-50%) scaleY(${progressScale})`,
+          transform: `translateX(${dir === "rtl" ? "50%" : "-50%"}) scaleY(${progressScale})`,
           transition: reduced ? undefined : "transform 700ms cubic-bezier(0.22,1,0.36,1)",
           background: "linear-gradient(180deg, rgba(56,189,248,0.55) 0%, rgba(56,189,248,0.35) 88%, rgba(56,189,248,0.15) 100%)",
         }}
@@ -520,12 +523,19 @@ const DetailedStagesTimeline = ({ reduced }: { reduced: boolean }) => {
         const state = getDetailedStageState(i, activeIndex);
         const isActive = state === "active";
         const isCompleted = state === "completed";
+        // Hover borrows the exact same "highlighted" look active already
+        // has — it never changes activeIndex/isCompleted, so scroll stays
+        // the sole owner of real active/completed state; this only affects
+        // which stages currently render with that look.
+        const isHighlighted = isActive || hoveredIndex === i;
 
         return (
           <motion.div
             key={stage.num}
             variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" custom={0.05} viewport={{ once: true, margin: "-60px" }}
-            className="relative flex gap-8 pb-12 lg:gap-12 lg:pb-16"
+            onMouseEnter={() => setHoveredIndex(i)}
+            onMouseLeave={() => setHoveredIndex((prev) => (prev === i ? null : prev))}
+            className="group relative flex gap-8 pb-12 [transition:transform_250ms_ease-out] hover:-translate-y-0.5 motion-reduce:hover:translate-y-0 lg:gap-12 lg:pb-16"
           >
             {/* Stage number dot */}
             <div className="relative shrink-0">
@@ -533,22 +543,37 @@ const DetailedStagesTimeline = ({ reduced }: { reduced: boolean }) => {
                 ref={(el) => { markerRefs.current[i] = el; }}
                 className="relative flex h-14 w-14 items-center justify-center rounded-full border"
                 style={{
-                  borderColor: isActive ? "#38bdf8" : isCompleted ? "rgba(56,189,248,0.45)" : "rgba(255,255,255,0.12)",
-                  backgroundColor: "#03050a",
-                  boxShadow: isActive
+                  borderColor: isHighlighted
+                    ? "#38bdf8"
+                    : isCompleted
+                      ? "rgba(56,189,248,0.45)"
+                      : isLight ? "rgba(15,23,42,0.14)" : "rgba(255,255,255,0.12)",
+                  // Was an unconditional #03050a fill regardless of theme —
+                  // every circle (active, completed, or upcoming) rendered as
+                  // a small near-black dot in light mode. Active gets a light
+                  // blue fill (matching the Flight Path timeline above it for
+                  // visual consistency); inactive gets a plain white fill.
+                  backgroundColor: isHighlighted
+                    ? (isLight ? "rgba(14,165,233,0.12)" : "#03050a")
+                    : isLight ? "rgba(255,255,255,0.9)" : "#03050a",
+                  boxShadow: isHighlighted
                     ? "0 0 18px rgba(56,189,248,0.55), 0 0 44px rgba(56,189,248,0.22)"
                     : isCompleted
                       ? "0 0 14px rgba(56,189,248,0.18)"
                       : "none",
-                  transform: isActive && !reduced ? "scale(1.04)" : "scale(1)",
+                  transform: isHighlighted && !reduced ? "scale(1.04)" : "scale(1)",
                   transition: STAGE_STATE_TRANSITION,
-                  animation: isActive && !reduced ? "lux-stage-active-pulse 2.4s ease-in-out infinite" : undefined,
+                  animation: isHighlighted && !reduced ? "lux-stage-active-pulse 2.4s ease-in-out infinite" : undefined,
                 }}
               >
                 <span
                   className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-medium tracking-[1px]"
                   style={{
-                    color: isActive ? "#38bdf8" : isCompleted ? "rgba(56,189,248,0.75)" : "rgba(245,247,250,0.4)",
+                    color: isHighlighted
+                      ? (isLight ? "#0284c7" : "#38bdf8")
+                      : isCompleted
+                        ? "rgba(56,189,248,0.75)"
+                        : isLight ? "#94A3B8" : "rgba(245,247,250,0.4)",
                     transition: STAGE_STATE_TRANSITION,
                   }}
                 >
@@ -559,33 +584,95 @@ const DetailedStagesTimeline = ({ reduced }: { reduced: boolean }) => {
 
             {/* Stage content */}
             <div className="flex-1 pt-2">
-              <h3 className="[font-family:'Bricolage_Grotesque',Helvetica] text-[22px] font-medium tracking-[-0.5px] text-[#f5f7fa] lg:text-[28px]">
+              <h3
+                className="[font-family:'Bricolage_Grotesque',Helvetica] text-[22px] font-medium tracking-[-0.5px] lg:text-[28px]"
+                style={{
+                  color: isHighlighted ? (isLight ? "#0284c7" : "#38bdf8") : isLight ? "#0F172A" : "#f5f7fa",
+                  transition: STAGE_HOVER_TRANSITION,
+                }}
+              >
                 {stage.title}
               </h3>
-              <p className="mt-3 max-w-[580px] [font-family:'Inter',Helvetica] text-[14px] font-normal leading-[25px] text-[#f5f7faa6]">
+              <p
+                className="mt-3 max-w-[580px] [font-family:'Inter',Helvetica] text-[14px] font-normal leading-[25px]"
+                style={{
+                  color: isHighlighted
+                    ? (isLight ? "#1e293b" : "#e2e8f0")
+                    : isLight ? "#475569" : "#f5f7faa6",
+                  transition: STAGE_HOVER_TRANSITION,
+                }}
+              >
                 {stage.description}
               </p>
 
               <div className="mt-6 flex flex-col gap-5 lg:flex-row lg:gap-10">
-                {/* What happens */}
-                <GlassCard className="flex-1 p-6">
-                  <p className="mb-4 [font-family:'JetBrains_Mono',Helvetica] text-[10px] tracking-[1.5px] text-[#f5f7fa55] uppercase">What happens</p>
+                {/* What happens — bespoke div (mirrors GlassCard's own base
+                    recipe) instead of <GlassCard> so it can carry a
+                    highlighted state the shared component doesn't have,
+                    same reasoning as "Client involvement" below. */}
+                <div
+                  className="flex-1 rounded-[20px] border p-6 backdrop-blur-sm"
+                  style={{
+                    borderColor: isLight
+                      ? isHighlighted ? "rgba(2,132,199,0.35)" : "rgba(15,23,42,0.10)"
+                      : isHighlighted ? "rgba(56,189,248,0.28)" : "rgba(255,255,255,0.11)",
+                    backgroundColor: isLight
+                      ? isHighlighted ? "rgba(255,255,255,0.85)" : "rgba(255,255,255,0.72)"
+                      : isHighlighted ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
+                    boxShadow: isLight ? "0 18px 50px rgba(15,23,42,0.08)" : undefined,
+                    transition: STAGE_HOVER_TRANSITION,
+                  }}
+                >
+                  <p className={`mb-4 [font-family:'JetBrains_Mono',Helvetica] text-[10px] tracking-[1.5px] uppercase ${isLight ? "text-[#64748B]" : "text-[#f5f7fa55]"}`}>{whatHappensLabel}</p>
                   <div className="flex flex-wrap gap-2">
                     {stage.happens.map((item) => (
-                      <span key={item} className="rounded-full border border-white/[0.10] bg-white/[0.06] px-3 py-1 [font-family:'Inter',Helvetica] text-[12px] text-[#f5f7fa99]">
+                      <span
+                        key={item}
+                        className={`rounded-full border px-3 py-1 [font-family:'Inter',Helvetica] text-[12px] ${
+                          isLight
+                            ? "border-[rgba(56,189,248,0.30)] bg-[rgba(56,189,248,0.06)] text-sky-700"
+                            : "border-white/[0.10] bg-white/[0.06] text-[#f5f7fa99]"
+                        }`}
+                      >
                         {item}
                       </span>
                     ))}
                   </div>
-                </GlassCard>
+                </div>
 
-                {/* Client involvement */}
-                <GlassCard className="flex-1 p-6">
-                  <p className="mb-4 [font-family:'JetBrains_Mono',Helvetica] text-[10px] tracking-[1.5px] text-[#f5f7fa55] uppercase">Client involvement</p>
-                  <p className="[font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px] text-[#f5f7faa6]">
+                {/* Client involvement — deliberately NOT routed through
+                    GlassCard: it needs a highlighted state (active-or-hover)
+                    GlassCard doesn't have, in both themes now — light already
+                    had a distinct look while active, dark previously had
+                    none at all (always plain GlassCard styling regardless of
+                    state), which is what this pass adds. */}
+                <div
+                  className="flex-1 rounded-[20px] border p-6"
+                  style={{
+                    borderColor: isLight
+                      ? isHighlighted ? "rgba(14,165,233,0.38)" : "rgba(148,163,184,0.12)"
+                      : isHighlighted ? "rgba(56,189,248,0.30)" : "rgba(255,255,255,0.11)",
+                    backgroundColor: isLight
+                      ? isHighlighted ? "rgba(224,242,254,0.55)" : "rgba(255,255,255,0.25)"
+                      : isHighlighted ? "rgba(255,255,255,0.07)" : "rgba(255,255,255,0.04)",
+                    boxShadow: isLight && isHighlighted ? "0 18px 45px rgba(14,165,233,0.12)" : undefined,
+                    backdropFilter: isLight && isHighlighted ? "blur(4px)" : undefined,
+                    transition: STAGE_HOVER_TRANSITION,
+                  }}
+                >
+                  <p className={`mb-4 [font-family:'JetBrains_Mono',Helvetica] text-[10px] tracking-[1.5px] uppercase ${isLight ? "text-[#64748B]" : "text-[#f5f7fa55]"}`}>{clientInvolvementLabel}</p>
+                  <p
+                    className="[font-family:'Inter',Helvetica] text-[13px] font-normal leading-[22px]"
+                    style={{
+                      color: isLight
+                        ? isHighlighted ? "#0F172A" : "#475569"
+                        : isHighlighted ? "#e2e8f0" : "#f5f7faa6",
+                      transition: STAGE_HOVER_TRANSITION,
+                    }}
+                  >
                     {stage.client}
                   </p>
-                </GlassCard>
+                </div>
               </div>
             </div>
           </motion.div>
@@ -602,7 +689,8 @@ const DetailedStagesTimeline = ({ reduced }: { reduced: boolean }) => {
    -> body -> each card in order, then holds briefly before unpinning. On
    mobile or with prefers-reduced-motion, pinning is skipped entirely and
    everything renders normally, in its final visible state. ─── */
-const ApprovalGatesSection = ({ reduced }: { reduced: boolean }) => {
+const ApprovalGatesSection = ({ reduced, isLight }: { reduced: boolean; isLight: boolean }) => {
+  const { label, heading, body, gates: approvalGates } = useDict(processPageDict).approvalGates;
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
     const check = () => setIsMobile(window.innerWidth < 768);
@@ -683,22 +771,35 @@ const ApprovalGatesSection = ({ reduced }: { reduced: boolean }) => {
         className={`relative z-10 mx-auto w-full max-w-[1100px] px-6 sm:px-8 lg:px-12 ${animOff ? "" : "flex h-screen flex-col justify-center"}`}
       >
         <div className="mb-14">
-          <p ref={labelRef} className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] text-[#f5f7fa55] uppercase">Collaboration</p>
-          <h2 ref={headingRef} className="mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] text-[#f5f7fa] lg:text-[44px] lg:tracking-[-1.3px]">
-            Every stage has a clear review point.
+          <p ref={labelRef} className={`[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] uppercase ${isLight ? "text-[#64748B]" : "text-[#f5f7fa55]"}`}>{label}</p>
+          <h2 ref={headingRef} className={`mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] lg:text-[44px] lg:tracking-[-1.3px] ${isLight ? "text-[#0F172A]" : "text-[#f5f7fa]"}`}>
+            {heading}
           </h2>
-          <p ref={bodyRef} className="mt-5 max-w-[520px] [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[26px] text-[#f5f7faa6]">
-            We avoid surprises by reviewing the structure, content, design, development, and launch details with the client before moving forward.
+          <p ref={bodyRef} className={`mt-5 max-w-[520px] [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[26px] ${isLight ? "text-[#475569]" : "text-[#f5f7faa6]"}`}>
+            {body}
           </p>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
+        {/* sm:auto-rows-fr forces both rows to the height of their tallest
+            card — since Arabic gate text wraps to a different number of
+            lines per card, a plain grid would leave each card at its own
+            natural (uneven) height. Gated to sm: so mobile's single-column
+            stack keeps each card's natural height instead of being forced
+            to match the tallest of all four. items-stretch is CSS Grid's
+            default anyway, but stated explicitly since the fix depends on
+            it. */}
+        <div className="grid gap-4 sm:grid-cols-2 sm:auto-rows-fr sm:items-stretch">
           {approvalGates.map((gate, i) => (
-            <div key={gate.num} ref={(el) => { cardRefs.current[i] = el; }}>
-              <GlassCard className="p-7 lg:p-8">
-                <span className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.5px] text-[#38bdf880]">{gate.num}</span>
-                <h3 className="mt-3 [font-family:'Bricolage_Grotesque',Helvetica] text-[20px] font-medium tracking-[-0.4px] text-[#f5f7fa]">{gate.title}</h3>
-                <p className="mt-3 [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[23px] text-[#f5f7faa6]">{gate.desc}</p>
+            <div key={gate.num} ref={(el) => { cardRefs.current[i] = el; }} className="h-full">
+              {/* h-full here is what actually turns the grid row's stretched
+                  track height into extra bottom padding-space rather than a
+                  no-op: the wrapper div above stretches for free (grid
+                  align-items:stretch), but GlassCard is a plain block child
+                  of it and would otherwise size to its own content only. */}
+              <GlassCard className="flex h-full flex-col p-7 lg:p-8" isLight={isLight}>
+                <span className={`[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.5px] ${isLight ? "text-[#0284c7]" : "text-[#38bdf880]"}`}>{gate.num}</span>
+                <h3 className={`mt-3 [font-family:'Bricolage_Grotesque',Helvetica] text-[20px] font-medium tracking-[-0.4px] ${isLight ? "text-[#0F172A]" : "text-[#f5f7fa]"}`}>{gate.title}</h3>
+                <p className={`mt-3 [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[23px] ${isLight ? "text-[#475569]" : "text-[#f5f7faa6]"}`}>{gate.desc}</p>
               </GlassCard>
             </div>
           ))}
@@ -710,64 +811,95 @@ const ApprovalGatesSection = ({ reduced }: { reduced: boolean }) => {
 
 /* ─── Page ─── */
 export const ProcessPage = (): JSX.Element => {
+  useSEO(pageMeta.process);
+  useJSONLD("breadcrumb", buildBreadcrumbSchema(pageBreadcrumbs.process));
   const reduced = useReducedMotion() ?? false;
-  const { openProjectModal } = useProjectModal();
+  const { theme } = useTheme();
+  const isLight = theme === "light";
+  const t = useDict(processPageDict);
+
+  // Landed here via a cross-page anchor (e.g. Home's "Discover Our Approach"
+  // CTA, /process#approach) — scroll to that section once it's actually in
+  // the DOM, offset for the sticky navbar. ScrollToTop (mounted once at the
+  // app root) resets scroll to 0 first on this same navigation; this effect
+  // runs after and takes over with the smooth scroll to the real target.
+  // Same pattern as ServicesPage's own mount effect.
+  useEffect(() => {
+    const hash = window.location.hash.replace(/^#/, "");
+    if (hash) scrollToHashTarget(hash);
+  }, []);
 
   return (
-    <div className="relative min-h-screen w-full text-[#f5f7fa] overflow-x-hidden">
+    <div className={`relative min-h-screen w-full overflow-x-clip ${isLight ? "bg-[#F8FBFF] text-[#0f172a]" : "text-[#f5f7fa]"}`}>
+      <div className="page-content-layer">
 
       {/* ══════════════ HERO ══════════════ */}
+      {/* Hero artwork/composition/typography stays exactly as-is in both
+          themes per explicit instruction. Only touch: the shader's own
+          vignette is fully disabled in light mode via its uIsLight uniform
+          (see ProcessHeroGradient/the fragment shader source) — no dark
+          edge mixing at all, full color shows edge to edge. No CSS overlay
+          of any kind sits on top of the canvas in either theme. */}
       <Section className="flex min-h-screen items-center justify-center overflow-hidden pt-24 pb-20">
         {/* Stars background */}
         <img className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-80" alt="" aria-hidden="true" src="/figmaAssets/backgroundstars-2.svg" />
         {/* Spectral gradient blobs */}
-        <ProcessHeroGradient reduced={reduced} />
+        <ProcessHeroGradient reduced={reduced} isLight={isLight} />
         <SideStars starsPerSide={12} />
 
         <div className="relative z-10 mx-auto flex w-full max-w-[880px] flex-col items-center px-6 text-center sm:px-8">
           <motion.p
             variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" viewport={{ once: true }}
-            className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] tracking-[2px] text-[#f5f7fa55] uppercase"
+            className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] tracking-[2px] uppercase"
+            style={{ color: "var(--hero-eyebrow-text-fixed)", textShadow: "var(--hero-eyebrow-text-fixed-shadow)" }}
           >
-            Process
+            {t.hero.eyebrow}
           </motion.p>
           <motion.h1
             variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" custom={0.1} viewport={{ once: true }}
             className="mt-6 [font-family:'Bricolage_Grotesque',Helvetica] text-[40px] font-medium leading-[1.04] tracking-[-1.4px] text-[#f5f7fa] sm:text-[54px] lg:text-[72px] lg:tracking-[-2.2px]"
           >
-            A clear path from<br />idea to launch.
+            {t.hero.headingLine1}<br />{t.hero.headingLine2}
           </motion.h1>
           <motion.p
             variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" custom={0.2} viewport={{ once: true }}
             className="mt-7 max-w-[600px] [font-family:'Inter',Helvetica] text-[16px] font-normal leading-[28px] text-[#f5f7faa6]"
           >
-            We guide every project through strategy, content, design, development, testing, and launch — so the final experience feels premium, functional, and ready to grow.
+            {t.hero.body}
           </motion.p>
           <motion.p
             variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" custom={0.3} viewport={{ once: true }}
-            className="mt-10 [font-family:'JetBrains_Mono',Helvetica] text-[11px] tracking-[1.8px] text-[#38bdf880]"
+            className="mt-10 [font-family:'JetBrains_Mono',Helvetica] text-[11px] tracking-[1.8px]"
+            style={{ color: "var(--hero-accent-text-fixed)", textShadow: "var(--hero-accent-text-fixed-shadow)" }}
           >
-            Discovery · Design · Build · Connect · Optimize · Launch
+            {t.hero.tagline}
           </motion.p>
         </div>
       </Section>
 
       {/* ══════════════ FLIGHT PATH OVERVIEW ══════════════ */}
+      {/* id="approach" is the cross-page landing target for the Home page's
+          "Discover Our Approach" CTA (MissionStatementSection) — this is the
+          first section that actually summarizes the studio's approach/
+          methodology as a single connected journey (Discover → Define →
+          Create → Design → Build & Connect → Optimize/Launch/Support), so it
+          reads as the direct answer to "our approach" rather than the page's
+          hero (too generic) or a later single-stage section (too narrow). */}
       <Section className="py-24 lg:py-32">
         <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-[500px] w-[800px] -translate-x-1/2 rounded-full blur-[160px]" style={{ backgroundColor: "rgba(56,189,248,0.06)" }} />
-        <div className="relative z-10 mx-auto w-full max-w-[1200px] px-6 sm:px-8 lg:px-12">
+        <div id="approach" className="relative z-10 mx-auto w-full max-w-[1200px] px-6 sm:px-8 lg:px-12 scroll-mt-[110px]">
           <motion.div
             variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" viewport={{ once: true }}
             className="mb-14 text-center"
           >
-            <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] text-[#f5f7fa55] uppercase">Flight Path</p>
-            <h2 className="mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] text-[#f5f7fa] lg:text-[44px] lg:tracking-[-1.3px]">
-              Six stages. One connected journey.
+            <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] uppercase ${isLight ? "text-[#64748B]" : "text-[#f5f7fa55]"}`}>{t.flightPath.label}</p>
+            <h2 className={`mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] lg:text-[44px] lg:tracking-[-1.3px] ${isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"}`}>
+              {t.flightPath.heading}
             </h2>
           </motion.div>
 
           {/* Nodes — horizontal on desktop, vertical on mobile */}
-          <FlightPathTimeline reduced={reduced} />
+          <FlightPathTimeline reduced={reduced} isLight={isLight} />
         </div>
       </Section>
 
@@ -779,18 +911,18 @@ export const ProcessPage = (): JSX.Element => {
             variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" viewport={{ once: true }}
             className="mb-16"
           >
-            <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] text-[#f5f7fa55] uppercase">Stages</p>
-            <h2 className="mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] text-[#f5f7fa] lg:text-[44px] lg:tracking-[-1.3px]">
-              What happens at each stage.
+            <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] uppercase ${isLight ? "text-[#64748B]" : "text-[#f5f7fa55]"}`}>{t.stagesSection.label}</p>
+            <h2 className={`mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] lg:text-[44px] lg:tracking-[-1.3px] ${isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"}`}>
+              {t.stagesSection.heading}
             </h2>
           </motion.div>
 
-          <DetailedStagesTimeline reduced={reduced} />
+          <DetailedStagesTimeline reduced={reduced} isLight={isLight} />
         </div>
       </Section>
 
       {/* ══════════════ APPROVAL GATES ══════════════ */}
-      <ApprovalGatesSection reduced={reduced} />
+      <ApprovalGatesSection reduced={reduced} isLight={isLight} />
 
       {/* ══════════════ WHAT WE NEED ══════════════ */}
       <Section className="py-24 lg:py-32">
@@ -800,25 +932,27 @@ export const ProcessPage = (): JSX.Element => {
               variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" viewport={{ once: true }}
               className="lg:w-[42%]"
             >
-              <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] text-[#f5f7fa55] uppercase">Client Inputs</p>
-              <h2 className="mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] text-[#f5f7fa] lg:text-[40px] lg:tracking-[-1.2px]">
-                What helps us move faster.
+              <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] uppercase ${isLight ? "text-[#64748B]" : "text-[#f5f7fa55]"}`}>{t.clientInputs.label}</p>
+              <h2 className={`mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] lg:text-[40px] lg:tracking-[-1.2px] ${isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"}`}>
+                {t.clientInputs.heading}
               </h2>
-              <p className="mt-5 [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[26px] text-[#f5f7faa6]">
-                The better the starting information, the smoother the strategy, design, and build process becomes.
+              <p className={`mt-5 [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[26px] ${isLight ? "text-[#475569]" : "text-[#f5f7faa6]"}`}>
+                {t.clientInputs.body}
               </p>
             </motion.div>
 
             <div className="flex-1">
               <div className="flex flex-col gap-3">
-                {clientInputs.map((item, i) => (
+                {t.clientInputs.items.map((item, i) => (
                   <motion.div
                     key={item}
                     variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" custom={i * 0.05} viewport={{ once: true, margin: "-40px" }}
-                    className="flex items-start gap-3.5 rounded-xl border border-white/[0.09] bg-white/[0.03] px-5 py-4"
+                    className={`flex items-start gap-3.5 rounded-xl border px-5 py-4 ${
+                      isLight ? "border-[rgba(148,163,184,0.22)] bg-[rgba(255,255,255,0.6)]" : "border-white/[0.09] bg-white/[0.03]"
+                    }`}
                   >
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-[#38bdf880]" />
-                    <span className="[font-family:'Inter',Helvetica] text-[14px] font-normal leading-[22px] text-[#f5f7faa6]">{item}</span>
+                    <CheckCircle2 className={`mt-0.5 h-4 w-4 shrink-0 ${isLight ? "text-[#0284c7]" : "text-[#38bdf880]"}`} />
+                    <span className={`[font-family:'Inter',Helvetica] text-[14px] font-normal leading-[22px] ${isLight ? "text-[#475569]" : "text-[#f5f7faa6]"}`}>{item}</span>
                   </motion.div>
                 ))}
               </div>
@@ -835,67 +969,44 @@ export const ProcessPage = (): JSX.Element => {
             variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" viewport={{ once: true }}
             className="mb-12"
           >
-            <p className="[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] text-[#f5f7fa55] uppercase">Before Launch</p>
-            <h2 className="mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] text-[#f5f7fa] lg:text-[44px] lg:tracking-[-1.3px]">
-              Launch is part of the process,<br className="hidden lg:block" /> not the end of it.
+            <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] tracking-[1.8px] uppercase ${isLight ? "text-[#64748B]" : "text-[#f5f7fa55]"}`}>{t.launchChecklist.label}</p>
+            <h2 className={`mt-4 [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-medium leading-[1.06] tracking-[-0.9px] lg:text-[44px] lg:tracking-[-1.3px] ${isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"}`}>
+              {t.launchChecklist.headingLine1}<br className="hidden lg:block" /> {t.launchChecklist.headingLine2}
             </h2>
-            <p className="mt-5 max-w-[520px] [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[26px] text-[#f5f7faa6]">
-              Before a website goes live, we check the details that affect real performance, visibility, usability, and client confidence.
+            <p className={`mt-5 max-w-[520px] [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[26px] ${isLight ? "text-[#475569]" : "text-[#f5f7faa6]"}`}>
+              {t.launchChecklist.body}
             </p>
           </motion.div>
 
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {launchChecklist.map((item, i) => (
+            {t.launchChecklist.items.map((item, i) => (
               <motion.div
                 key={item}
                 variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" custom={i * 0.05} viewport={{ once: true, margin: "-40px" }}
-                className="flex items-center gap-3 rounded-xl border border-white/[0.09] bg-white/[0.03] px-5 py-4"
+                className={`flex items-center gap-3 rounded-xl border px-5 py-4 ${
+                  isLight ? "border-[rgba(148,163,184,0.22)] bg-[rgba(255,255,255,0.6)]" : "border-white/[0.09] bg-white/[0.03]"
+                }`}
               >
                 <div className="h-1.5 w-1.5 shrink-0 rounded-full bg-[#38bdf8]" />
-                <span className="[font-family:'Inter',Helvetica] text-[13.5px] font-normal text-[#f5f7faa6]">{item}</span>
+                <span className={`[font-family:'Inter',Helvetica] text-[13.5px] font-normal ${isLight ? "text-[#475569]" : "text-[#f5f7faa6]"}`}>{item}</span>
               </motion.div>
             ))}
           </div>
         </div>
       </Section>
 
-      {/* ══════════════ CTA ══════════════ */}
-      <Section className="py-24 pb-32 lg:py-32">
-        <div className="relative z-10 mx-auto w-full max-w-[900px] px-6 sm:px-8 lg:px-12">
-          <motion.div
-            variants={fadeUp} initial={reduced ? "visible" : "hidden"} whileInView="visible" viewport={{ once: true }}
-          >
-            <GlassCard className="work-cta-orbit-border relative overflow-hidden p-10 lg:p-14">
-              <div aria-hidden="true" className="pointer-events-none absolute left-1/2 top-0 h-[300px] w-[600px] -translate-x-1/2 rounded-full blur-[100px]" style={{ backgroundColor: "rgba(38,100,255,0.12)" }} />
-              <div className="relative z-10 flex flex-col items-center text-center">
-                <h2 className="[font-family:'Bricolage_Grotesque',Helvetica] text-[30px] font-medium leading-[1.08] tracking-[-0.9px] text-[#f5f7fa] lg:text-[42px] lg:tracking-[-1.3px]">
-                  Ready to move from idea to launch?
-                </h2>
-                <p className="mt-5 max-w-[480px] [font-family:'Inter',Helvetica] text-[15px] font-normal leading-[26px] text-[#f5f7faa6]">
-                  Tell us what you want to build, and we will shape the right process around your goals, content, design, and technical needs.
-                </p>
-                <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
-                  <button
-                    type="button"
-                    onClick={openProjectModal}
-                    data-testid="button-process-cta-start"
-                    className="flex items-center gap-2 rounded-full bg-[#f5f7fa] px-7 py-3.5 [font-family:'Inter',Helvetica] text-[14px] font-medium text-[#080b12] transition-opacity hover:opacity-90"
-                  >
-                    Start a Project <ArrowRight className="h-4 w-4" />
-                  </button>
-                  <Link href="/work">
-                    <button type="button" className="flex items-center gap-2 rounded-full border border-white/[0.14] bg-white/[0.05] px-7 py-3.5 [font-family:'Inter',Helvetica] text-[14px] font-medium text-[#f5f7fa] transition-colors hover:bg-white/[0.09]">
-                      View Work
-                    </button>
-                  </Link>
-                </div>
-              </div>
-            </GlassCard>
-          </motion.div>
-        </div>
-      </Section>
+      <FinalCtaSection
+        eyebrow={t.cta.eyebrow}
+        heading={t.cta.heading}
+        description={t.cta.description}
+        secondaryLabel={t.cta.secondaryLabel}
+        secondaryHref="/work"
+        primaryTestId="button-process-cta-start"
+        secondaryTestId="button-process-cta-work"
+      />
 
-      <SiteFooterSection />
+      </div>
+      <FooterRevealStage />
     </div>
   );
 };

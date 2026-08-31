@@ -1,17 +1,12 @@
 import { useEffect, useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, Moon, Sun, Volume2, VolumeX, X } from "lucide-react";
+import { Languages, Menu, Moon, Sun, Volume2, VolumeX, X } from "lucide-react";
 import { useProjectModal } from "@/contexts/ProjectModalContext";
 import { useAudioController } from "@/hooks/use-audio-controller";
 import { useTheme } from "@/contexts/ThemeContext";
-
-const navLinks = [
-  { label: "Work", href: "/work" },
-  { label: "Services", href: "/services" },
-  { label: "Process", href: "/process" },
-  { label: "About", href: "/about" },
-  { label: "Contact", href: "/contact" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { commonDict } from "@/lib/i18n/common";
 
 export const Navbar = () => {
   const [location] = useLocation();
@@ -20,6 +15,19 @@ export const Navbar = () => {
   const { isPlaying: isSoundOn, toggle: toggleSound } = useAudioController();
   const { theme, toggleTheme } = useTheme();
   const isLight = theme === "light";
+  const { language, toggleLanguage } = useLanguage();
+  const t = useDict(commonDict);
+  const navLinks = [
+    { key: "work", label: t.nav.work, href: "/work" },
+    { key: "services", label: t.nav.services, href: "/services" },
+    { key: "process", label: t.nav.process, href: "/process" },
+    { key: "about", label: t.nav.about, href: "/about" },
+    { key: "contact", label: t.nav.contact, href: "/contact" },
+  ];
+  // Per spec, the accessible label always names the *target* language, so it
+  // reads from the language being switched to, not the current dictionary.
+  const languageSwitchLabel =
+    language === "en" ? commonDict.en.language.switchToArabic : commonDict.ar.language.switchToEnglish;
 
   useEffect(() => {
     setIsMenuOpen(false);
@@ -43,21 +51,22 @@ export const Navbar = () => {
             href="/"
             data-testid="link-home"
             aria-label="Lux Studio home"
+            dir="ltr"
             className={`shrink-0 [font-family:'Bricolage_Grotesque',Helvetica] text-[17px] font-semibold leading-[25.5px] tracking-[-0.43px] transition-opacity hover:opacity-90 ${
               isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
             }`}
           >
-            Lux Studio
+            {t.brand}
           </Link>
 
           <ul className="hidden items-center gap-6 lg:flex xl:gap-8" role="list">
             {navLinks.map((item) => {
               const isActive = location === item.href;
               return (
-                <li key={item.label}>
+                <li key={item.key}>
                   <Link
                     href={item.href}
-                    data-testid={`link-${item.label.toLowerCase()}`}
+                    data-testid={`link-${item.key}`}
                     aria-current={isActive ? "page" : undefined}
                     className={`relative whitespace-nowrap [font-family:'Inter',Helvetica] text-[13px] font-normal leading-[19.5px] tracking-[0.13px] transition-colors ${
                       isLight
@@ -89,8 +98,8 @@ export const Navbar = () => {
                   ? "border-[rgba(15,23,42,0.10)] bg-[rgba(15,23,42,0.05)] text-[rgba(15,23,42,0.55)]"
                   : "border-[#ffffff1f] bg-[#ffffff0e] text-[#f5f7fa59]"
               }`}
-              aria-label={isSoundOn ? "Sound on" : "Sound off"}
-              title={isSoundOn ? "Sound on" : "Sound off"}
+              aria-label={isSoundOn ? t.sound.onLabel : t.sound.offLabel}
+              title={isSoundOn ? t.sound.onLabel : t.sound.offLabel}
             >
               {isSoundOn ? (
                 <Volume2 className="h-3 w-3" aria-hidden="true" />
@@ -98,7 +107,7 @@ export const Navbar = () => {
                 <VolumeX className="h-3 w-3" aria-hidden="true" />
               )}
               <span className="hidden [font-family:'Inter',Helvetica] text-[11.5px] font-medium leading-[17.2px] tracking-[0.29px] sm:inline">
-                {isSoundOn ? "Sound On" : "Sound Off"}
+                {isSoundOn ? t.sound.on : t.sound.off}
               </span>
             </button>
 
@@ -111,14 +120,32 @@ export const Navbar = () => {
                   ? "border-[rgba(15,23,42,0.10)] bg-[rgba(15,23,42,0.05)] text-[rgba(15,23,42,0.55)] hover:bg-[rgba(15,23,42,0.08)] hover:text-[#0f172a]"
                   : "border-[#ffffff1f] bg-[#ffffff0e] text-[#f5f7faad] hover:bg-[#ffffff18] hover:text-[#f5f7fa]"
               }`}
-              aria-label={isLight ? "Switch to dark mode" : "Switch to light mode"}
-              title={isLight ? "Switch to dark mode" : "Switch to light mode"}
+              aria-label={isLight ? t.theme.toDark : t.theme.toLight}
+              title={isLight ? t.theme.toDark : t.theme.toLight}
             >
               {isLight ? (
                 <Moon className="h-3.5 w-3.5" aria-hidden="true" />
               ) : (
                 <Sun className="h-3.5 w-3.5" aria-hidden="true" />
               )}
+            </button>
+
+            <button
+              type="button"
+              onClick={toggleLanguage}
+              data-testid="button-language"
+              className={`inline-flex h-8 items-center gap-1 rounded-full border px-2.5 transition-colors ${
+                isLight
+                  ? "border-[rgba(15,23,42,0.10)] bg-[rgba(15,23,42,0.05)] text-[rgba(15,23,42,0.55)] hover:bg-[rgba(15,23,42,0.08)] hover:text-[#0f172a]"
+                  : "border-[#ffffff1f] bg-[#ffffff0e] text-[#f5f7faad] hover:bg-[#ffffff18] hover:text-[#f5f7fa]"
+              }`}
+              aria-label={languageSwitchLabel}
+              title={languageSwitchLabel}
+            >
+              <Languages className="h-3 w-3" aria-hidden="true" />
+              <span dir="ltr" className="[font-family:'Inter',Helvetica] text-[11.5px] font-medium leading-[17.2px] tracking-[0.29px]">
+                {t.language.code}
+              </span>
             </button>
 
             <button
@@ -131,12 +158,12 @@ export const Navbar = () => {
                   : "bg-[#f5f7fa] text-[#080b12] shadow-[0px_3px_12px_#00000047,0px_0px_20px_#f5f7fa1a] hover:bg-white"
               }`}
             >
-              Start a Project
+              {t.actions.startAProject}
             </button>
 
             <button
               type="button"
-              aria-label={isMenuOpen ? "Close menu" : "Open menu"}
+              aria-label={isMenuOpen ? t.actions.closeMenu : t.actions.openMenu}
               aria-expanded={isMenuOpen}
               aria-controls="mobile-navigation"
               data-testid="button-menu"
@@ -162,7 +189,7 @@ export const Navbar = () => {
             {navLinks.map((item) => {
               const isActive = location === item.href;
               return (
-                <li key={item.label}>
+                <li key={item.key}>
                   <Link
                     href={item.href}
                     aria-current={isActive ? "page" : undefined}
@@ -195,7 +222,7 @@ export const Navbar = () => {
                 : "bg-[#f5f7fa] text-[#080b12] shadow-[0px_3px_12px_#00000047]"
             }`}
           >
-            Start a Project
+            {t.actions.startAProject}
           </button>
         </div>
       </nav>

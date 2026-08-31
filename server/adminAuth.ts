@@ -1,6 +1,8 @@
 import session from "express-session";
+import connectPgSimple from "connect-pg-simple";
 import type { Express, Request, Response, NextFunction } from "express";
 import { randomBytes } from "crypto";
+import { pool } from "./db";
 
 /* Single shared-password gate for the admin dashboard — no user accounts,
    no extra tables. If ADMIN_DASHBOARD_PASSWORD isn't set, login always
@@ -23,12 +25,24 @@ declare module "express-session" {
 }
 
 export function setupAdminSession(app: Express) {
+  const PgSessionStore = connectPgSimple(session);
+
   app.use(
     session({
       secret: sessionSecret,
       name: "lux_admin_session",
       resave: false,
       saveUninitialized: false,
+      // Production already requires DATABASE_URL for durable form data. Reuse
+      // that PostgreSQL connection for dashboard sessions so logins survive
+      // process restarts and Express never relies on its non-production
+      // in-memory session store once the required database is configured.
+      store: pool
+        ? new PgSessionStore({
+            pool,
+            createTableIfMissing: true,
+          })
+        : undefined,
       cookie: {
         httpOnly: true,
         sameSite: "lax",

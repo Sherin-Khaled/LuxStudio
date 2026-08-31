@@ -1,6 +1,9 @@
+import { Link } from "wouter";
 import { motion, useReducedMotion } from "framer-motion";
 import { useTheme } from "@/contexts/ThemeContext";
 import { LIGHT } from "@/lib/lightModeColors";
+import { useDict } from "@/lib/i18n/useDict";
+import { missionDict } from "@/lib/i18n/home/mission";
 
 /* Fade-up-and-unblur reveal, triggered once per element as it enters the
    viewport — replaces the previous pinned/scrubbed GSAP timeline. `custom`
@@ -17,39 +20,17 @@ const fadeUp = {
   }),
 };
 
-const principles = [
-  {
-    id: "P.01",
-    title: "Strategy before screens",
-    body: "We define the purpose, audience, and experience before designing the interface.",
-    detail:
-      "Every project starts with understanding the business, the audience, the offer, and the result the website or system needs to achieve.",
-  },
-  {
-    id: "P.02",
-    title: "Design that can actually be built",
-    body: "We create interfaces with responsiveness, performance, and development in mind.",
-    detail:
-      "The design is shaped to look premium, work across screen sizes, and translate cleanly into real frontend code without losing quality.",
-  },
-  {
-    id: "P.03",
-    title: "Systems prepared to scale",
-    body: "We build digital foundations that can grow into dashboards, CMS platforms, integrations, and larger business systems.",
-    detail:
-      "The website is treated as a foundation that can later connect with backend logic, admin panels, product management, APIs, content systems, and business tools.",
-  },
-];
-
 export const MissionStatementSection = (): JSX.Element => {
   const reduced = useReducedMotion() ?? false;
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(missionDict);
+  const principles = t.principles;
 
   return (
     <section
       className={`relative w-full bg-[url(/figmaAssets/backgroundstars.svg)] bg-[100%_100%] transition-colors ${
-        isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"
+        isLight ? "bg-[#F8FBFF]" : "bg-transparent"
       }`}
       aria-labelledby="mission-statement-heading"
     >
@@ -92,9 +73,9 @@ export const MissionStatementSection = (): JSX.Element => {
               id="mission-statement-heading"
               className="[font-family:'Bricolage_Grotesque',Helvetica] text-[40px] font-medium leading-[1.02] tracking-[-1.2px] sm:text-[52px] md:text-[68px] md:tracking-[-1.78px] lg:text-[80px] lg:leading-[82px]"
             >
-              <span className={isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa70]"}>We do not just make websites. </span>
+              <span className={isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa70]"}>{t.headingPart1}</span>
               <span className={isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"}>
-                We create digital systems that move brands forward.
+                {t.headingPart2}
               </span>
             </motion.h2>
           </header>
@@ -111,63 +92,64 @@ export const MissionStatementSection = (): JSX.Element => {
                 isLight ? "text-[rgba(15,23,42,0.68)]" : "text-[#f5f7faa6]"
               }`}
             >
-              We combine strategy, design, content, development, and technology
-              to create digital experiences that look premium, perform
-              efficiently, and grow with the businesses behind them.
+              {t.intro}
             </motion.p>
 
             <div className={`mt-10 flex flex-col border-t ${isLight ? "border-[rgba(15,23,42,0.10)]" : "border-white/10"}`}>
               {principles.map((principle, i) => (
                 <motion.article
                   key={principle.id}
+                  data-home-principle={principle.id}
                   variants={fadeUp}
                   custom={0.28 + i * 0.15}
                   initial={reduced ? "visible" : "hidden"}
                   whileInView="visible"
                   viewport={{ once: true, margin: "-60px" }}
                   className={`group w-full border-b pb-5 pt-5 ${
-                    // Light-mode-only: subtle lift on hover (translateX + a
-                    // hair of scale, per spec) plus a divider tint toward the
-                    // accent blue. Kept entirely inside the isLight branch —
-                    // dark mode's className stays the exact string it always
-                    // was ("border-white/10"), no transition/transform added.
+                    // Light-mode: subtle lift on hover (translateX + a hair
+                    // of scale) plus a divider tint toward the accent blue —
+                    // unchanged. Dark mode: same concept, its own tokens —
+                    // only the divider brightens here; the title/body/detail
+                    // below each carry their own group-hover treatment
+                    // (separate scale/color per spec) rather than one
+                    // whole-row transform.
                     isLight
                       ? "border-[rgba(15,23,42,0.10)] transition-all duration-300 ease-out hover:translate-x-1 hover:scale-[1.015] hover:border-[rgba(2,132,199,0.35)]"
-                      : "border-white/10"
+                      : "border-white/10 transition-colors duration-300 ease-out hover:border-[rgba(56,189,248,0.32)]"
                   }`}
                 >
                   <p
                     className={`[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-normal leading-[15px] tracking-[1px] transition-all duration-300 ${
                       isLight
                         ? "text-[#0284c7] group-hover:text-[#0ea5e9] group-hover:[text-shadow:0_0_14px_rgba(14,165,233,0.35)]"
-                        : "text-[#70d7ff99]"
+                        : "text-[#70d7ff99] ease-out group-hover:text-[#38bdf8] group-hover:[text-shadow:0_0_14px_rgba(56,189,248,0.35)]"
                     }`}
                   >
                     {principle.id}
                   </p>
                   <h3
-                    className={`pt-[7px] [font-family:'Bricolage_Grotesque',Helvetica] text-[20px] font-medium leading-[24px] tracking-[-0.28px] transition-all duration-300 ${
+                    className={`pt-[7px] origin-left rtl:origin-right [font-family:'Bricolage_Grotesque',Helvetica] text-[20px] font-medium leading-[24px] tracking-[-0.28px] transition-all duration-300 ${
                       isLight
                         ? "text-[#0f172a] group-hover:text-[#0284c7] group-hover:[text-shadow:0_0_14px_rgba(14,165,233,0.30)]"
-                        : "text-[#f5f7fa]"
+                        : "text-[#f5f7fa] ease-out group-hover:scale-[1.025] group-hover:text-[#38bdf8] group-hover:[text-shadow:0_0_14px_rgba(56,189,248,0.30)] rtl:group-hover:translate-x-1"
                     }`}
                   >
                     {principle.title}
                   </h3>
                   <p
-                    className={`pt-[6px] [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[22px] tracking-[0] transition-colors duration-300 ${
+                    className={`pt-[6px] origin-left rtl:origin-right [font-family:'Inter',Helvetica] text-[13.5px] font-normal leading-[22px] tracking-[0] transition-colors duration-300 ${
                       isLight
                         ? "text-[rgba(15,23,42,0.65)] group-hover:text-[rgba(15,23,42,0.85)]"
-                        : "text-[#f5f7fa99]"
+                        : "text-[#f5f7fa99] ease-out group-hover:scale-[1.01] group-hover:text-[#cbd5e1]"
                     }`}
                   >
                     {principle.body}
                   </p>
                   <p
-                    className={`pt-[5px] [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[20px] tracking-[0] transition-colors duration-300 ${
+                    className={`pt-[5px] origin-left rtl:origin-right [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[20px] tracking-[0] transition-colors duration-300 ${
                       isLight
                         ? "text-[rgba(15,23,42,0.50)] group-hover:text-[rgba(15,23,42,0.70)]"
-                        : "text-[#f5f7fa52]"
+                        : "text-[#f5f7fa52] ease-out group-hover:scale-[1.01] group-hover:text-[#94a3b8]"
                     }`}
                   >
                     {principle.detail}
@@ -176,14 +158,16 @@ export const MissionStatementSection = (): JSX.Element => {
               ))}
             </div>
 
-            <a
-              href="#"
+            <Link
+              href="/process#approach"
+              data-testid="link-discover-approach"
               className={`mt-8 inline-flex w-fit items-center gap-1.5 [font-family:'Inter',Helvetica] text-[13.5px] font-medium leading-[20px] tracking-[0.14px] transition-colors duration-200 ${
                 isLight ? "text-[rgba(15,23,42,0.55)] hover:text-[#0f172a]" : "text-[#f5f7fa61] hover:text-[#f5f7fa]"
               }`}
             >
-              Discover Our Approach →
-            </a>
+              {t.discoverApproach}
+              <span aria-hidden="true" className="inline-block rtl:rotate-180">→</span>
+            </Link>
           </aside>
         </div>
       </div>

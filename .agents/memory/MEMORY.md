@@ -1,2 +1,0 @@
-- [GSAP pin + React HMR fix](gsap-pin-hmr.md) — useLayoutEffect (not useEffect) for GSAP pinned-scroll setup prevents "removeChild" HMR crash.
-- [Card deck stack layout](card-deck-layout.md) — layered-deck peek pattern: all cards absolute top-0 h-full, h-28 peek spacer reserves visible room, stacked cards at y=36/72/108 peek below active card's bottom edge.

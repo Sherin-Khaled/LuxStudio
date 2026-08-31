@@ -1,2 +1,5 @@
 User-agent: *
 Allow: /
+
+# The production build replaces this file in dist/public and injects the
+# verified VITE_SITE_URL sitemap directive automatically.

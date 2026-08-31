@@ -1,7 +1,10 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
+import { useSEO } from "@/lib/seo/useSEO";
+import { notFoundMeta } from "@/lib/seo/pageMeta";
 
 export default function NotFound() {
+  useSEO(notFoundMeta);
   return (
     <div className="min-h-screen w-full flex items-center justify-center bg-gray-50">
       <Card className="w-full max-w-md mx-4">

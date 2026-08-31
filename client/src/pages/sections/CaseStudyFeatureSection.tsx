@@ -5,66 +5,60 @@ import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { SideStars } from "@/components/backgrounds/SideStars";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { caseStudyDict } from "@/lib/i18n/home/caseStudy";
 
 gsap.registerPlugin(ScrollTrigger);
 
-/* ─────────────────────────── Data ─────────────────────────── */
-const projects = [
+/* ─────────────────────────── Data ───────────────────────────
+   Visual-only metadata (name is a real client name and stays identical in
+   both locales). subtitle/description/tags are localized — see
+   caseStudyDict — and zipped in by index inside the component. */
+const projectMeta = [
   {
-    label: "P.01",
     name: "Houd El Nile",
-    subtitle: "Agriculture export company",
-    description:
-      "We rebuilt Houd El Nile's digital presence from an outdated WordPress website into a premium multilingual Next.js experience that better reflects the company's farms, factories, export business, and product quality.",
-    tags: ["Website Redesign", "Next.js", "Photography", "7 Languages", "SEO & Performance"],
     domain: "houdelnile.com",
     websiteUrl: "https://houdelnile.com",
+    previewVideoUrl: null,
     useLivePreview: true,
+    projectUrl: null,
     headerBg: "#16532d",
     bodyBg: "#f0ece4",
     accent: "#1e7a42",
     navLines: ["#4ade80", "#4ade80", "#4ade80"],
   },
   {
-    label: "P.02",
     name: "X Dental",
-    subtitle: "Dental supplies e-commerce platform",
-    description:
-      "We designed and built X Dental as a complete e-commerce platform for doctors and clinics. The project included UI/UX design, product flows, cart and checkout, frontend and backend development, and product image editing.",
-    tags: ["E-commerce", "UI/UX Design", "Frontend", "Backend", "Photoshop"],
-    domain: "xdental.com",
-    websiteUrl: null,
-    useLivePreview: false,
+    domain: "dentora-x.com",
+    websiteUrl: "https://dentora-x.com",
+    previewVideoUrl: null,
+    useLivePreview: true,
+    projectUrl: "https://dentora-x.com",
     headerBg: "#0c0c0f",
     bodyBg: "#f5f5f5",
     accent: "#b8943f",
     navLines: ["#b8943f", "#b8943f", "#b8943f"],
   },
   {
-    label: "P.03",
     name: "Al Nours",
-    subtitle: "Saudi beverage distribution e-commerce",
-    description:
-      "We created a complete online shopping platform for Al Nours, a Saudi company with distribution rights for Domty juices. The project included logo creation, brand color direction, full-stack development, and deployment.",
-    tags: ["E-commerce", "Frontend", "Backend", "Logo Design", "Brand Direction"],
     domain: "al-nours.com",
     websiteUrl: "https://al-nours.com",
+    previewVideoUrl: null,
     useLivePreview: true,
+    projectUrl: null,
     headerBg: "#0f2d6b",
     bodyBg: "#f0f5ff",
     accent: "#2563eb",
     navLines: ["#60a5fa", "#60a5fa", "#60a5fa"],
   },
   {
-    label: "P.04",
     name: "Al Baraka Olives",
-    subtitle: "Olive export company",
-    description:
-      "We transformed Al Baraka Olives from an outdated website into a cleaner, more premium export-brand experience through full visual redesign, frontend development, photography direction, and cPanel deployment.",
-    tags: ["Website Redesign", "Frontend", "Export Brand", "Photography", "cPanel Deployment"],
     domain: "albarakaolives.com",
     websiteUrl: "https://albarakaolives.com",
+    previewVideoUrl: null,
     useLivePreview: true,
+    projectUrl: null,
     headerBg: "#364a18",
     bodyBg: "#f3f0e6",
     accent: "#6b8c2a",
@@ -107,14 +101,14 @@ const CLIP_EDGE   = "inset(94% 0% 0% 0% round 0px 0px 36px 36px)";
   (2× width at scale 0.5 → desktop layout) with a themed "Open live website"
   panel layered underneath as the loading/blocked fallback. A transparent
   anchor covers the whole frame so the entire preview is clickable and the
-  iframe never captures scroll/clicks. Without `websiteUrl` (X Dental for now)
-  the original skeleton preview renders unchanged.
+  iframe never captures scroll/clicks. X Dental uses its recorded preview;
+  projects without either media source retain the original skeleton.
 */
 const BrowserMockup = ({
-  name, domain, headerBg, bodyBg, accent, navLines, websiteUrl, showLive,
+  name, domain, headerBg, bodyBg, accent, navLines, websiteUrl, previewVideoUrl, projectUrl, showLive,
 }: {
   name: string; domain: string; headerBg: string; bodyBg: string; accent: string;
-  navLines: string[]; websiteUrl: string | null; showLive: boolean;
+  navLines: string[]; websiteUrl: string | null; previewVideoUrl: string | null; projectUrl: string | null; showLive: boolean;
 }) => {
   // Root cause of Issue 1: this shadow was never theme-gated at all — the
   // same heavy 0_20px_64px_rgba(0,0,0,0.65) rendered identically in both
@@ -123,6 +117,8 @@ const BrowserMockup = ({
   // a big gray haze under the browser mockup.
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const { dir } = useLanguage();
+  const t = useDict(caseStudyDict);
   return (
   <div className={`relative overflow-hidden rounded-2xl border border-white/10 ${isLight ? "shadow-[0_18px_45px_rgba(15,23,42,0.12)]" : "shadow-[0_20px_64px_rgba(0,0,0,0.65)]"}`}>
     {/* Chrome bar */}
@@ -136,7 +132,32 @@ const BrowserMockup = ({
         <span className="font-mono text-[10px] leading-none text-white/45">{domain}</span>
       </div>
     </div>
-    {websiteUrl ? (
+    {previewVideoUrl ? (
+      <div className="relative h-[clamp(340px,46vh,446px)] w-full overflow-hidden">
+        <video
+          autoPlay
+          muted={true}
+          loop
+          playsInline
+          preload="auto"
+          className="block h-full w-full object-cover"
+          data-testid={`video-preview-${domain}`}
+        >
+          <source src={previewVideoUrl} type="video/mp4" />
+        </video>
+        {/* Full-frame click target — opens the real site in a new tab */}
+        {projectUrl && (
+          <a
+            href={projectUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-label={t.openLiveWebsiteAriaLabel(name)}
+            className="absolute inset-0 z-10 cursor-pointer"
+            data-testid={`link-live-preview-${domain}`}
+          />
+        )}
+      </div>
+    ) : websiteUrl ? (
       /* ── Live website preview ── height matches the skeleton's natural size */
       <div className="relative h-[clamp(340px,46vh,446px)]" style={{ backgroundColor: bodyBg }}>
         {/* Themed fallback — visible while the iframe loads or if embedding fails */}
@@ -151,13 +172,13 @@ const BrowserMockup = ({
             className="mt-2.5 rounded-full border px-3.5 py-1.5 [font-family:'Inter',Helvetica] text-[11px] font-medium"
             style={{ borderColor: accent, color: accent }}
           >
-            Open live website →
+            {t.openLiveWebsite} <span className={dir === "rtl" ? "inline-block rotate-180" : ""}>→</span>
           </span>
         </div>
         {showLive && (
           <iframe
             src={websiteUrl}
-            title={`${name} website preview`}
+            title={t.websitePreviewTitle(name)}
             loading="lazy"
             tabIndex={-1}
             scrolling="no"
@@ -170,7 +191,7 @@ const BrowserMockup = ({
           href={websiteUrl}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`Open ${name} live website in a new tab`}
+          aria-label={t.openLiveWebsiteAriaLabel(name)}
           className="absolute inset-0 z-10 cursor-pointer"
           data-testid={`link-live-preview-${domain}`}
         />
@@ -233,6 +254,16 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
   const reduced  = useReducedMotion() ?? false;
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const { dir } = useLanguage();
+  const t = useDict(caseStudyDict);
+  // View Project CTA destination: prefer projectUrl (set when the preview
+  // isn't the live-iframe kind, e.g. X Dental), else fall back to the same
+  // websiteUrl already driving that project's live browser preview.
+  const projects = projectMeta.map((meta, i) => ({
+    ...meta,
+    ...t.projects[i],
+    projectLink: meta.projectUrl ?? meta.websiteUrl,
+  }));
   // Pinned book animation only runs where the two-column card layout exists (lg+);
   // below 1024px (tablet/mobile) the static vertical list keeps content readable.
   const [isCompact, setIsCompact] = useState(
@@ -473,7 +504,7 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
   return (
     <section
       ref={sectionRef}
-      className={`relative w-full transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"}`}
+      className={`relative w-full transition-colors ${isLight ? "bg-[#F8FBFF]" : "bg-transparent"}`}
       aria-labelledby="selected-work-heading"
     >
       {/* Background stars */}
@@ -545,8 +576,8 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
           className="flex w-full shrink-0 flex-col items-start justify-between gap-3 lg:flex-row lg:items-end lg:gap-12"
         >
           <div className="flex flex-col items-start">
-            <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] font-normal leading-[17px] tracking-[1.5px] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"}`}>
-              04 / 06
+            <p dir="ltr" className={`[font-family:'JetBrains_Mono',Helvetica] text-[10.5px] font-normal leading-[17px] tracking-[1.5px] ${isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"}`}>
+              {t.progress}
             </p>
             <h2
               id="selected-work-heading"
@@ -554,15 +585,13 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
                 isLight ? "text-[#0f172a]" : "text-[#f5f7fa]"
               }`}
             >
-              Selected work shaped
+              {t.headingLine1}
               <br className="hidden sm:block" />
-              {" "}from strategy to launch.
+              {" "}{t.headingLine2}
             </h2>
           </div>
           <p className={`max-w-[380px] shrink-0 [font-family:'Inter',Helvetica] text-[12px] font-normal leading-[20px] lg:text-[13px] lg:leading-[22px] ${isLight ? "text-[rgba(15,23,42,0.65)]" : "text-[#f5f7faa6]"}`}>
-            A closer look at websites and digital systems we designed, developed,
-            optimized, and launched across export brands, e-commerce platforms,
-            and business-focused experiences.
+            {t.description}
           </p>
         </header>
 
@@ -596,17 +625,30 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
                       </span>
                     ))}
                   </div>
-                  <button
-                    type="button"
-                    className={`mt-6 flex items-center gap-1.5 text-[12.5px] font-medium transition-colors ${
-                      isLight ? "text-[rgba(15,23,42,0.75)] hover:text-[#0f172a]" : "text-[#f5f7fac2] hover:text-[#f5f7fa]"
-                    }`}
-                  >
-                    View Project <ArrowRight className="h-3.5 w-3.5" />
-                  </button>
+                  {project.projectLink ? (
+                    <a
+                      href={project.projectLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`mt-6 flex items-center gap-1.5 text-[12.5px] font-medium transition-colors ${
+                        isLight ? "text-[rgba(15,23,42,0.75)] hover:text-[#0f172a]" : "text-[#f5f7fac2] hover:text-[#f5f7fa]"
+                      }`}
+                    >
+                      {t.viewProject} <ArrowRight className={`h-3.5 w-3.5 ${dir === "rtl" ? "rotate-180" : ""}`} />
+                    </a>
+                  ) : (
+                    <button
+                      type="button"
+                      className={`mt-6 flex items-center gap-1.5 text-[12.5px] font-medium transition-colors ${
+                        isLight ? "text-[rgba(15,23,42,0.75)] hover:text-[#0f172a]" : "text-[#f5f7fac2] hover:text-[#f5f7fa]"
+                      }`}
+                    >
+                      {t.viewProject} <ArrowRight className={`h-3.5 w-3.5 ${dir === "rtl" ? "rotate-180" : ""}`} />
+                    </button>
+                  )}
                 </div>
                 <div className="p-6">
-                  <BrowserMockup name={project.name} domain={project.domain} headerBg={project.headerBg} bodyBg={project.bodyBg} accent={project.accent} navLines={project.navLines} websiteUrl={project.useLivePreview ? project.websiteUrl : null} showLive={previewsReady} />
+                  <BrowserMockup name={project.name} domain={project.domain} headerBg={project.headerBg} bodyBg={project.bodyBg} accent={project.accent} navLines={project.navLines} websiteUrl={project.useLivePreview ? project.websiteUrl : null} previewVideoUrl={project.previewVideoUrl} projectUrl={project.projectUrl} showLive={previewsReady} />
                 </div>
               </div>
             ))}
@@ -740,16 +782,31 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
                               </span>
                             ))}
                           </div>
-                          <button
-                            type="button"
-                            className={`mt-7 flex items-center gap-2 [font-family:'Inter',Helvetica] text-[13.5px] font-medium leading-[20px] tracking-[0.12px] transition-colors ${
-                              isLight ? "text-[rgba(15,23,42,0.75)] hover:text-[#0f172a]" : "text-[#f5f7fac2] hover:text-[#f5f7fa]"
-                            }`}
-                            data-testid={`btn-view-project-${project.label}`}
-                          >
-                            View Project
-                            <ArrowRight className="h-4 w-4" />
-                          </button>
+                          {project.projectLink ? (
+                            <a
+                              href={project.projectLink}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className={`mt-7 flex items-center gap-2 [font-family:'Inter',Helvetica] text-[13.5px] font-medium leading-[20px] tracking-[0.12px] transition-colors ${
+                                isLight ? "text-[rgba(15,23,42,0.75)] hover:text-[#0f172a]" : "text-[#f5f7fac2] hover:text-[#f5f7fa]"
+                              }`}
+                              data-testid={`btn-view-project-${project.label}`}
+                            >
+                              {t.viewProject}
+                              <ArrowRight className={`h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`} />
+                            </a>
+                          ) : (
+                            <button
+                              type="button"
+                              className={`mt-7 flex items-center gap-2 [font-family:'Inter',Helvetica] text-[13.5px] font-medium leading-[20px] tracking-[0.12px] transition-colors ${
+                                isLight ? "text-[rgba(15,23,42,0.75)] hover:text-[#0f172a]" : "text-[#f5f7fac2] hover:text-[#f5f7fa]"
+                              }`}
+                              data-testid={`btn-view-project-${project.label}`}
+                            >
+                              {t.viewProject}
+                              <ArrowRight className={`h-4 w-4 ${dir === "rtl" ? "rotate-180" : ""}`} />
+                            </button>
+                          )}
                         </div>
                       </div>
 
@@ -778,6 +835,8 @@ export const CaseStudyFeatureSection = (): JSX.Element => {
                             accent={project.accent}
                             navLines={project.navLines}
                             websiteUrl={project.useLivePreview ? project.websiteUrl : null}
+                            previewVideoUrl={project.previewVideoUrl}
+                            projectUrl={project.projectUrl}
                             showLive={previewsReady}
                           />
                         </div>

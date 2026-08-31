@@ -1,19 +1,44 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState, useLayoutEffect } from "react";
 import { useReducedMotion, motion } from "framer-motion";
-import { SiteFooterSection } from "./sections/SiteFooterSection";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+import { FinalCtaSection } from "@/components/FinalCtaSection";
+import { FooterRevealStage } from "@/components/FooterRevealStage";
 import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { Globe } from "lucide-react";
 import { StarsBackground } from "@/components/backgrounds/StarsBackground";
 import { SideStars } from "@/components/backgrounds/SideStars";
 import { ShootingStars } from "@/components/backgrounds/ShootingStars";
-import { useProjectModal } from "@/contexts/ProjectModalContext";
 import { useTheme } from "@/contexts/ThemeContext";
+import { useDict } from "@/lib/i18n/useDict";
+import { commonDict } from "@/lib/i18n/common";
+import { workPageDict } from "@/lib/i18n/workPage";
+import { getCaseStudy } from "@/lib/caseStudies/registry";
+import { useSEO } from "@/lib/seo/useSEO";
+import { useJSONLD } from "@/lib/seo/useJSONLD";
+import { buildBreadcrumbSchema } from "@/lib/seo/schema";
+import { pageMeta, pageBreadcrumbs } from "@/lib/seo/pageMeta";
 import abdalwahbHeroVideo from "../../../attached_assets/herosection.mp4";
 
+gsap.registerPlugin(ScrollTrigger);
+
+// Lives in client/public/audio/, so it's served as a static file at this
+// root-relative path — not a module import like abdalwahbHeroVideo above
+// (that file lives outside client/public/ and needs Vite's asset pipeline).
+const xDentalHeroVideo = "/audio/HeroDental.mp4";
+
+// Real production site — used both for the corner "Open Live Website ↗"
+// hover link on the preview and for the small understated domain link
+// underneath it. Kept separate from the internal `/work/x-dental` case
+// study route: the preview and this link point OUT to the live product,
+// "View Case Study" navigates WITHIN Lux Studio.
+const xDentalWebsiteUrl = "https://dentora-x.com";
+const xDentalWebsiteLabel = "dentora-x.com";
+
 /* Live site previews for the Work page project cards. X Dental has no entry —
-   its site isn't uploaded yet, so its card always shows the "coming soon"
-   placeholder instead of ever attempting to load a URL. */
+   its site isn't uploaded yet, so its card shows a recorded hero-section
+   video (xDentalHeroVideo) instead of a live iframe. */
 const projectPreviewUrl: Record<string, string> = {
   "houd-el-nile": "https://houdelnile.com",
   "al-nours": "https://al-nours.com",
@@ -39,33 +64,13 @@ const houdElNileGalleryImages = [
   "/figmaAssets/222.webp",
 ];
 
-const projects = [
+/* Non-text project metadata only — display copy (type/description/tags/etc.)
+   lives in workPageDict so it can be localized; `name` stays here since
+   project/company names are real clients and are never translated. */
+const projectMeta = [
   {
     id: "x-dental",
     name: "X Dental",
-    type: "Dental Supplies E-commerce Platform",
-    description:
-      "We designed and built a complete e-commerce platform for dental doctors and clinics, combining UI/UX design, frontend, backend, and real store functionality into a cleaner and more professional buying experience.",
-    secondary:
-      "The project included product browsing, product details, cart, checkout, backend functionality, and large-scale product image preparation. We sourced product visuals, enhanced their quality, removed backgrounds, and created a cleaner and more consistent e-commerce presentation across more than 1000 products.",
-    tags: [
-      "UI/UX Design",
-      "Frontend",
-      "Backend",
-      "E-commerce",
-      "1000+ Product Images",
-      "Background Removal",
-      "Quality Enhancement",
-      "Checkout Flow",
-      "SEO & Performance",
-      "Motion-Rich UX",
-    ],
-    proof: [
-      "Product Visual Preparation",
-      "Image Sourcing",
-      "Quality Enhancement",
-      "Background Removal",
-    ],
     accent: "#38bdf8",
     gradientFrom: "#0c2240",
     gradientTo: "#060f1e",
@@ -74,22 +79,6 @@ const projects = [
   {
     id: "houd-el-nile",
     name: "Houd El Nile",
-    type: "Agriculture Export Company",
-    description:
-      "We rebuilt Houd El Nile's digital presence from an outdated WordPress website into a premium multilingual Next.js experience that better reflects the company's farms, factories, export business, and product quality.",
-    secondary:
-      "The project included original farm and factory photography, Lightroom image editing, a redesigned visual direction, a rotating hero experience, a top contact bar, seven-language support, SEO / performance thinking, and final deployment.",
-    tags: [
-      "Website Redesign",
-      "Next.js",
-      "Photography",
-      "Lightroom Editing",
-      "7 Languages",
-      "Export Brand",
-      "SEO & Performance",
-      "Scroll Storytelling",
-      "Deployment",
-    ],
     accent: "#4ade80",
     gradientFrom: "#0a1f12",
     gradientTo: "#060e09",
@@ -98,19 +87,6 @@ const projects = [
   {
     id: "al-nours",
     name: "Al Nours",
-    type: "Saudi Beverage Distribution E-commerce",
-    description:
-      "We created an online shopping platform for Al Nours, combining logo creation, brand direction, frontend, backend, authentication flows, and deployment into a clear and trustworthy e-commerce experience.",
-    tags: [
-      "E-commerce",
-      "Frontend",
-      "Backend",
-      "Logo Design",
-      "Brand Direction",
-      "Authentication",
-      "Deployment",
-      "Motion-Rich UX",
-    ],
     accent: "#f59e0b",
     gradientFrom: "#1a1206",
     gradientTo: "#0c0a04",
@@ -119,19 +95,6 @@ const projects = [
   {
     id: "al-baraka",
     name: "Al Baraka Olives",
-    type: "Olive Export Brand Website",
-    description:
-      "We transformed Al Baraka Olives from an outdated website into a cleaner, more premium export-brand experience with stronger visuals, refined structure, and subtle motion.",
-    tags: [
-      "Website Redesign",
-      "Frontend",
-      "Export Brand",
-      "Photography",
-      "Curated Imagery",
-      "Subtle Motion",
-      "Scroll Storytelling",
-      "Deployment",
-    ],
     accent: "#a3e635",
     gradientFrom: "#111a06",
     gradientTo: "#090e04",
@@ -172,7 +135,7 @@ const TagBadge = ({ tag, color, isLight }: { tag: string; color: string; isLight
    made a real, already-visible preview disappear on its own. Once a live URL
    is set, the iframe renders and stays rendered; the only case that shows a
    placeholder instead is a project with no URL at all (X Dental). */
-const BrowserPreview = ({
+export const BrowserPreview = ({
   url,
   label,
   title,
@@ -182,11 +145,16 @@ const BrowserPreview = ({
   scale = 0.72,
   imageSrc,
   imageFit = "cover",
-  imageBg = "#050810",
+  imageBg,
   videoSrc,
   videoFit = "cover",
   videoPosition = "center",
+  videoPreload = "auto",
   isLight,
+  // Optional per-card override for the light-mode shadow — kept as a prop
+  // (rather than changed in place) so a single card's spec-requested shadow
+  // value doesn't silently change every other card using this component.
+  lightShadowClass = "shadow-[0_14px_35px_rgba(15,23,42,0.08)] group-hover:shadow-[0_14px_35px_rgba(15,23,42,0.08),0_0_24px_rgba(56,189,248,0.14)]",
 }: {
   url?: string;
   label: string;
@@ -201,7 +169,9 @@ const BrowserPreview = ({
   videoSrc?: string;
   videoFit?: "cover" | "contain";
   videoPosition?: string;
+  videoPreload?: "auto" | "metadata" | "none";
   isLight: boolean;
+  lightShadowClass?: string;
 }) => {
   const [imageFailed, setImageFailed] = useState(false);
   const useVideoMode = Boolean(videoSrc);
@@ -209,17 +179,31 @@ const BrowserPreview = ({
   const imageBroken = useImageMode && imageFailed;
   const showNoUrlFallback = !url && !imageSrc && !videoSrc;
   const inversePercent = `${100 / scale}%`;
+  // Falls back per-theme instead of a single hardcoded dark value: every card
+  // shows this exact color for a moment before its preview activates (lazy/
+  // inactive state) or as the permanent backdrop when there's no url/image/
+  // video at all. A hardcoded dark fallback here was the real root cause of
+  // the "dark patch before the CTA" — it wasn't only Abdalwahb, every card
+  // using this component had the same unconditional #050810 default; it just
+  // happened to land on a section seam for the last card before the CTA.
+  const resolvedImageBg = imageBg ?? (isLight ? "#F8FBFF" : "#050810");
 
   return (
     <div
-      className={`relative w-full overflow-hidden rounded-2xl border border-white/[0.08] bg-[#03050a] [transition:transform_600ms_cubic-bezier(0.22,1,0.36,1),filter_600ms_cubic-bezier(0.22,1,0.36,1),box-shadow_600ms_cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5 group-hover:scale-[1.01] group-hover:brightness-110 ${
+      className={`relative w-full overflow-hidden rounded-2xl border border-white/[0.08] [transition:transform_600ms_cubic-bezier(0.22,1,0.36,1),filter_600ms_cubic-bezier(0.22,1,0.36,1),box-shadow_600ms_cubic-bezier(0.22,1,0.36,1)] group-hover:-translate-y-0.5 group-hover:scale-[1.01] group-hover:brightness-110 ${
+        // Outer frame background — sits behind the chrome bar and preview
+        // area, both of which fully cover it via rounded-2xl + overflow-
+        // hidden clipping. Still theme-gated (was unconditionally #03050a)
+        // so no dark value survives anywhere in this component in light mode.
+        isLight ? "bg-[#F8FBFF]" : "bg-[#03050a]"
+      } ${
         // Root cause of "heavy shadow under the preview": this was never
         // theme-gated at all — same 0_20px_50px_rgba(0,0,0,0.45) in both
         // themes, same pattern as the earlier CaseStudyFeatureSection/footer
         // shadow bugs. Fine against dark mode's own near-black cards; over
         // the new light-mode glass cards it read as a heavy black smudge.
         isLight
-          ? "shadow-[0_14px_35px_rgba(15,23,42,0.08)] group-hover:shadow-[0_14px_35px_rgba(15,23,42,0.08),0_0_24px_rgba(56,189,248,0.14)]"
+          ? lightShadowClass
           : "shadow-[0_20px_50px_rgba(0,0,0,0.45)] group-hover:shadow-[0_20px_50px_rgba(0,0,0,0.45),0_0_30px_rgba(56,189,248,0.16)]"
       }`}
     >
@@ -247,7 +231,7 @@ const BrowserPreview = ({
              shrunk so more of the real site's hero fits in the small frame. */}
       <div
         className="relative w-full overflow-hidden"
-        style={{ ...(aspectRatio ? { aspectRatio } : { height }), backgroundColor: imageBg }}
+        style={{ ...(aspectRatio ? { aspectRatio } : { height }), backgroundColor: resolvedImageBg }}
       >
         {useVideoMode && active && (
           <video
@@ -256,7 +240,7 @@ const BrowserPreview = ({
             muted
             loop
             playsInline
-            preload="auto"
+            preload={videoPreload}
             aria-label={title}
             style={{ objectFit: videoFit, objectPosition: videoPosition }}
             className="absolute inset-0 h-full w-full [transition:transform_600ms_cubic-bezier(0.22,1,0.36,1),filter_600ms_cubic-bezier(0.22,1,0.36,1)] group-hover:scale-[1.02] group-hover:brightness-110"
@@ -318,17 +302,24 @@ const BrowserPreview = ({
 };
 
 const XDentalCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolean }) => {
+  const t = useDict(workPageDict);
+  const copy = t.xDental;
   const [previewActive, setPreviewActive] = useState(false);
 
   return (
   <motion.div
     variants={fadeUp}
-    initial={reduced ? "visible" : "hidden"}
+    // Light mode: this card's own entrance is fully owned by the GSAP
+    // scroll-reveal on its wrapper (see WorkPage's "work-first-project"
+    // effect) — starting already "visible" here means framer-motion has
+    // nothing left to animate, so the two systems never fight over the
+    // same opacity/transform. Dark mode is completely untouched — same
+    // whileInView reveal it always had.
+    initial={reduced || isLight ? "visible" : "hidden"}
     whileInView="visible"
     onViewportEnter={() => setPreviewActive(true)}
     viewport={{ once: true, margin: "-80px" }}
     data-testid="card-project-x-dental"
-    data-debug="first-project-card"
     className={`group relative overflow-hidden border transition-all duration-500 ease-out hover:-translate-y-1.5 hover:brightness-[1.03] ${
       isLight
         ? "rounded-[32px] border-[rgba(15,23,42,0.08)] bg-[rgba(255,255,255,0.75)] shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-md hover:border-[rgba(56,189,248,0.45)] hover:shadow-[0_20px_60px_rgba(15,23,42,0.08),0_0_40px_rgba(56,189,248,0.16)]"
@@ -345,12 +336,15 @@ const XDentalCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolean 
         <div className="absolute right-0 top-0 h-[300px] w-[500px] bg-[#1d4ed80a] blur-[100px]" />
       </div>
     )}
-    <div className="relative grid gap-0 lg:grid-cols-[1fr_380px]">
+    {/* Right column widened from a fixed 380px (read as a narrow phone-style
+        sidebar next to the text) to a 54/46 split, so the video preview gets
+        real widescreen room instead of being squeezed into a vertical box. */}
+    <div className="relative grid gap-0 lg:grid-cols-[54%_46%]">
       <div className="flex flex-col justify-between gap-6 p-8 sm:p-10 lg:p-12">
         <div>
           <div className="mb-4 flex items-center gap-3">
             <span className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal tracking-[1.4px] text-[#38bdf8] uppercase">
-              Featured Project
+              {t.card.featuredProject}
             </span>
             <span className="h-px w-8 bg-[#38bdf840]" />
           </div>
@@ -358,37 +352,41 @@ const XDentalCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolean 
             X Dental
           </h3>
           <p className="mt-2 [font-family:'Inter',Helvetica] text-[14px] font-normal tracking-[0.14px] text-[#38bdf8]">
-            Dental Supplies E-commerce Platform
+            {copy.type}
           </p>
         </div>
         <p className={`max-w-[560px] [font-family:'Inter',Helvetica] text-[16px] font-normal leading-[27px] tracking-[0] ${isLight ? "text-[rgba(15,23,42,0.68)]" : "text-[#f5f7faa6]"}`}>
-          {projects[0].description}
+          {copy.description}
         </p>
         <p className={`max-w-[560px] [font-family:'Inter',Helvetica] text-[14px] font-normal leading-[24px] tracking-[0] ${isLight ? "text-[rgba(15,23,42,0.50)]" : "text-[#f5f7fa61]"}`}>
-          {projects[0].secondary}
+          {copy.secondary}
         </p>
         <div className="flex flex-wrap gap-2">
-          {projects[0].tags.map((tag) => (
-            <TagBadge key={tag} tag={tag} color={projects[0].accent} isLight={isLight} />
+          {copy.tags.map((tag) => (
+            <TagBadge key={tag} tag={tag} color="#38bdf8" isLight={isLight} />
           ))}
         </div>
         <div className="flex items-center gap-6">
           <Button
-            type="button"
+            asChild
             data-testid="button-view-x-dental"
             variant="ghost"
             className="h-auto p-0 [font-family:'Inter',Helvetica] text-[14px] font-medium tracking-[0] text-sky-400 hover:bg-transparent hover:text-sky-300"
           >
-            View Case Study →
+            {/* Internal navigation — this is a Lux Studio page, not the
+                external product, so it never opens a new tab. */}
+            <Link href="/work/x-dental">
+              {t.card.viewCaseStudy} <span className="rtl:rotate-180 inline-block">→</span>
+            </Link>
           </Button>
         </div>
       </div>
       <div className={`flex flex-col gap-4 border-t p-8 lg:border-l lg:border-t-0 lg:p-10 ${isLight ? "border-[rgba(15,23,42,0.08)]" : "border-[#ffffff0a]"}`}>
         <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-normal tracking-[1.2px] uppercase ${isLight ? "text-[rgba(15,23,42,0.40)]" : "text-[#f5f7fa3d]"}`}>
-          Image Production
+          {t.card.imageProduction}
         </p>
         <div className="grid grid-cols-2 gap-3">
-          {(projects[0].proof ?? []).map((item) => (
+          {copy.proof.map((item) => (
             <div
               key={item}
               className={`flex items-center gap-2.5 rounded-xl border p-3 ${
@@ -404,12 +402,31 @@ const XDentalCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolean 
         </div>
         <div className="mt-4">
           <BrowserPreview
-            label="xdental.com"
-            title="X Dental website preview coming soon"
+            url={xDentalWebsiteUrl}
+            label={xDentalWebsiteLabel}
+            title={t.card.websitePreviewTitle("X Dental")}
             active={previewActive}
-            height="clamp(260px, 24vw, 340px)"
+            aspectRatio="16 / 9"
+            videoSrc={xDentalHeroVideo}
+            videoFit="cover"
+            videoPreload="metadata"
             isLight={isLight}
+            lightShadowClass="shadow-[0_16px_40px_rgba(15,23,42,0.10)] group-hover:shadow-[0_16px_40px_rgba(15,23,42,0.10),0_0_24px_rgba(56,189,248,0.14)]"
           />
+          {/* Small, understated external link — deliberately quieter than
+              "View Case Study" (no bold color, thin underline only on
+              hover) so it never competes with the internal CTA above. */}
+          <a
+            href={xDentalWebsiteUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            data-testid="link-x-dental-domain"
+            className={`mt-2.5 inline-flex items-center gap-1 [font-family:'Inter',Helvetica] text-[11.5px] font-normal tracking-[0.1px] underline-offset-4 transition-colors hover:underline ${
+              isLight ? "text-[rgba(15,23,42,0.42)] hover:text-[#0284c7]" : "text-[#f5f7fa4d] hover:text-sky-300"
+            }`}
+          >
+            {xDentalWebsiteLabel} <span className="rtl:rotate-180 inline-block">↗</span>
+          </a>
         </div>
       </div>
     </div>
@@ -423,16 +440,25 @@ const ProjectCard = ({
   reduced,
   isLight,
 }: {
-  project: (typeof projects)[number];
+  project: (typeof projectMeta)[number];
   animVariant: typeof fadeUp | typeof fadeRight;
   reduced: boolean;
   isLight: boolean;
 }) => {
+  const t = useDict(workPageDict);
+  const copy =
+    project.id === "houd-el-nile" ? t.houdElNile : project.id === "al-nours" ? t.alNours : t.alBaraka;
   const [previewActive, setPreviewActive] = useState(false);
   const previewUrl = projectPreviewUrl[project.id];
   const previewLabel = previewUrl
     ? new URL(previewUrl).hostname
     : `${project.name.toLowerCase().replace(/\s+/g, "")}.com`;
+  // Resolves dynamically against the case-study registry — every project
+  // rendered through ProjectCard (Houd El Nile, Al Nours, Al Baraka) now has
+  // a real entry there, so this is truthy for all three and the button
+  // below renders as an internal Link to /work/<slug>. Only a project with
+  // no registry entry at all would fall through to the inert Button below.
+  const caseStudy = getCaseStudy(project.id);
 
   return (
   <motion.div
@@ -480,12 +506,31 @@ const ProjectCard = ({
       <BrowserPreview
         url={previewUrl}
         label={previewLabel}
-        title={`${project.name} website preview`}
+        title={t.card.websitePreviewTitle(project.name)}
         active={previewActive}
         height="clamp(300px, 24vw, 380px)"
         scale={projectPreviewScale[project.id]}
         isLight={isLight}
       />
+      {/* Same understated external-domain treatment as the X Dental card's
+          own domain link — deliberately quieter than "View Case Study" so it
+          never competes with the internal CTA below. Houd El Nile and Al
+          Nours both have a real preview URL wired to an actual live site
+          among these three cards, so this is scoped to them rather than
+          shown for every card (Al Baraka's site isn't uploaded yet). */}
+      {(project.id === "houd-el-nile" || project.id === "al-nours") && previewUrl && (
+        <a
+          href={previewUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          data-testid={`link-${project.id}-domain`}
+          className={`mt-2.5 inline-flex items-center gap-1 [font-family:'Inter',Helvetica] text-[11.5px] font-normal tracking-[0.1px] underline-offset-4 transition-colors hover:underline ${
+            isLight ? "text-[rgba(15,23,42,0.42)] hover:text-[#0284c7]" : "text-[#f5f7fa4d] hover:text-sky-300"
+          }`}
+        >
+          {previewLabel} <span className="rtl:rotate-180 inline-block">↗</span>
+        </a>
+      )}
     </div>
     <div className="relative flex flex-1 flex-col p-6 pt-0">
       <div>
@@ -496,19 +541,19 @@ const ProjectCard = ({
           className="mt-1 [font-family:'Inter',Helvetica] text-[12px] font-normal tracking-[0.12px]"
           style={{ color: project.accent }}
         >
-          {project.type}
+          {copy.type}
         </p>
       </div>
       <p className={`mt-4 [font-family:'Inter',Helvetica] text-[14px] font-normal leading-[23px] tracking-[0] ${isLight ? "text-[rgba(15,23,42,0.68)]" : "text-[#f5f7fa80]"}`}>
-        {project.description}
+        {copy.description}
       </p>
       <div className={`flex flex-wrap gap-1.5 ${project.id === "houd-el-nile" ? "mt-6" : "mt-4"}`}>
-        {project.tags.slice(0, 4).map((tag) => (
+        {copy.tags.slice(0, 4).map((tag) => (
           <TagBadge key={tag} tag={tag} color={project.accent} isLight={isLight} />
         ))}
-        {project.tags.length > 4 && (
+        {copy.tags.length > 4 && (
           <span className={`inline-flex items-center rounded-full border px-3 py-1 [font-family:'Inter',Helvetica] text-[11px] ${isLight ? "border-[rgba(15,23,42,0.08)] bg-[rgba(15,23,42,0.03)] text-[rgba(15,23,42,0.40)]" : "border-[#ffffff0e] bg-[#ffffff04] text-[#f5f7fa38]"}`}>
-            +{project.tags.length - 4}
+            +{copy.tags.length - 4}
           </span>
         )}
       </div>
@@ -517,10 +562,10 @@ const ProjectCard = ({
         <div className="mt-7 lg:mt-10">
           <div>
             <p className={`[font-family:'JetBrains_Mono',Helvetica] text-[10px] font-medium tracking-[1.2px] uppercase ${isLight ? "text-[rgba(15,23,42,0.45)]" : "text-[#f5f7fa50]"}`}>
-              Photography &amp; Lightroom Editing
+              {t.houdElNile.photographyLabel}
             </p>
             <p className={`mt-2.5 max-w-[90%] [font-family:'Inter',Helvetica] text-[12.5px] font-normal leading-[1.6] ${isLight ? "text-[rgba(15,23,42,0.60)]" : "text-[#f5f7fa70]"}`}>
-              We captured original farm and factory visuals for Houd El Nile, then refined the selected images in Lightroom to support a more premium agriculture export identity.
+              {t.houdElNile.photographyDescription}
             </p>
           </div>
           <div className="mt-5 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:mt-7">
@@ -535,7 +580,7 @@ const ProjectCard = ({
               >
                 <img
                   src={src}
-                  alt={`Houd El Nile farm and factory photography ${i + 1}`}
+                  alt={t.houdElNile.galleryAlt(i + 1)}
                   loading="lazy"
                   className="h-full w-full object-cover [transition:transform_600ms_cubic-bezier(0.22,1,0.36,1),filter_600ms_cubic-bezier(0.22,1,0.36,1)] group-hover/photo:scale-[1.04] group-hover/photo:brightness-110"
                 />
@@ -546,15 +591,31 @@ const ProjectCard = ({
       )}
 
       <div className={project.id === "houd-el-nile" ? "mt-8 pb-0 lg:mt-10" : "mt-auto pt-2"}>
-        <Button
-          type="button"
-          data-testid={`button-view-${project.id}`}
-          variant="ghost"
-          className="h-auto p-0 [font-family:'Inter',Helvetica] text-[13px] font-medium tracking-[0] hover:bg-transparent"
-          style={{ color: project.accent }}
-        >
-          View Case Study →
-        </Button>
+        {caseStudy ? (
+          <Button
+            asChild
+            data-testid={`button-view-${project.id}`}
+            variant="ghost"
+            className="h-auto p-0 [font-family:'Inter',Helvetica] text-[13px] font-medium tracking-[0] hover:bg-transparent"
+            style={{ color: project.accent }}
+          >
+            {/* Internal navigation — this is a Lux Studio page, not the
+                external product, so it never opens a new tab. */}
+            <Link href={`/work/${caseStudy.data.slug}`}>
+              {t.card.viewCaseStudy} <span className="rtl:rotate-180 inline-block">→</span>
+            </Link>
+          </Button>
+        ) : (
+          <Button
+            type="button"
+            data-testid={`button-view-${project.id}`}
+            variant="ghost"
+            className="h-auto p-0 [font-family:'Inter',Helvetica] text-[13px] font-medium tracking-[0] hover:bg-transparent"
+            style={{ color: project.accent }}
+          >
+            {t.card.viewCaseStudy} <span className="rtl:rotate-180 inline-block">→</span>
+          </Button>
+        )}
       </div>
     </div>
   </motion.div>
@@ -564,18 +625,10 @@ const ProjectCard = ({
 /* Abdalwahb — a standalone featured card (like X Dental), not driven by the
    shared `projects` array, so it can't accidentally affect the other cards. */
 const abdalwahbUrl = "https://abdalwahb.com";
-const abdalwahbTags = [
-  "Portfolio Website",
-  "Accounting Services",
-  "Courses",
-  "Training",
-  "UI/UX Design",
-  "Frontend Development",
-  "Bilingual Website",
-  "SEO Structure",
-];
 
 const AbdalwahbCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolean }) => {
+  const t = useDict(workPageDict);
+  const copy = t.abdalwahb;
   const [previewActive, setPreviewActive] = useState(false);
 
   return (
@@ -587,8 +640,17 @@ const AbdalwahbCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolea
       viewport={{ once: true, margin: "-60px" }}
       data-testid="card-project-abdalwahb"
       className={`group relative overflow-hidden border transition-all duration-500 ease-out hover:-translate-y-1.5 hover:brightness-[1.03] ${
+        // Light-mode shadow reduced from the shared 0_20px_60px card shadow
+        // (offset+blur reach ~80px) to 0_8px_24px (reach ~32px) — this is
+        // the LAST card before the CTA, and the old shadow's blur envelope
+        // physically extended past the section's own ~32px bottom gap into
+        // the CTA area, a bleed getComputedStyle(...).backgroundColor can't
+        // detect since it doesn't change the CTA section's own background
+        // property. Same soft "glass" character (color/alpha), just a
+        // tighter falloff so it never reaches the next section. Scoped to
+        // this card only — every other card keeps the original shared shadow.
         isLight
-          ? "rounded-[32px] border-[rgba(15,23,42,0.08)] bg-[rgba(255,255,255,0.75)] shadow-[0_20px_60px_rgba(15,23,42,0.08)] backdrop-blur-md hover:border-[rgba(56,189,248,0.45)] hover:shadow-[0_20px_60px_rgba(15,23,42,0.08),0_0_40px_rgba(56,189,248,0.16)]"
+          ? "rounded-[32px] border-[rgba(15,23,42,0.08)] bg-[rgba(255,255,255,0.75)] shadow-[0_8px_24px_rgba(15,23,42,0.06)] backdrop-blur-md hover:border-[rgba(56,189,248,0.45)] hover:shadow-[0_8px_24px_rgba(15,23,42,0.06),0_0_40px_rgba(56,189,248,0.16)]"
           : "rounded-3xl border-[#ffffff0e] shadow-[0px_0px_40px_#00000040] hover:border-[#38bdf873] hover:shadow-[0px_0px_40px_#00000040,0_0_40px_rgba(56,189,248,0.14),0_0_90px_rgba(37,99,235,0.10)]"
       }`}
       style={isLight ? undefined : { background: "linear-gradient(135deg, #0f172a 0%, #060c16 100%)" }}
@@ -611,28 +673,34 @@ const AbdalwahbCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolea
               Abdalwahb
             </h3>
             <p className="mt-1 [font-family:'Inter',Helvetica] text-[12px] font-normal tracking-[0.12px] text-[#38bdf8]">
-              Accounting &amp; Financial Consulting Portfolio Website
+              {copy.type}
             </p>
           </div>
           <p className={`[font-family:'Inter',Helvetica] text-[14px] font-normal leading-[23px] tracking-[0] ${isLight ? "text-[rgba(15,23,42,0.68)]" : "text-[#f5f7fa80]"}`}>
-            We designed and developed a premium portfolio website for an accounting and financial consulting professional, presenting services, training, courses, and business credibility through a clean bilingual digital experience.
+            {copy.description}
           </p>
           <p className={`[font-family:'Inter',Helvetica] text-[13px] font-normal leading-[21px] tracking-[0] ${isLight ? "text-[rgba(15,23,42,0.50)]" : "text-[#f5f7fa61]"}`}>
-            The website was created to support trust, authority, and clear service communication through structured service pages, training content, course information, contact flows, and a modern blue visual identity.
+            {copy.secondary}
           </p>
           <div className="flex flex-wrap gap-1.5">
-            {abdalwahbTags.map((tag) => (
+            {copy.tags.map((tag) => (
               <TagBadge key={tag} tag={tag} color="#38bdf8" isLight={isLight} />
             ))}
           </div>
           <div className="flex flex-wrap items-center gap-6 pt-1">
             <Button
-              type="button"
+              asChild
               data-testid="button-view-abdalwahb"
               variant="ghost"
               className="h-auto p-0 [font-family:'Inter',Helvetica] text-[13px] font-medium tracking-[0] text-sky-400 hover:bg-transparent hover:text-sky-300"
             >
-              View Case Study →
+              {/* Internal navigation — this is a Lux Studio page, not the
+                  external product, so it never opens a new tab. Previously a
+                  plain, non-navigating Button; this is the fix for the
+                  reported "View Case Study" button that didn't go anywhere. */}
+              <Link href="/work/abdalwahb">
+                {t.card.viewCaseStudy} <span className="rtl:rotate-180 inline-block">→</span>
+              </Link>
             </Button>
             <a
               href={abdalwahbUrl}
@@ -640,7 +708,7 @@ const AbdalwahbCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolea
               rel="noopener noreferrer"
               className={`[font-family:'Inter',Helvetica] text-[13px] font-medium tracking-[0] transition-colors ${isLight ? "text-[rgba(15,23,42,0.65)] hover:text-[#0f172a]" : "text-[#f5f7fa80] hover:text-[#f5f7fa]"}`}
             >
-              Open Live Website ↗
+              {t.preview.openLiveWebsite} <span className="rtl:rotate-180 inline-block">↗</span>
             </a>
           </div>
         </div>
@@ -657,12 +725,15 @@ const AbdalwahbCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolea
               url={abdalwahbUrl}
               videoSrc={abdalwahbHeroVideo}
               label="abdalwahb.com"
-              title="Abdalwahb website preview"
+              title={t.card.websitePreviewTitle("Abdalwahb")}
               active={previewActive}
               aspectRatio="16 / 10"
               videoFit="cover"
               videoPosition="60% center"
-              imageBg="#050810"
+              // No explicit imageBg override needed — BrowserPreview's own
+              // default now resolves per-theme (see resolvedImageBg there),
+              // so every card's lazy/inactive preview state matches its
+              // theme instead of only this one card being special-cased.
               isLight={isLight}
             />
           </div>
@@ -673,10 +744,13 @@ const AbdalwahbCard = ({ reduced, isLight }: { reduced: boolean; isLight: boolea
 };
 
 export const WorkPage = () => {
+  useSEO(pageMeta.work);
+  useJSONLD("breadcrumb", buildBreadcrumbSchema(pageBreadcrumbs.work));
   const reduced = useReducedMotion() ?? false;
-  const { openProjectModal } = useProjectModal();
   const { theme } = useTheme();
   const isLight = theme === "light";
+  const t = useDict(workPageDict);
+  const common = useDict(commonDict);
   const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
@@ -686,18 +760,72 @@ export const WorkPage = () => {
     return () => window.removeEventListener("resize", check);
   }, []);
 
+  // Scroll-linked "rising sheet" reveal — light mode only. The sheet's
+  // FINAL resting position still comes from the static negative margin on
+  // its section (unchanged, untouched by this effect) — that's what keeps
+  // the layout stable and gives the "slight negative overlap" end state.
+  // This effect only adds an ADDITIVE transform on top: the sheet starts
+  // pushed down by translateY(220px), which more than cancels the negative
+  // margin at rest (so nothing overlaps the hero on load), then scrubs back
+  // to translateY(0) as the user scrolls past the hero — at that point the
+  // static margin alone is doing the overlapping, exactly as before.
+  const heroRef = useRef<HTMLElement>(null);
+  const sheetRef = useRef<HTMLElement>(null);
+  const firstProjectRef = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    if (!isLight || reduced) return;
+    const heroEl = heroRef.current;
+    const sheetEl = sheetRef.current;
+    const firstProjectEl = firstProjectRef.current;
+    if (!heroEl || !sheetEl || !firstProjectEl) return;
+
+    const ctx = gsap.context(() => {
+      gsap.set(sheetEl, { y: 220, opacity: 0.98, willChange: "transform", backfaceVisibility: "hidden" });
+      gsap.set(firstProjectEl, { y: 80, opacity: 0, willChange: "transform, opacity", backfaceVisibility: "hidden" });
+
+      gsap.to(sheetEl, {
+        y: 0,
+        opacity: 1,
+        ease: "none",
+        scrollTrigger: {
+          trigger: heroEl,
+          start: "bottom bottom",
+          end: "bottom 45%",
+          scrub: 0.8,
+        },
+      });
+
+      gsap.to(firstProjectEl, {
+        y: 0,
+        opacity: 1,
+        ease: "none",
+        scrollTrigger: {
+          trigger: sheetEl,
+          start: "top 85%",
+          end: "top 55%",
+          scrub: 0.8,
+        },
+      });
+    });
+
+    return () => ctx.revert();
+  }, [isLight, reduced]);
+
   return (
-    <main className={`w-full overflow-x-hidden ${isLight ? "bg-[#F8FBFF]" : ""}`} data-testid="page-work">
+    <main className={`w-full overflow-x-clip ${isLight ? "bg-[#F8FBFF]" : ""}`} data-testid="page-work">
+      <div className="page-content-layer">
 
       {/* Hero */}
       <section
-        data-debug="work-hero-root"
+        ref={heroRef}
+        data-section="work-hero"
         className={`relative w-full pt-[80px] ${isLight ? "z-[1] overflow-visible min-h-[100svh] lg:min-h-[980px]" : "overflow-hidden min-h-[640px]"}`}
-        aria-label="Work page hero"
+        aria-label={t.hero.ariaLabel}
       >
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat"
-          style={{ backgroundImage: "url('/figmaAssets/imagewithfallback.png')" }}
+          style={{ backgroundImage: "url('/figmaAssets/imagewithfallback.webp')" }}
         />
         <div className="absolute inset-0 z-[1] bg-[linear-gradient(180deg,rgba(3,5,10,0.6)_0%,rgba(3,5,10,0.1)_30%,rgba(3,5,10,0.4)_70%,rgba(3,5,10,1)_100%)]" />
 
@@ -726,59 +854,73 @@ export const WorkPage = () => {
             atmosphere. Keeping the text anchored near the top means the
             EXTRA height added in light mode becomes pure breathing space
             below the text, which is exactly where the overlap should land. */}
-        <div
-          data-debug="work-hero-content"
-          className="relative z-10 flex min-h-[560px] flex-col items-center justify-center px-6 pb-[100px] pt-[120px] text-center sm:px-10 lg:px-16"
-        >
+        <div className="relative z-10 flex min-h-[560px] flex-col items-center justify-center px-6 pb-[100px] pt-[120px] text-center sm:px-10 lg:px-16">
           <motion.div
             initial={reduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="flex flex-col items-center gap-6"
           >
-            <p className="[font-family:'JetBrains_Mono',Helvetica] text-[12px] font-normal tracking-[1.8px] text-[#38bdf8] opacity-90 uppercase">
-              Selected Projects
+            <p
+              className="[font-family:'JetBrains_Mono',Helvetica] text-[12px] font-normal tracking-[1.8px] uppercase"
+              style={{ color: "var(--hero-eyebrow-text-fixed)", textShadow: "var(--hero-eyebrow-text-fixed-shadow)" }}
+            >
+              {t.hero.eyebrow}
             </p>
             <h1 className="max-w-[860px] [font-family:'Bricolage_Grotesque',Helvetica] text-[46px] font-semibold leading-[0.97] tracking-[-1.6px] text-[#f5f7fa] sm:text-[68px] sm:tracking-[-2.2px] lg:text-[96px] lg:tracking-[-2.88px]">
-              Work built from strategy to launch.
+              {t.hero.heading}
             </h1>
             <p className="max-w-[600px] [font-family:'Inter',Helvetica] text-[17px] font-normal leading-[29px] tracking-[0.1px] text-[#f5f7faad]">
-              A closer look at websites, e-commerce platforms, brand
-              experiences, and digital systems we shaped, designed, developed,
-              and launched for real businesses.
+              {t.hero.subheading}
             </p>
-            <p className="[font-family:'Inter',Helvetica] text-[13px] font-normal tracking-[0.13px] text-[#38bdf8] opacity-90">
-              4 selected projects · Websites · E-commerce · Export brands ·
-              Digital systems
+            <p
+              className="[font-family:'Inter',Helvetica] text-[13px] font-normal tracking-[0.13px]"
+              style={{ color: "var(--hero-accent-text-fixed)", textShadow: "var(--hero-accent-text-fixed-shadow)" }}
+            >
+              {t.hero.stats}
             </p>
           </motion.div>
         </div>
       </section>
 
-      {/* Projects Section — light mode only. Pulled up by a negative margin
-          so it visibly overlaps the hero — explicit z-[5] against the
-          hero's own z-[1] guarantees this sheet paints on top of the hero
-          in that overlap band regardless of DOM order. Dark mode keeps the
-          exact original flush, unpositioned layout — no margin, no
-          z-index, no rounded corners. */}
+      {/* Projects Section — light mode only. Static negative margin gives it
+          its FINAL resting overlap (unchanged, still the sole layout
+          mechanism — no animation touches margin/top/height). The entrance
+          itself is a separate, additive GSAP transform (see the effect
+          above) that starts the sheet pushed down far enough to cancel this
+          margin at rest, then scrubs to translateY(0) on scroll — at which
+          point the static margin alone produces the overlap, same as
+          before. Explicit z-[5] against the hero's own z-[1] guarantees
+          this sheet paints on top of the hero regardless of DOM order.
+          Dark mode keeps the exact original flush, unpositioned layout —
+          no margin, no z-index, no rounded corners, no GSAP effect. */}
       <section
-        data-debug="projects-sheet-outer"
+        ref={sheetRef}
+        data-section="work-projects-sheet"
         className={`relative w-full overflow-visible px-4 pb-20 sm:px-6 lg:px-12 xl:px-20 ${
           isLight
             ? "z-[5] -mt-[60px] rounded-t-[72px] border-t border-[rgba(15,23,42,0.08)] bg-[#F8FBFF] pt-16 shadow-[0_-24px_80px_rgba(15,23,42,0.08)] sm:-mt-[100px] lg:-mt-[150px]"
             : ""
         }`}
-        aria-label="Work projects"
+        aria-label={t.projectsAriaLabel}
       >
         <div className="mx-auto flex max-w-[1400px] flex-col gap-5">
-          {/* X Dental – featured horizontal */}
-          <XDentalCard reduced={reduced} isLight={isLight} />
+          {/* X Dental – featured horizontal. Wrapped so the GSAP reveal
+              above (the ONLY system controlling this entrance in light
+              mode) has an element to animate that's separate from
+              XDentalCard's own framer-motion whileInView — see the isLight
+              guard added to that card's own `initial` prop, which hands
+              this reveal fully to GSAP in light mode without touching its
+              dark-mode behavior at all. */}
+          <div ref={firstProjectRef} data-section="work-first-project">
+            <XDentalCard reduced={reduced} isLight={isLight} />
+          </div>
 
           {/* Row 2: Houd El Nile tall | Al Nours + Al Baraka */}
           <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_1fr]">
             {/* Houd El Nile – tall vertical */}
             <ProjectCard
-              project={projects[1]}
+              project={projectMeta[1]}
               animVariant={fadeUp}
               reduced={reduced}
               isLight={isLight}
@@ -787,13 +929,13 @@ export const WorkPage = () => {
             {/* Al Nours + Al Baraka stacked */}
             <div className="flex flex-col gap-5">
               <ProjectCard
-                project={projects[2]}
+                project={projectMeta[2]}
                 animVariant={fadeRight}
                 reduced={reduced}
                 isLight={isLight}
               />
               <ProjectCard
-                project={projects[3]}
+                project={projectMeta[3]}
                 animVariant={fadeUp}
                 reduced={reduced}
                 isLight={isLight}
@@ -806,84 +948,18 @@ export const WorkPage = () => {
         </div>
       </section>
 
-      {/* CTA Section — light mode gets the same pale background as the
-          Projects sheet and the footer's own spacer (#F8FBFF), so the whole
-          stretch from the sheet through this section to the footer reads as
-          one continuous background instead of the CTA's own area briefly
-          reverting to plain white (this section previously had no bg class
-          at all, just showing the page body's background through). */}
-      <section
-        data-debug="work-cta-section"
-        className={`relative w-full overflow-hidden px-4 pb-24 sm:px-6 lg:px-12 ${isLight ? "bg-[#F8FBFF]" : ""}`}
-        aria-label="Work CTA"
-      >
-        <motion.div
-          variants={fadeUp}
-          initial={reduced ? "visible" : "hidden"}
-          whileInView="visible"
-          viewport={{ once: true, margin: "-60px" }}
-          className="mx-auto max-w-[860px]"
-        >
-          <div
-            className="work-cta-orbit-border relative overflow-hidden rounded-3xl border border-[#38bdf820] bg-[#060e1c] p-10 text-center shadow-[0px_0px_60px_#00000050] sm:p-14"
-          >
-            <div className="pointer-events-none absolute inset-0">
-              <div className="absolute left-1/2 top-0 h-[300px] w-[600px] -translate-x-1/2 rounded-full bg-[#38bdf80c] blur-[100px]" />
-              {!reduced &&
-                Array.from({ length: 8 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="animate-float-star absolute h-[2px] w-[2px] rounded-full bg-sky-300/70"
-                    style={{
-                      left: `${10 + i * 11}%`,
-                      bottom: `${20 + (i % 3) * 20}%`,
-                      "--duration": `${3 + i * 0.7}s`,
-                      "--delay": `${i * 0.5}s`,
-                    } as React.CSSProperties}
-                  />
-                ))}
-            </div>
-            <div className="relative z-10 flex flex-col items-center gap-6">
-              <p className="[font-family:'JetBrains_Mono',Helvetica] text-[11px] font-normal tracking-[1.5px] text-[#38bdf880] uppercase">
-                Start a Project
-              </p>
-              <h2 className="max-w-[600px] [font-family:'Bricolage_Grotesque',Helvetica] text-[32px] font-semibold leading-[1.1] tracking-[-0.9px] text-[#f5f7fa] sm:text-[40px]">
-                Have a project that needs this level of care?
-              </h2>
-              <p className="max-w-[480px] [font-family:'Inter',Helvetica] text-[16px] font-normal leading-[27px] tracking-[0] text-[#f5f7faad]">
-                Let's shape the strategy, design, system, and launch plan
-                behind your next digital experience.
-              </p>
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <Button
-                  type="button"
-                  onClick={openProjectModal}
-                  data-testid="button-work-cta-start"
-                  className="h-auto rounded-full bg-[#f5f7fa] px-8 py-[14px] shadow-[0px_4px_20px_#00000052] hover:bg-[#f5f7fa]"
-                >
-                  <span className="[font-family:'Inter',Helvetica] text-[14px] font-medium text-[#080b12]">
-                    Start a Project →
-                  </span>
-                </Button>
-                <Link href="/services">
-                  <Button
-                    type="button"
-                    data-testid="button-work-cta-services"
-                    variant="outline"
-                    className="h-auto rounded-full border-[0.8px] border-[#f5f7fa26] bg-[#f5f7fa0a] px-8 py-[14px] text-[#f5f7fa] hover:bg-[#f5f7fa14] hover:text-[#f5f7fa]"
-                  >
-                    <span className="[font-family:'Inter',Helvetica] text-[14px] font-normal">
-                      Explore Services
-                    </span>
-                  </Button>
-                </Link>
-              </div>
-            </div>
-          </div>
-        </motion.div>
-      </section>
+      <FinalCtaSection
+        eyebrow={common.actions.startAProject}
+        heading={t.cta.heading}
+        description={t.cta.description}
+        secondaryLabel={common.actions.exploreServices}
+        secondaryHref="/services"
+        primaryTestId="button-work-cta-start"
+        secondaryTestId="button-work-cta-services"
+      />
 
-      <SiteFooterSection />
+      </div>
+      <FooterRevealStage />
     </main>
   );
 };
