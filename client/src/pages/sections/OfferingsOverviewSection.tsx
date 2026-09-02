@@ -152,20 +152,29 @@ export const OfferingsOverviewSection = (): JSX.Element => {
       <SideStars starsPerSide={isMobile ? 8 : 15} className="z-[1]" variant={isLight ? "light" : "dark"} />
 
       {/* ── Main content ── */}
-      {/* h-screen (a fixed, single-viewport-tall box) is only meaningful on
-          desktop, where GSAP pins this section for exactly one viewport
-          while it scrubs each card's opacity — the 2-column grid was tuned
-          to fit that box. On mobile the grid collapses to 1 column (6
-          stacked cards) and the pin is already disabled (animOff, above),
-          but the box itself stayed a fixed h-screen with justify-center:
-          since the stacked content is taller than one screen, centering it
-          inside a height-capped box made it overflow equally above *and*
-          below the box's own edges — bleeding up into the previous section
-          and silently eating clicks meant for its CTA. min-h-screen keeps
-          the exact same centered-in-one-screen look whenever content fits,
-          but lets the box grow to natural content height instead of
+      {/* h-screen (a fixed, single-viewport-tall box) is the pin frame GSAP
+          scrubs against on desktop: its rendered height (not its content's
+          scrollHeight) is what the ScrollTrigger's "+=420%" travel distance
+          is computed from, so the frame must stay a fixed, unconditional
+          100vh for every theme/language combo — anything that makes it
+          theme- or language-dependent (min-h-screen, extra padding that
+          isn't offset elsewhere, a taller box for one combo only) changes
+          how much scroll distance row 3 gets to reveal in, un-syncing it
+          from the Dark Mode baseline this was tuned against. justify-center
+          + py-14 is that baseline; every combo shares it. On mobile the
+          grid collapses to 1 column (6 stacked cards) and the pin is
+          already disabled (animOff, above), but the box itself stayed a
+          fixed h-screen with justify-center: since the stacked content is
+          taller than one screen, centering it inside a height-capped box
+          made it overflow equally above *and* below the box's own edges —
+          bleeding up into the previous section and silently eating clicks
+          meant for its CTA. min-h-screen keeps the exact same
+          centered-in-one-screen look whenever content fits, but lets the
+          box grow to natural content height instead of
           clipping/overlapping when it doesn't. */}
-      <div className={`relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-center px-6 py-14 sm:px-8 lg:px-11 ${isMobile ? "min-h-screen" : "h-screen"}`}>
+      <div
+        className={`relative z-10 mx-auto flex w-full max-w-[1400px] flex-col justify-center px-6 py-14 sm:px-8 lg:px-11 ${isMobile ? "min-h-screen" : "h-screen"}`}
+      >
 
         {/* Section header */}
         <header className="flex flex-col items-start pb-10">
@@ -187,7 +196,7 @@ export const OfferingsOverviewSection = (): JSX.Element => {
 
         {/* Grid of 6 service cards */}
         <div className={`border-t ${isLight ? "border-[rgba(15,23,42,0.10)]" : "border-white/10"}`}>
-          <div className="grid grid-cols-1 md:grid-cols-2">
+          <div className="grid grid-cols-1 md:grid-cols-2 mb-14">
             {services.map((service, i) => {
               const isLeftCol  = i % 2 === 0;
               const isLastRow  = i >= 4;

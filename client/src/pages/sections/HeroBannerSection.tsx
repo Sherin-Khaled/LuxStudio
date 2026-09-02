@@ -1,4 +1,5 @@
 import { useState, useEffect, type MutableRefObject } from "react";
+import { Link } from "wouter";
 import { Button } from "@/components/ui/button";
 import { GalaxyStarCanvas } from "@/components/backgrounds/GalaxyStarCanvas";
 import { ShootingStars } from "@/components/backgrounds/ShootingStars";
@@ -150,27 +151,21 @@ export const HeroBannerSection = ({ scrollProgressRef }: HeroBannerSectionProps)
         >
           <div className="flex max-w-[872px] flex-col items-center pb-7">
             <h1
-              className={`relative mt-[-1.00px] [font-family:'Bricolage_Grotesque',Helvetica] text-center text-[48px] font-semibold leading-[0.96] tracking-[-1.8px] transition-colors sm:text-[72px] sm:tracking-[-2.4px] lg:text-[112px] lg:tracking-[-3.36px] ${
-                isLight ? "text-[#020617]" : "text-[#f5f7fa]"
-              }`}
+              className="relative mt-[-1.00px] [font-family:'Bricolage_Grotesque',Helvetica] text-center text-[48px] font-semibold leading-[0.96] tracking-[-1.8px] text-[#f5f7fa] transition-colors sm:text-[72px] sm:tracking-[-2.4px] lg:text-[112px] lg:tracking-[-3.36px]"
             >
               {t.heading}
             </h1>
           </div>
           <div className="flex flex-col items-center pb-[22px]">
             <p
-              className={`relative mt-[-1.00px] max-w-[620px] [font-family:'Inter',Helvetica] text-center text-[16px] font-normal leading-[28px] tracking-[0.10px] transition-colors sm:text-[19.9px] sm:leading-[33.9px] ${
-                isLight ? "text-[rgba(15,23,42,0.68)]" : "text-[#f5f7faad]"
-              }`}
+              className="relative mt-[-1.00px] max-w-[620px] [font-family:'Inter',Helvetica] text-center text-[16px] font-normal leading-[28px] tracking-[0.10px] text-[#f5f7faad] transition-colors sm:text-[19.9px] sm:leading-[33.9px]"
             >
               {t.description}
             </p>
           </div>
           <div className="flex items-center gap-1.5 pb-9">
             <span
-              className={`relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-center text-[15px] font-normal leading-[22.5px] tracking-[0.38px] whitespace-nowrap transition-colors ${
-                isLight ? "text-[rgba(15,23,42,0.55)]" : "text-[#f5f7fa61]"
-              }`}
+              className="relative mt-[-1.00px] w-fit whitespace-nowrap [font-family:'Inter',Helvetica] text-center text-[15px] font-normal leading-[22.5px] tracking-[0.38px] text-[#f5f7fa61] transition-colors"
             >
               {t.weCreate}
             </span>
@@ -206,7 +201,7 @@ export const HeroBannerSection = ({ scrollProgressRef }: HeroBannerSectionProps)
               </span>
             </Button>
             <Button
-              type="button"
+              asChild
               variant="outline"
               className={`h-auto rounded-full border-[0.8px] px-[30px] py-[15.75px] transition-colors ${
                 isLight
@@ -214,9 +209,11 @@ export const HeroBannerSection = ({ scrollProgressRef }: HeroBannerSectionProps)
                   : "border-[#f5f7fa33] bg-[#f5f7fa12] text-[#f5f7fa] hover:bg-[#f5f7fa1a] hover:text-[#f5f7fa]"
               }`}
             >
-              <span className="relative w-fit [font-family:'Inter',Helvetica] text-center text-[15px] font-normal leading-[22.5px] tracking-[0.15px] whitespace-nowrap">
-                {common.actions.viewOurWork}
-              </span>
+              <Link href="/work" data-testid="button-hero-view-work">
+                <span className="relative w-fit [font-family:'Inter',Helvetica] text-center text-[15px] font-normal leading-[22.5px] tracking-[0.15px] whitespace-nowrap">
+                  {common.actions.viewOurWork}
+                </span>
+              </Link>
             </Button>
           </div>
         </div>
@@ -227,9 +224,7 @@ export const HeroBannerSection = ({ scrollProgressRef }: HeroBannerSectionProps)
           className="absolute inset-x-0 bottom-8 z-10 flex flex-col items-center gap-1.5"
         >
           <p
-            className={`relative w-fit mt-[-1.00px] [font-family:'Inter',Helvetica] text-[10px] font-normal leading-[15px] tracking-[1.40px] whitespace-nowrap transition-colors ${
-              isLight ? "text-[rgba(15,23,42,0.45)]" : "text-[#f5f7fa59]"
-            }`}
+            className="relative mt-[-1.00px] w-fit whitespace-nowrap [font-family:'Inter',Helvetica] text-[10px] font-normal leading-[15px] tracking-[1.40px] text-[#f5f7fa59] transition-colors"
           >
             {t.scrollToExplore}
           </p>
